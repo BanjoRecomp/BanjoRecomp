@@ -19,3 +19,6 @@
 [submodule "lib/bk-decomp"]
 	path = lib/bk-decomp
 	url = https://gitlab.com/banjo.decomp/banjo-kazooie
+[submodule "BanjoRecompSyms"]
+	path = BanjoRecompSyms
+	url = https://github.com/BanjoRecomp/BanjoRecompSyms
