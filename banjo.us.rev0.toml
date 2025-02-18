@@ -4,9 +4,9 @@
 entrypoint = 0x80000400
 # Paths are relative to the location of this config file.
 output_func_path = "RecompiledFuncs"
-# symbols_file_path = "BanjoRecompSyms/bk.us.rev0.syms.toml"
+symbols_file_path = "BanjoRecompSyms/bk.us.rev0.syms.toml"
 rom_file_path = "banjo.us.v10.decompressed.z64"
-elf_path = "banjo.us.v10.elf"
+# elf_path = "banjo.us.v10.elf"
 
 manual_funcs = [
     { name = "__n_CSPVoiceHandler", section = ".core1", vram = 0x8025E438, size = 0x684 },
