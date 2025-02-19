@@ -10,13 +10,6 @@ rom_file_path = "banjo.us.v10.decompressed.z64"
 
 manual_funcs = [
     { name = "__n_CSPVoiceHandler", section = ".core1", vram = 0x8025E438, size = 0x684 },
-    # { name = "__code7AF80_func_803036A0", section = ".core2", vram = 0x803036A0, size = 0x160 },
-    # { name = "__code7AF80_func_80303960", section = ".core2", vram = 0x80303960, size = 0x190 },
-    # { name = "_gcdialog_freeZoomboxes", section = ".core2", vram = 0x8030F030, size = 0x48 },
-    # { name = "__actor_free", section = ".core2", vram = 0x80328028, size = 0xF4 },
-    # { name = "_baModel_preDraw", section = ".core2", vram = 0x80291ac4, size = 0x2C },
-    { name = "__chFrogMinigame_spawnJiggy", section = ".BGS", vram = 0x8038cb20, size = 0x28 },
-    { name = "__chFrogMinigame_textCallback", section = ".BGS", vram = 0x8038cb48, size = 0x6C },
 ]
 
 [patches]
