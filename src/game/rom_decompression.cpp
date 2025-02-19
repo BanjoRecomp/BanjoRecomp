@@ -4,6 +4,7 @@
 
 #include "librecomp/game.hpp"
 #include "banjo_game.h"
+#include "recomp_data.h"
 
 #ifdef _MSC_VER
 inline uint32_t byteswap(uint32_t val) {
@@ -120,4 +121,5 @@ std::vector<uint8_t> banjo::decompress_bk(std::span<const uint8_t> compressed_ro
 void banjo::bk_on_init(uint8_t* rdram, recomp_context* ctx) {
     MEM_W(0, (int32_t)0x80000310) = 6103;
     recomp::do_rom_read(rdram, (int32_t)0x80000000, 0x100004C0, 0x2A4);
+    recomp::init_extended_actor_data();
 }

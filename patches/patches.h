@@ -21,9 +21,15 @@
 void osWriteBackDCacheAll(void);
 #define bzero bzero_recomp
 #define osDpSetStatus osDpSetStatus_recomp
+#define malloc malloc_recomp
+#define free free_recomp
+#define realloc realloc_recomp
+#define memcpy memcpy_recomp
 
 #include "ultra64.h"
 
 typedef int bool;
+
+int recomp_printf(const char* fmt, ...);
 
 #endif
