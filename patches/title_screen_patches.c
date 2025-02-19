@@ -1,5 +1,7 @@
 #include "patches.h"
 
+#include "enums.h"
+
 struct Struct_core2_9B180_1;
 typedef struct Struct_core2_9B180_1 Struct_core2_9B180_1;
 struct struct_core2_9B180_s;
@@ -16,6 +18,7 @@ typedef struct struct_core2_9B180_s{
 extern u8 D_80383330;
 extern Struct_core2_9B180_0 D_8036DE00[];
 
+void func_80322318(Struct_core2_9B180_0*);
 int map_get(void);
 
 RECOMP_PATCH void func_80322490(void) {
@@ -23,7 +26,8 @@ RECOMP_PATCH void func_80322490(void) {
 
     if (D_80383330 != 0) {
         for(i_ptr = D_8036DE00; i_ptr != &D_8036DE00[6]; i_ptr++){
-            if((i_ptr->unk4 != 0 || (i_ptr->unkC == 0x80322318 && map_get() == 0x1F)) && i_ptr->unkC != NULL){
+            
+            if((i_ptr->unk4 != 0 || (i_ptr->unkC == func_80322318 && map_get() == MAP_1F_CS_START_RAREWARE)) && i_ptr->unkC != NULL){
                 i_ptr->unkC(i_ptr);
             }
         }
