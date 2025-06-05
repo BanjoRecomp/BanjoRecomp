@@ -1,7 +1,9 @@
 #include "patches.h"
 #include "misc_funcs.h"
+#include "core1/core1.h"
+#include "core1/vimgr.h"
 
-extern struct {
+extern struct{
     s32 unk0;
     s32 game_mode; //game_mode
     f32 unk8; 
@@ -18,13 +20,7 @@ extern struct {
     u8 unk1C;
 } D_8037E8E0;
 
-void scissorBox_setDefault(void);
-void getGraphicsStacks(Gfx **gfx, Mtx **mtx, Vtx **vtx);
-s32 getActiveFramebuffer(void);
 void func_802E39D0(Gfx **gdl, Mtx **mptr, Vtx **vptr, s32 framebuffer_idx, s32 arg4);
-void viMgr_func_8024C1DC(void);
-void func_80253EC4(Gfx *arg0, Gfx *arg1);
-void dummy_func_80254464();
 
 // 10x the original sizes.
 #define GFX_BUFFER_COUNT 37000
@@ -90,6 +86,11 @@ RECOMP_PATCH void game_draw(s32 arg0){
     Vtx* vtx_start = vtx;
 
     gfx_start = gfx;
+
+    // @recomp Enable the extended gbi.
+    gEXEnable(gfx++);
+    gEXSetRefreshRate(gfx++, 60 / viMgr_func_8024BFA0()); // Input framerate is equal to 60 Hz divided by the frame divisor
+
     func_802E39D0(&gfx, &mtx, &vtx, getActiveFramebuffer(), arg0);
 
     // @recomp Check for graphics stack overflow

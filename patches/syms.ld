@@ -31,3 +31,4 @@ __divdi3_recomp = 0x8F000068;
 __udivdi3_recomp = 0x8F00006C;
 __umoddi3_recomp = 0x8F000070;
 strlen_recomp = 0x8F000074;
+osVirtualToPhysical_recomp = 0x8F000078;

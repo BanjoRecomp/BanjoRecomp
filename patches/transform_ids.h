@@ -1,6 +1,8 @@
 #ifndef __TRANSFORM_IDS_H__
 #define __TRANSFORM_IDS_H__
 
-
+#define ACTOR_TRANSFORM_ID_COUNT 256 // Number of transform IDs for each actor.
+#define BANJO_TRANSFORM_ID_START 0x01000000
+#define ACTOR_TRANSFORM_ID_START (BANJO_TRANSFORM_ID_START + ACTOR_TRANSFORM_ID_COUNT)
 
 #endif
