@@ -14,6 +14,7 @@
 #include "../src/ui/util/hsv.h"
 #include "../src/ui/util/bem.h"
 #include "../src/ui/elements/ui_button.h"
+#include "../src/ui/elements/ui_theme.h"
 
 #include "../src/ui/core/ui_context.h"
 

@@ -153,6 +153,7 @@ set (SOURCES
     ${CMAKE_SOURCE_DIR}/src/main/register_overlays.cpp
     ${CMAKE_SOURCE_DIR}/src/main/register_patches.cpp
     ${CMAKE_SOURCE_DIR}/src/main/rt64_render_context.cpp
+    ${CMAKE_SOURCE_DIR}/src/main/theme.cpp
 
     ${CMAKE_SOURCE_DIR}/src/game/input.cpp
     ${CMAKE_SOURCE_DIR}/src/game/controls.cpp
@@ -169,7 +170,6 @@ set (SOURCES
     ${CMAKE_SOURCE_DIR}/src/ui/ui_config.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/ui_prompt.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/ui_config_sub_menu.cpp
-    ${CMAKE_SOURCE_DIR}/src/ui/ui_theme_override.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/ui_color_hack.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/ui_rml_hacks.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/ui_elements.cpp

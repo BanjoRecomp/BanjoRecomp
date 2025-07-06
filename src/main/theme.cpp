@@ -1,7 +1,7 @@
-#include "elements/ui_theme.h"
-#include "ui_theme_override.h"
+#include "recomp_ui.h"
+#include "theme.h"
 
-void set_custom_theme() {
+void recomptheme::set_custom_theme() {
     recompui::set_theme_color(recompui::ThemeColor::Background1, recompui::Color{2, 7, 18, 255});
     recompui::set_theme_color(recompui::ThemeColor::Background2, recompui::Color{7, 15, 34, 255});
     recompui::set_theme_color(recompui::ThemeColor::Background3, recompui::Color{18, 24, 38, 255});

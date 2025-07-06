@@ -26,7 +26,6 @@
 #include "ui_mod_menu.h"
 #include "ui_mod_installer.h"
 #include "ui_renderer.h"
-#include "ui_theme_override.h"
 
 bool can_focus(Rml::Element* element) {
     return element->GetOwnerDocument() != nullptr && element->GetProperty(Rml::PropertyId::TabIndex)->Get<Rml::Style::TabIndex>() != Rml::Style::TabIndex::None;
@@ -199,8 +198,7 @@ public:
         recompui::register_custom_elements();
 
         Rml::Initialise();
-        
-        set_custom_theme();
+    
         // Apply the hack to replace RmlUi's default color parser with one that conforms to HTML5 alpha parsing for SASS compatibility
         recompui::apply_color_hack();
 
