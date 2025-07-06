@@ -35,14 +35,16 @@
 
         &.menu-list-item:focus:not(:disabled, [disabled]),
         &.menu-list-item:hover:not(:disabled, [disabled]) {
-            decorator: $primary-rl-fade;
+            // decorator: $primary-rl-fade;
+            background-color: $color-white-a5;
         }
     }
 
     &:focus:not(:disabled, [disabled]),
     &:hover:not(:disabled, [disabled]) {
         @include set-color($color-primary);
-        decorator: $primary-lr-fade;
+        // decorator: $primary-lr-fade;
+        background-color: $color-white-a5;
 
         .menu-list-item__bullet {
             opacity: 1;

@@ -27,9 +27,6 @@ static bool is_mod_enabled_or_auto(const std::string &mod_id) {
 }
 
 // ModEntryView
-#define COL_TEXT_DEFAULT 242, 242, 242
-#define COL_TEXT_DIM 204, 204, 204
-#define COL_SECONDARY 23, 214, 232
 constexpr float modEntryHeight = 120.0f;
 constexpr float modEntryPadding = 4.0f;
 
@@ -45,17 +42,17 @@ ModEntryView::ModEntryView(Element *parent) : Element(parent, Events(EventType::
     set_height_auto();
     set_padding(modEntryPadding);
     set_border_left_width(2.0f);
-    set_border_color(Color{ COL_TEXT_DEFAULT, 12 });
-    set_background_color(Color{ COL_TEXT_DEFAULT, 12 });
+    set_border_color(ThemeColor::BorderSoft);
+    set_background_color(ThemeColor::BorderSoft);
     set_cursor(Cursor::Pointer);
-    set_color(Color{ COL_TEXT_DEFAULT, 255 });
+    set_color(ThemeColor::Text);
 
-    checked_style.set_border_color(Color{ COL_TEXT_DEFAULT, 160 });
-    checked_style.set_color(Color{ 255, 255, 255, 255 });
-    checked_style.set_background_color(Color{ 26, 24, 32, 255 });
-    hover_style.set_border_color(Color{ COL_TEXT_DEFAULT, 64 });
-    checked_hover_style.set_border_color(Color{ COL_TEXT_DEFAULT, 255 });
-    pulsing_style.set_border_color(Color{ 23, 214, 232, 244 });
+    checked_style.set_border_color(ThemeColor::BorderSolid);
+    checked_style.set_color(ThemeColor::White);
+    checked_style.set_background_color(recompui::ThemeColor::Background3);
+    hover_style.set_border_color(ThemeColor::BorderHard);
+    checked_hover_style.set_border_color(ThemeColor::Text);
+    pulsing_style.set_border_color(ThemeColor::SecondaryA80);
 
     {
         thumbnail_image = context.create_element<Image>(this, "");
@@ -63,7 +60,7 @@ ModEntryView::ModEntryView(Element *parent) : Element(parent, Events(EventType::
         thumbnail_image->set_height(modEntryHeight);
         thumbnail_image->set_min_width(modEntryHeight);
         thumbnail_image->set_min_height(modEntryHeight);
-        thumbnail_image->set_background_color(Color{ 190, 184, 219, 25 });
+        thumbnail_image->set_background_color(ThemeColor::BGOverlay);
 
 
         body_container = context.create_element<Element>(this);
@@ -78,7 +75,7 @@ ModEntryView::ModEntryView(Element *parent) : Element(parent, Events(EventType::
             name_label = context.create_element<Label>(body_container, LabelStyle::Normal);
             description_label = context.create_element<Label>(body_container, LabelStyle::Small);
             description_label->set_margin_top(4.0f);
-            description_label->set_color(Color{ COL_TEXT_DIM, 255 });
+            description_label->set_color(ThemeColor::TextDim);
         } // body_container
     } // this
 
@@ -653,7 +650,7 @@ ModMenu::ModMenu(Element *parent) : Element(parent) {
             list_container->set_flex_basis(100.0f);
             list_container->set_align_items(AlignItems::Center);
             list_container->set_height(100.0f, Unit::Percent);
-            list_container->set_background_color(Color{ 0, 0, 0, 89 });
+            list_container->set_background_color(ThemeColor::BGShadow);
             list_container->set_border_bottom_left_radius(16.0f);
             {
                 list_scroll_container = context.create_element<ScrollContainer>(list_container, ScrollDirection::Vertical);
@@ -676,9 +673,9 @@ ModMenu::ModMenu(Element *parent) : Element(parent) {
         footer_container = context.create_element<Container>(this, FlexDirection::Row, JustifyContent::FlexStart);
         footer_container->set_width(100.0f, recompui::Unit::Percent);
         footer_container->set_align_items(recompui::AlignItems::Center);
-        footer_container->set_background_color(Color{ 0, 0, 0, 89 });
+        footer_container->set_background_color(ThemeColor::BGShadow);
         footer_container->set_border_top_width(1.1f);
-        footer_container->set_border_top_color(Color{ 255, 255, 255, 25 });
+        footer_container->set_border_top_color(ThemeColor::BorderSoft);
         footer_container->set_padding(20.0f);
         footer_container->set_gap(20.0f);
         footer_container->set_border_bottom_left_radius(16.0f);
@@ -691,7 +688,7 @@ ModMenu::ModMenu(Element *parent) : Element(parent) {
             Element* footer_spacer = context.create_element<Element>(footer_container);
             footer_spacer->set_flex(1.0f, 0.0f);
 
-            refresh_button = context.create_element<Button>(footer_container, "Refresh", recompui::ButtonStyle::Primary);
+            refresh_button = context.create_element<Button>(footer_container, "Refresh", recompui::ButtonStyle::Tertiary);
             refresh_button->add_pressed_callback([this](){ refresh_mods(true); });
             refresh_button->set_nav_manual(NavDirection::Up, mod_tab_id);
 

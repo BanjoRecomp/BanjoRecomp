@@ -26,6 +26,7 @@
 #include "ui_mod_menu.h"
 #include "ui_mod_installer.h"
 #include "ui_renderer.h"
+#include "ui_theme_override.h"
 
 bool can_focus(Rml::Element* element) {
     return element->GetOwnerDocument() != nullptr && element->GetProperty(Rml::PropertyId::TabIndex)->Get<Rml::Style::TabIndex>() != Rml::Style::TabIndex::None;
@@ -199,6 +200,7 @@ public:
 
         Rml::Initialise();
         
+        set_custom_theme();
         // Apply the hack to replace RmlUi's default color parser with one that conforms to HTML5 alpha parsing for SASS compatibility
         recompui::apply_color_hack();
 
@@ -220,6 +222,7 @@ public:
                 {"LatoLatin-Italic.ttf", false},
                 {"LatoLatin-Bold.ttf", false},
                 {"LatoLatin-BoldItalic.ttf", false},
+                {"Suplexmentary Comic NC.ttf", false},
                 {"NotoEmoji-Regular.ttf", true},
                 {"promptfont/promptfont.ttf", false},
             };
@@ -913,7 +916,7 @@ void recompui::drop_files(const std::list<std::filesystem::path> &file_list) {
                 return lhs.empty() ? rhs : lhs + '\n' + rhs;
             });
 
-        recompui::open_info_prompt("Error Installing Mods", error_label, "OK", {}, recompui::ButtonVariant::Tertiary);
+        recompui::open_info_prompt("Error Installing Mods", error_label, "OK", {}, recompui::ButtonStyle::Tertiary);
         std::vector<std::string> dummy_error_messages{};
         ModInstaller::cancel_mod_installation(result, dummy_error_messages);
         return;
@@ -1001,8 +1004,8 @@ void recompui::drop_files(const std::list<std::filesystem::path> &file_list) {
                 ModInstaller::cancel_mod_installation(result, error_messages);
                 // TODO show errors
             },
-            recompui::ButtonVariant::Success,
-            recompui::ButtonVariant::Error,
+            recompui::ButtonStyle::Success,
+            recompui::ButtonStyle::Danger,
             true,
             ""
         );

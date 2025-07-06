@@ -1,10 +1,4 @@
 @import "./base";
-@import "./globals/old";
-@import "./globals/scrollbars";
-@import "./components/components";
-@import "./pages/pages";
-
-$font-size: 20dp;
 
 body
 {
@@ -13,6 +7,14 @@ body
 	color: $color-text;
 	font-family: $font-stack;
 }
+
+@import "./globals/old";
+@import "./globals/scrollbars";
+@import "./components/components";
+@import "./pages/pages";
+
+$font-size: 20dp;
+
 
 .rmlui-window {
     opacity: 1;

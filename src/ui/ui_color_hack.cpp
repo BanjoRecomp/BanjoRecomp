@@ -37,6 +37,13 @@ namespace recompui {
         html_colours["aqua"] = Rml::Colourb(0, 255, 255);
         html_colours["transparent"] = Rml::Colourb(0, 0, 0, 0);
         html_colours["whitesmoke"] = Rml::Colourb(245, 245, 245);
+
+        for (std::size_t i = 0; i < (std::size_t)recompui::ThemeColor::size; i++) {
+            const char *color_name = recompui::get_theme_color_name((recompui::ThemeColor)i);
+            const recompui::Color color_value = recompui::get_theme_color((recompui::ThemeColor)i);
+            Rml::String color_name_lower = Rml::StringUtilities::ToLower(color_name);
+            html_colours[color_name_lower] = Rml::Colourb(color_value.r, color_value.g, color_value.b, color_value.a);
+        }
     }
 
     PropertyParserColorHack::~PropertyParserColorHack() {}
@@ -166,6 +173,8 @@ namespace recompui {
         PropertyParserColorHack* new_parser = new PropertyParserColorHack();
         // Copy the allocated object into the color parser pointer to overwrite its vtable.
         memcpy((void*)Rml::StyleSheetSpecification::GetParser("color"), (void*)new_parser, sizeof(*new_parser));
+        // TODO: Register the new parser with RmlUi when RmlUi supports custom parsers overrides.
+        // Rml::StyleSheetSpecification::RegisterParser("color", new_parser);
     }
 
     ColourMap PropertyParserColorHack::html_colours{};

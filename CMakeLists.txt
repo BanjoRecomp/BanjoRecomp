@@ -169,6 +169,7 @@ set (SOURCES
     ${CMAKE_SOURCE_DIR}/src/ui/ui_config.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/ui_prompt.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/ui_config_sub_menu.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/ui_theme_override.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/ui_color_hack.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/ui_rml_hacks.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/ui_elements.cpp
@@ -193,6 +194,7 @@ set (SOURCES
     ${CMAKE_SOURCE_DIR}/src/ui/elements/ui_span.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/elements/ui_style.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/elements/ui_text_input.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/elements/ui_theme.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/elements/ui_toggle.cpp
 
     ${CMAKE_SOURCE_DIR}/rsp/n_aspMain.cpp

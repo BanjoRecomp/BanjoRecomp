@@ -93,11 +93,11 @@ namespace recompui {
                     queue_update();
                 }
                 else {
-                    circle_element->set_background_color(Color{ 204, 204, 204, 255 });
+                    circle_element->set_background_color(ThemeColor::TextDim);
                 }
             }
             else {
-                circle_element->set_background_color(Color{ 102, 102, 102, 255 });
+                circle_element->set_background_color(ThemeColor::BW25);
             }
             break;
         case EventType::Navigate:
@@ -118,12 +118,12 @@ namespace recompui {
                 if (enable_active) {
                     set_cursor(Cursor::Pointer);
                     set_focusable(true);
-                    circle_element->set_background_color(Color{ 204, 204, 204, 255 });
+                    circle_element->set_background_color(ThemeColor::TextDim);
                 }
                 else {
                     set_cursor(Cursor::None);
                     set_focusable(false);
-                    circle_element->set_background_color(Color{ 102, 102, 102, 255 });
+                    circle_element->set_background_color(ThemeColor::BW25);
                 }
             }
             break;
@@ -162,7 +162,7 @@ namespace recompui {
             bar_element->set_width(100.0f, Unit::Percent);
             bar_element->set_height(2.0f);
             bar_element->set_margin_top(8.0f);
-            bar_element->set_background_color(Color{ 255, 255, 255, 50 });
+            bar_element->set_background_color(ThemeColor::WhiteA20);
             bar_element->add_pressed_callback([this](float x, float y){ bar_pressed(x, y); focus(); });
             bar_element->add_dragged_callback([this](float x, float y, recompui::DragPhase phase){ bar_dragged(x, y, phase); focus(); });
             
@@ -173,7 +173,7 @@ namespace recompui {
             circle_element->set_margin_top(-7.0f);
             circle_element->set_margin_right(-8.0f);
             circle_element->set_margin_left(-8.0f);
-            circle_element->set_background_color(Color{ 204, 204, 204, 255 });
+            circle_element->set_background_color(ThemeColor::TextDim);
             circle_element->set_border_radius(8.0f);
             circle_element->add_pressed_callback([this](float, float){ focus(); });
             circle_element->add_dragged_callback([this](float x, float y, recompui::DragPhase phase){ circle_dragged(x, y, phase); focus(); });

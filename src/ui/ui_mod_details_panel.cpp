@@ -11,7 +11,7 @@ ModDetailsPanel::ModDetailsPanel(Element *parent) : Element(parent) {
     set_height(100.0f, Unit::Percent);
     set_display(Display::Flex);
     set_flex_direction(FlexDirection::Column);
-    set_background_color(Color{ 190, 184, 219, 25 });
+    set_background_color(ThemeColor::BGOverlay);
 
     ContextId context = get_current_context();
 
@@ -19,9 +19,9 @@ ModDetailsPanel::ModDetailsPanel(Element *parent) : Element(parent) {
     header_container->set_flex(0.0f, 0.0f);
     header_container->set_padding(16.0f);
     header_container->set_gap(16.0f);
-    header_container->set_background_color(Color{ 0, 0, 0, 89 });
+    header_container->set_background_color(ThemeColor::BGShadow);
     header_container->set_border_bottom_width(1.1f);
-    header_container->set_border_bottom_color(Color{ 255, 255, 255, 25 });
+    header_container->set_border_bottom_color(ThemeColor::BorderSoft);
     {
         thumbnail_container = context.create_element<Container>(header_container, FlexDirection::Column, JustifyContent::SpaceEvenly);
         thumbnail_container->set_flex(0.0f, 0.0f);
@@ -29,7 +29,7 @@ ModDetailsPanel::ModDetailsPanel(Element *parent) : Element(parent) {
             thumbnail_image = context.create_element<Image>(thumbnail_container, "");
             thumbnail_image->set_width(100.0f);
             thumbnail_image->set_height(100.0f);
-            thumbnail_image->set_background_color(Color{ 190, 184, 219, 25 });
+            thumbnail_image->set_background_color(ThemeColor::BGOverlay);
         }
 
         header_details_container = context.create_element<Container>(header_container, FlexDirection::Column, JustifyContent::SpaceEvenly);
@@ -56,8 +56,8 @@ ModDetailsPanel::ModDetailsPanel(Element *parent) : Element(parent) {
     buttons_container->set_padding(16.0f);
     buttons_container->set_justify_content(JustifyContent::SpaceBetween);
     buttons_container->set_border_top_width(1.1f);
-    buttons_container->set_border_top_color(Color{ 255, 255, 255, 25 });
-    buttons_container->set_background_color(Color{ 0, 0, 0, 89 });
+    buttons_container->set_border_top_color(ThemeColor::BorderSoft);
+    buttons_container->set_background_color(ThemeColor::BGShadow);
     {
         enable_container = context.create_element<Container>(buttons_container, FlexDirection::Row, JustifyContent::FlexStart);
         enable_container->set_align_items(AlignItems::Center);

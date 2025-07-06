@@ -13,6 +13,7 @@
 
 #include "../src/ui/util/hsv.h"
 #include "../src/ui/util/bem.h"
+#include "../src/ui/elements/ui_button.h"
 
 #include "../src/ui/core/ui_context.h"
 
@@ -75,16 +76,6 @@ namespace recompui {
     void set_config_tabset_mod_nav();
     void focus_mod_configure_button();
 
-    enum class ButtonVariant {
-        Primary,
-        Secondary,
-        Tertiary,
-        Success,
-        Error,
-        Warning,
-        NumVariants,
-    };
-
     void init_styling(const std::filesystem::path& rcss_file);
     void init_prompt_context();
     void open_choice_prompt(
@@ -94,8 +85,8 @@ namespace recompui {
         const std::string& cancel_label_text,
         std::function<void()> confirm_action,
         std::function<void()> cancel_action,
-        ButtonVariant confirm_variant = ButtonVariant::Success,
-        ButtonVariant cancel_variant = ButtonVariant::Error,
+        ButtonStyle confirm_variant = ButtonStyle::Success,
+        ButtonStyle cancel_variant = ButtonStyle::Danger,
         bool focus_on_cancel = true,
         const std::string& return_element_id = ""
     );
@@ -104,7 +95,7 @@ namespace recompui {
         const std::string& content_text,
         const std::string& okay_label_text,
         std::function<void()> okay_action,
-        ButtonVariant okay_variant = ButtonVariant::Error,
+        ButtonStyle okay_variant = ButtonStyle::Danger,
         const std::string& return_element_id = ""
     );
     void open_notification(

@@ -31,7 +31,7 @@
         @each $slot in $valid-binding-slots {
             // global attr -> this active row -> binding slot
             [cur-binding-slot="#{$slot}"] & .control-option__binding[bind-slot="#{$slot}"] {
-                border-color: $color-error;
+                border-color: $color-danger;
 
                 .control-option__binding-icon {
                     opacity: 0;
@@ -93,7 +93,7 @@
     }
 
     &:active {
-        @include set-color(color.scale($color-text, $lightness: 20%));
+        @include set-color($color-text-active);
     }
 
     &:disabled, &[disabled] {
@@ -145,7 +145,7 @@
         height: space($rec-size);
         animation: 1.5s sine-in-out infinite control-option__binding-recording-scale;
         border-radius: space($rec-size);
-        background-color: $color-error;
+        background-color: $color-danger;
     }
 
     .control-option__binding-edge {
@@ -164,7 +164,7 @@
         > svg.control-option__binding-edge-svg {
             width: space($edge-size);
             height: space($edge-size);
-            image-color: $color-error;
+            image-color: $color-danger;
         }
     }
 }

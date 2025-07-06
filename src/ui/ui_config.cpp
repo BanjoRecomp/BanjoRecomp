@@ -200,8 +200,8 @@ void close_config_menu() {
                 graphics_model_handle.DirtyAllVariables();
                 close_config_menu_impl();
             },
-            recompui::ButtonVariant::Success,
-            recompui::ButtonVariant::Error,
+            recompui::ButtonStyle::Success,
+            recompui::ButtonStyle::Danger,
             true,
             "config__close-menu-button"
         );
@@ -221,8 +221,8 @@ void banjo::open_quit_game_prompt() {
             ultramodern::quit();
         },
         []() {},
-        recompui::ButtonVariant::Error,
-        recompui::ButtonVariant::Tertiary,
+        recompui::ButtonStyle::Danger,
+        recompui::ButtonStyle::Tertiary,
         true,
         "config__quit-game-button"
     );

@@ -20,53 +20,14 @@ namespace recompui {
         set_font_style(FontStyle::Normal);
         set_font_weight(700);
         set_cursor(Cursor::Pointer);
-        set_color(Color{ 204, 204, 204, 255 });
+        set_color(ThemeColor::Text);
         set_tab_index(TabIndex::Auto);
-        hover_style.set_color(Color{ 242, 242, 242, 255 });
-        focus_style.set_color(Color{ 242, 242, 242, 255 });
-        disabled_style.set_color(Color{ 204, 204, 204, 128 });
-        hover_disabled_style.set_color(Color{ 242, 242, 242, 128 });
+        hover_style.set_color(ThemeColor::Text);
+        focus_style.set_color(ThemeColor::Text);
+        disabled_style.set_color(ThemeColor::TextDim, 128);
+        hover_disabled_style.set_color(ThemeColor::Text, 128);
 
-        const uint8_t border_opacity = 204;
-        const uint8_t background_opacity = 13;
-        const uint8_t border_hover_opacity = 255;
-        const uint8_t background_hover_opacity = 76;
-        switch (style) {
-        case ButtonStyle::Primary: {
-            set_border_color({ 185, 125, 242, border_opacity });
-            set_background_color({ 185, 125, 242, background_opacity });
-            hover_style.set_border_color({ 185, 125, 242, border_hover_opacity });
-            hover_style.set_background_color({ 185, 125, 242, background_hover_opacity });
-            focus_style.set_border_color({ 185, 125, 242, border_hover_opacity });
-            focus_style.set_background_color({ 185, 125, 242, background_hover_opacity });
-            disabled_style.set_border_color({ 185, 125, 242, border_opacity / 4 });
-            disabled_style.set_background_color({ 185, 125, 242, background_opacity / 4 });
-            hover_disabled_style.set_border_color({ 185, 125, 242, border_hover_opacity / 4 });
-            hover_disabled_style.set_background_color({ 185, 125, 242, background_hover_opacity / 4 });
-            break;
-        }
-        case ButtonStyle::Secondary: {
-            set_border_color({ 23, 214, 232, border_opacity });
-            set_background_color({ 23, 214, 232, background_opacity });
-            hover_style.set_border_color({ 23, 214, 232, border_hover_opacity });
-            hover_style.set_background_color({ 23, 214, 232, background_hover_opacity });
-            focus_style.set_border_color({ 23, 214, 232, border_hover_opacity });
-            focus_style.set_background_color({ 23, 214, 232, background_hover_opacity });
-            disabled_style.set_border_color({ 23, 214, 232, border_opacity / 4 });
-            disabled_style.set_background_color({ 23, 214, 232, background_opacity / 4 });
-            hover_disabled_style.set_border_color({ 23, 214, 232, border_hover_opacity / 4 });
-            hover_disabled_style.set_background_color({ 23, 214, 232, background_hover_opacity / 4 });
-            break;
-        }
-        default:
-            assert(false && "Unknown button style.");
-            break;
-        }
-
-        add_style(&hover_style, hover_state);
-        add_style(&focus_style, focus_state);
-        add_style(&disabled_style, disabled_state);
-        add_style(&hover_disabled_style, { hover_state, disabled_state });
+        apply_button_style(style);
 
         // transition: color 0.05s linear-in-out, background-color 0.05s linear-in-out;
     }
@@ -110,5 +71,61 @@ namespace recompui {
 
     void Button::add_pressed_callback(std::function<void()> callback) {
         pressed_callbacks.emplace_back(callback);
+    }
+
+    void Button::apply_button_style(ButtonStyle new_style) {
+        style = new_style;
+        switch (style) {
+        case ButtonStyle::Primary: {
+            apply_theme_style(ThemeColor::Primary);
+            break;
+        }
+        case ButtonStyle::Secondary: {
+            apply_theme_style(ThemeColor::Secondary);
+            break;
+        }
+        case ButtonStyle::Tertiary: {
+            apply_theme_style(ThemeColor::Text);
+            break;
+        }
+        case ButtonStyle::Success: {
+            apply_theme_style(ThemeColor::Success);
+            break;
+        }
+        case ButtonStyle::Warning: {
+            apply_theme_style(ThemeColor::Warning);
+            break;
+        }
+        case ButtonStyle::Danger: {
+            apply_theme_style(ThemeColor::Danger);
+            break;
+        }
+        default:
+            assert(false && "Unknown button style.");
+            break;
+        }
+    }
+
+    void Button::apply_theme_style(recompui::ThemeColor color) {
+        const uint8_t border_opacity = 204;
+        const uint8_t background_opacity = 13;
+        const uint8_t border_hover_opacity = 255;
+        const uint8_t background_hover_opacity = 77;
+
+        set_border_color(color, border_opacity);
+        set_background_color(color, background_opacity);
+        hover_style.set_border_color(color, border_hover_opacity);
+        hover_style.set_background_color(color, background_hover_opacity);
+        focus_style.set_border_color(color, border_hover_opacity);
+        focus_style.set_background_color(color, background_hover_opacity);
+        disabled_style.set_border_color(color, border_opacity / 4);
+        disabled_style.set_background_color(color, background_opacity / 4);
+        hover_disabled_style.set_border_color(color, border_hover_opacity / 4);
+        hover_disabled_style.set_background_color(color, background_hover_opacity / 4);
+
+        add_style(&hover_style, hover_state);
+        add_style(&focus_style, focus_state);
+        add_style(&disabled_style, disabled_state);
+        add_style(&hover_disabled_style, { hover_state, disabled_state });
     }
 };

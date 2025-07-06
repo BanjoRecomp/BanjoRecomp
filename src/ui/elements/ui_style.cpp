@@ -388,9 +388,22 @@ namespace recompui {
         set_property(Rml::PropertyId::BorderBottomRightRadius, Rml::Property(radius, to_rml(unit)));
     }
 
+    static Color get_theme_color_with_opacity(ThemeColor color, int opacity) {
+        Color theme_color = get_theme_color(color);
+        if (opacity == recompui::ThemeDefaultOpacity) {
+            opacity = theme_color.a; // Use the existing opacity if not specified.
+        }
+        theme_color.a = opacity;
+        return theme_color;
+    }
+
     void Style::set_background_color(const Color &color) {
         Rml::Property property(Rml::Colourb(color.r, color.g, color.b, color.a), Rml::Unit::COLOUR);
         set_property(Rml::PropertyId::BackgroundColor, property);
+    }
+
+    void Style::set_background_color(recompui::ThemeColor color, int opacity) {
+        set_background_color(get_theme_color_with_opacity(color, opacity));
     }
 
     void Style::set_border_color(const Color &color) {
@@ -401,9 +414,17 @@ namespace recompui {
         set_property(Rml::PropertyId::BorderRightColor, property);
     }
 
+    void Style::set_border_color(recompui::ThemeColor color, int opacity) {
+        set_border_color(get_theme_color_with_opacity(color, opacity));
+    }
+
     void Style::set_border_left_color(const Color &color) {
         Rml::Property property(Rml::Colourb(color.r, color.g, color.b, color.a), Rml::Unit::COLOUR);
         set_property(Rml::PropertyId::BorderLeftColor, property);
+    }
+
+    void Style::set_border_left_color(recompui::ThemeColor color, int opacity) {
+        set_border_left_color(get_theme_color_with_opacity(color, opacity));
     }
 
     void Style::set_border_top_color(const Color &color) {
@@ -411,9 +432,17 @@ namespace recompui {
         set_property(Rml::PropertyId::BorderTopColor, property);
     }
 
+    void Style::set_border_top_color(recompui::ThemeColor color, int opacity) {
+        set_border_top_color(get_theme_color_with_opacity(color, opacity));
+    }
+
     void Style::set_border_right_color(const Color &color) {
         Rml::Property property(Rml::Colourb(color.r, color.g, color.b, color.a), Rml::Unit::COLOUR);
         set_property(Rml::PropertyId::BorderRightColor, property);
+    }
+
+    void Style::set_border_right_color(recompui::ThemeColor color, int opacity) {
+        set_border_right_color(get_theme_color_with_opacity(color, opacity));
     }
 
     void Style::set_border_bottom_color(const Color &color) {
@@ -421,9 +450,17 @@ namespace recompui {
         set_property(Rml::PropertyId::BorderBottomColor, property);
     }
 
+    void Style::set_border_bottom_color(recompui::ThemeColor color, int opacity) {
+        set_border_bottom_color(get_theme_color_with_opacity(color, opacity));
+    }
+
     void Style::set_color(const Color &color) {
         Rml::Property property(Rml::Colourb(color.r, color.g, color.b, color.a), Rml::Unit::COLOUR);
         set_property(Rml::PropertyId::Color, property);
+    }
+
+    void Style::set_color(recompui::ThemeColor color, int opacity) {
+        set_color(get_theme_color_with_opacity(color, opacity));
     }
 
     void Style::set_cursor(Cursor cursor) {

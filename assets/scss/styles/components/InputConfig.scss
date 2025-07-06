@@ -195,7 +195,7 @@ $all-inputs: A,
     }
 
     &--Start {
-        @include set-svgs-color($color-error);
+        @include set-svgs-color($color-danger);
     }
 }
 

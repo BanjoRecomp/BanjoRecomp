@@ -18,7 +18,7 @@
                 </button>
                 <button
                     id="prompt__cancel-button"
-                    class="button button--error"
+                    class="button button--danger"
                     style="nav-right: none; nav-left: #prompt__confirm-button"
                 >
                     <div class="button__label" id="prompt__cancel-button-label">{{ promptCancelLabel }}</div>

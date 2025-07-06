@@ -57,7 +57,7 @@ h3, .tab {
   font-weight: 400;
 }
 
-body, .config-debug__select-wrapper select, .config-debug__select-wrapper input, .config-description__contents, .config-option-dropdown__select, .config-option-dropdown__wrapper, .config-option-textfield__select, .config-option-textfield__wrapper, .config__wrapper p {
+.config-debug__select-wrapper select, .config-debug__select-wrapper input, .config-description__contents, .config-option-dropdown__select, .config-option-dropdown__wrapper, .config-option-textfield__select, .config-option-textfield__wrapper, .config__wrapper p, body {
   font-size: 20dp;
   letter-spacing: 0dp;
   line-height: 20dp;
@@ -184,7 +184,7 @@ h3, .tab {
   font-weight: 400;
 }
 
-body, .config-debug__select-wrapper select, .config-debug__select-wrapper input, .config-description__contents, .config-option-dropdown__select, .config-option-dropdown__wrapper, .config-option-textfield__select, .config-option-textfield__wrapper, .config__wrapper p {
+.config-debug__select-wrapper select, .config-debug__select-wrapper input, .config-description__contents, .config-option-dropdown__select, .config-option-dropdown__wrapper, .config-option-textfield__select, .config-option-textfield__wrapper, .config__wrapper p, body {
   font-size: 20dp;
   letter-spacing: 0dp;
   line-height: 20dp;
@@ -252,6 +252,12 @@ body, .config-debug__select-wrapper select, .config-debug__select-wrapper input,
 /*
 @include set-color(COLOR);
 */
+body {
+  box-sizing: border-box;
+  color: Text;
+  font-family: "Suplexmentary Comic NC";
+}
+
 /* stylelint-disable color-no-hex */
 /* stylelint-disable selector-max-id */
 * {
@@ -261,12 +267,11 @@ body, .config-debug__select-wrapper select, .config-debug__select-wrapper input,
 hr {
   display: block;
   padding: 1.5dp;
-  background: #08070D;
+  background: Background1;
 }
 
 body {
   color: #fff;
-  font-family: LatoLatin;
   font-size: 20dp;
   font-style: normal;
   font-weight: normal;
@@ -281,8 +286,8 @@ div#window {
   box-sizing: border-box;
   width: 100%;
   height: 100%;
-  border-color: rgba(255, 255, 255, 0.2);
-  background-color: #121018;
+  border-color: Border;
+  background-color: Background2;
 }
 
 div#content {
@@ -368,12 +373,12 @@ scrollbarvertical, scrollbarhorizontal {
   border: 0;
 }
 scrollbarvertical slidertrack, scrollbarhorizontal slidertrack {
-  background: #DABAF7;
+  background: PrimaryL;
   opacity: 0.05;
 }
 scrollbarvertical sliderbar, scrollbarhorizontal sliderbar {
   border-radius: 5dp;
-  background: #DABAF7;
+  background: PrimaryL;
   opacity: 0.1;
 }
 scrollbarvertical sliderbar:hover:not(:active), scrollbarhorizontal sliderbar:hover:not(:active) {
@@ -415,7 +420,7 @@ scrollbarhorizontal sliderbar {
   bottom: 0;
   left: 0;
   padding: 64dp;
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: BorderSoft;
 }
 
 .centered-page__modal {
@@ -429,8 +434,8 @@ scrollbarhorizontal sliderbar {
   margin: auto;
   border-width: 1.1dp;
   border-radius: 16dp;
-  border-color: rgba(255, 255, 255, 0.2);
-  background: rgba(8, 7, 13, 0.9);
+  border-color: Border;
+  background: ModalOverlay;
 }
 .centered-page__modal > .tabs {
   display: flex;
@@ -473,7 +478,7 @@ scrollbarhorizontal sliderbar {
 }
 
 .control-option {
-  color: #CCCCCC;
+  color: TextDim;
   transition: color 0.05s linear-in-out, background-color 0.05s linear-in-out, opacity 0.05s linear-in-out;
   display: flex;
   position: relative;
@@ -487,23 +492,23 @@ scrollbarhorizontal sliderbar {
   background-color: rgba(0, 0, 0, 0);
 }
 .control-option svg {
-  image-color: #CCCCCC;
+  image-color: TextDim;
 }
 .control-option svg {
   transition: image-color 0.05s linear-in-out, background-color 0.05s linear-in-out;
 }
 .control-option:focus-visible:not(:disabled, [disabled]), .control-option:hover:not(:disabled, [disabled]) {
-  color: #F2F2F2;
-  background-color: rgba(190, 184, 219, 0.1);
+  color: Text;
+  background-color: BGOverlay;
 }
 .control-option:focus-visible:not(:disabled, [disabled]) svg, .control-option:hover:not(:disabled, [disabled]) svg {
-  image-color: #F2F2F2;
+  image-color: Text;
 }
 .control-option:disabled, .control-option[disabled] {
   opacity: 0.5;
 }
 [cur-binding-slot="0"] .control-option--active .control-option__binding[bind-slot="0"] {
-  border-color: #F86039;
+  border-color: Danger;
 }
 [cur-binding-slot="0"] .control-option--active .control-option__binding[bind-slot="0"] .control-option__binding-icon {
   opacity: 0;
@@ -512,7 +517,7 @@ scrollbarhorizontal sliderbar {
   opacity: 1;
 }
 [cur-binding-slot="1"] .control-option--active .control-option__binding[bind-slot="1"] {
-  border-color: #F86039;
+  border-color: Danger;
 }
 [cur-binding-slot="1"] .control-option--active .control-option__binding[bind-slot="1"] .control-option__binding-icon {
   opacity: 0;
@@ -543,7 +548,7 @@ scrollbarhorizontal sliderbar {
 }
 
 .control-option__binding {
-  color: #CCCCCC;
+  color: TextDim;
   transition: color 0.05s linear-in-out, background-color 0.05s linear-in-out, opacity 0.05s linear-in-out, border-color 0.05s linear-in-out;
   display: flex;
   position: relative;
@@ -556,35 +561,35 @@ scrollbarhorizontal sliderbar {
   padding: 8dp;
   border-width: 1.1dp;
   border-radius: 8dp;
-  border-color: rgba(190, 184, 219, 0.1);
-  background-color: rgba(190, 184, 219, 0.1);
+  border-color: BGOverlay;
+  background-color: BGOverlay;
 }
 .control-option__binding svg {
-  image-color: #CCCCCC;
+  image-color: TextDim;
 }
 .control-option__binding svg {
   transition: image-color 0.05s linear-in-out, background-color 0.05s linear-in-out;
 }
 .control-option__binding:focus, .control-option__binding:hover {
-  color: #F2F2F2;
-  border-color: #F2F2F2;
-  background-color: rgba(255, 255, 255, 0.1);
+  color: Text;
+  border-color: Text;
+  background-color: BorderSoft;
 }
 .control-option__binding:focus svg, .control-option__binding:hover svg {
-  image-color: #F2F2F2;
+  image-color: Text;
 }
 .control-option__binding:active {
-  color: rgb(244.6, 244.6, 244.6);
+  color: TextActive;
 }
 .control-option__binding:active svg {
-  image-color: rgb(244.6, 244.6, 244.6);
+  image-color: TextActive;
 }
 .control-option__binding:disabled, .control-option__binding[disabled] {
-  color: #CCCCCC;
+  color: TextDim;
   opacity: 0.5;
 }
 .control-option__binding:disabled svg, .control-option__binding[disabled] svg {
-  image-color: #CCCCCC;
+  image-color: TextDim;
 }
 .control-option__binding:not([disabled]) {
   cursor: pointer;
@@ -623,7 +628,7 @@ scrollbarhorizontal sliderbar {
   height: 24dp;
   animation: 1.5s sine-in-out infinite control-option__binding-recording-scale;
   border-radius: 24dp;
-  background-color: #F86039;
+  background-color: Danger;
 }
 .control-option__binding-recording .control-option__binding-edge {
   position: absolute;
@@ -636,7 +641,7 @@ scrollbarhorizontal sliderbar {
 .control-option__binding-recording .control-option__binding-edge > svg.control-option__binding-edge-svg {
   width: 36dp;
   height: 36dp;
-  image-color: #F86039;
+  image-color: Danger;
 }
 
 /*
@@ -661,13 +666,13 @@ scrollbarhorizontal sliderbar {
   transition: color 0.05s linear-in-out;
   opacity: 0.9;
   background-color: rgba(0, 0, 0, 0);
-  color: rgba(255, 255, 255, 0.6);
+  color: TextInactive;
 }
 .tab:selected {
-  color: #F2F2F2;
+  color: Text;
 }
 .tab:selected .tab__indicator {
-  background-color: rgba(255, 255, 255, 0.6);
+  background-color: BorderSolid;
 }
 .tab:selected:hover {
   cursor: default;
@@ -681,7 +686,7 @@ scrollbarhorizontal sliderbar {
 }
 .tab:focus, .tab:hover {
   opacity: 1;
-  color: #F2F2F2;
+  color: Text;
   cursor: pointer;
 }
 
@@ -710,7 +715,7 @@ scrollbarhorizontal sliderbar {
 
 .config__form {
   border-top-width: 1.1dp;
-  border-top-color: rgba(255, 255, 255, 0.1);
+  border-top-color: BorderSoft;
   display: flex;
   flex: 1 1 100%;
   flex-direction: column;
@@ -729,7 +734,7 @@ scrollbarhorizontal sliderbar {
   border-radius: 0dp;
   border-bottom-right-radius: 16dp;
   border-bottom-left-radius: 16dp;
-  background-color: rgba(0, 0, 0, 0.35);
+  background-color: BGShadow;
   text-align: left;
 }
 .config__wrapper p {
@@ -738,10 +743,10 @@ scrollbarhorizontal sliderbar {
   white-space: pre-line;
 }
 .config__wrapper p b {
-  color: #B97DF2;
+  color: Primary;
 }
 .config__wrapper p i {
-  color: #E9CD35;
+  color: Warning;
   font-style: normal;
 }
 
@@ -760,18 +765,18 @@ scrollbarhorizontal sliderbar {
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  background-color: rgba(0, 0, 0, 0.35);
+  background-color: BGShadow;
 }
 
 .config__header {
   border-bottom-width: 1.1dp;
-  border-bottom-color: rgba(255, 255, 255, 0.1);
+  border-bottom-color: BorderSoft;
   padding: 12dp 20dp;
 }
 
 .config__footer {
   border-top-width: 1.1dp;
-  border-top-color: rgba(255, 255, 255, 0.1);
+  border-top-color: BorderSoft;
   padding: 20dp 20dp;
   border-bottom-right-radius: 16dp;
   border-bottom-left-radius: 16dp;
@@ -805,7 +810,7 @@ scrollbarhorizontal sliderbar {
   overflow-y: auto;
 }
 .config-group__title {
-  color: #B97DF2;
+  color: Primary;
 }
 .config-group__title--hidden {
   display: none;
@@ -872,12 +877,12 @@ scrollbarhorizontal sliderbar {
   height: auto;
   margin: 4dp 12dp 0;
   padding: 8dp 0;
-  color: rgba(255, 255, 255, 0.6);
+  color: TextInactive;
   tab-index: none;
 }
 .config-option__radio-tabs .config-option__tab-label:hover,
 .config-option__list .config-option__tab-label:hover {
-  color: #F2F2F2;
+  color: Text;
   cursor: pointer;
 }
 .config-option__radio-tabs .config-option__checkbox-wrapper,
@@ -888,7 +893,7 @@ scrollbarhorizontal sliderbar {
   margin: 4dp 12dp 0;
   border-radius: 8dp;
   opacity: 0.5;
-  background-color: rgba(190, 184, 219, 0.1);
+  background-color: BGOverlay;
   cursor: pointer;
 }
 .config-option__radio-tabs .config-option__checkbox-wrapper:hover,
@@ -897,7 +902,7 @@ scrollbarhorizontal sliderbar {
 }
 .config-option__radio-tabs .config-option__checkbox-wrapper[checked],
 .config-option__list .config-option__checkbox-wrapper[checked] {
-  background-color: #3333FF;
+  background-color: A;
 }
 .config-option__radio-tabs .config-option__checkbox,
 .config-option__list .config-option__checkbox {
@@ -916,8 +921,8 @@ scrollbarhorizontal sliderbar {
 .config-option__radio-tabs input.radio:not(:disabled):checked + .config-option__tab-label,
 .config-option__list input.radio:not(:disabled):checked + .config-option__tab-label {
   border-bottom: 1dp;
-  border-color: #F2F2F2;
-  color: #F2F2F2;
+  border-color: Text;
+  color: Text;
 }
 .config-option__radio-tabs input.radio:not(:disabled):checked + .config-option__tab-label:hover,
 .config-option__list input.radio:not(:disabled):checked + .config-option__tab-label:hover {
@@ -927,13 +932,13 @@ scrollbarhorizontal sliderbar {
 .rmlui-window:not([mouse-active]) .config-option__list input.radio:not(:disabled):focus + .config-option__tab-label {
   transition: none;
   animation: blue-pulse 0.75s infinite;
-  border-color: #17D6E8;
-  color: #17D6E8;
+  border-color: Secondary;
+  color: Secondary;
 }
 .config-option__radio-tabs input.radio:not(:disabled):focus + .config-option__tab-label, .config-option__radio-tabs input.radio:not(:disabled):hover + .config-option__tab-label,
 .config-option__list input.radio:not(:disabled):focus + .config-option__tab-label,
 .config-option__list input.radio:not(:disabled):hover + .config-option__tab-label {
-  color: #F2F2F2;
+  color: Text;
 }
 .config-option__radio-tabs input.radio:disabled + .config-option__tab-label,
 .config-option__list input.radio:disabled + .config-option__tab-label {
@@ -948,7 +953,7 @@ scrollbarhorizontal sliderbar {
   transition: color 0.05s linear-in-out, background-color 0.05s linear-in-out;
   height: 2dp;
   margin-top: 8dp;
-  background-color: rgba(255, 255, 255, 0.2);
+  background-color: Border;
 }
 .config-option__radio-tabs input.range sliderbar,
 .config-option__list input.range sliderbar {
@@ -960,24 +965,24 @@ scrollbarhorizontal sliderbar {
   margin-left: -8dp;
   transition: background-color 0.05s linear-in-out;
   border-radius: 8dp;
-  background-color: #CCCCCC;
+  background-color: TextDim;
 }
 .rmlui-window:not([mouse-active]) .config-option__radio-tabs input.range sliderbar:focus,
 .rmlui-window:not([mouse-active]) .config-option__list input.range sliderbar:focus {
   border-width: 1.1dp;
-  border-color: #3333FF;
+  border-color: A;
   animation: blue-pulse-background 0.75s infinite;
 }
 .config-option__radio-tabs input.range sliderbar:hover,
 .config-option__list input.range sliderbar:hover {
-  background-color: #F2F2F2;
+  background-color: Text;
   cursor: pointer;
 }
 .config-option__radio-tabs input.range sliderbar:active,
 .config-option__radio-tabs input.range slidertrack:active + sliderbar,
 .config-option__list input.range sliderbar:active,
 .config-option__list input.range slidertrack:active + sliderbar {
-  background-color: #17D6E8;
+  background-color: Secondary;
 }
 .config-option__radio-tabs input.range sliderarrowdec,
 .config-option__radio-tabs input.range sliderarrowinc,
@@ -989,7 +994,7 @@ scrollbarhorizontal sliderbar {
 .config-option__details {
   height: 18dp;
   margin: 14dp 12dp 0;
-  color: #B97DF2;
+  color: Primary;
 }
 
 .config-option-color {
@@ -1012,7 +1017,7 @@ scrollbarhorizontal sliderbar {
   height: 100%;
   border-width: 1.1dp;
   border-radius: 16dp;
-  border-color: rgba(255, 255, 255, 0.2);
+  border-color: Border;
 }
 .config-option-color__hsv-wrapper {
   display: flex;
@@ -1049,7 +1054,7 @@ scrollbarhorizontal sliderbar {
   margin: 0 12dp;
   margin-right: 16dp;
   padding: 0;
-  color: #F2F2F2;
+  color: Text;
   tab-index: none;
 }
 .config-option-range__range-input {
@@ -1059,7 +1064,7 @@ scrollbarhorizontal sliderbar {
   transition: color 0.05s linear-in-out, background-color 0.05s linear-in-out;
   height: 2dp;
   margin-top: 8dp;
-  background-color: rgba(255, 255, 255, 0.2);
+  background-color: Border;
 }
 .config-option-range__range-input sliderbar {
   transition: color 0.05s linear-in-out, background-color 0.05s linear-in-out;
@@ -1070,20 +1075,20 @@ scrollbarhorizontal sliderbar {
   margin-left: -8dp;
   transition: background-color 0.05s linear-in-out;
   border-radius: 8dp;
-  background-color: #CCCCCC;
+  background-color: TextDim;
 }
 .rmlui-window:not([mouse-active]) .config-option-range__range-input sliderbar:focus {
   border-width: 1.1dp;
-  border-color: #3333FF;
+  border-color: A;
   animation: blue-pulse-background 0.75s infinite;
 }
 .config-option-range__range-input sliderbar:hover {
-  background-color: #F2F2F2;
+  background-color: Text;
   cursor: pointer;
 }
 .config-option-range__range-input sliderbar:active,
 .config-option-range__range-input slidertrack:active + sliderbar {
-  background-color: #17D6E8;
+  background-color: Secondary;
 }
 .config-option-range__range-input sliderarrowdec,
 .config-option-range__range-input sliderarrowinc {
@@ -1101,7 +1106,7 @@ scrollbarhorizontal sliderbar {
   margin: 0 12dp;
   margin-right: 16dp;
   padding: 0;
-  color: #F2F2F2;
+  color: Text;
   tab-index: none;
 }
 
@@ -1139,21 +1144,21 @@ scrollbarhorizontal sliderbar {
 .config-option-dropdown__select, .config-option-dropdown__wrapper, .config-option-textfield__select, .config-option-textfield__wrapper {
   transition: color 0.05s linear-in-out, background-color 0.05s linear-in-out, opacity 0.05s linear-in-out, border-color 0.05s linear-in-out;
   border-width: 1.1dp;
-  border-color: rgba(255, 255, 255, 0.5);
+  border-color: WhiteA50;
   position: relative;
   box-sizing: border-box;
   flex: 1 1 100%;
   width: auto;
   border-radius: 12dp;
-  background-color: rgba(255, 255, 255, 0.05);
+  background-color: WhiteA5;
 }
 .config-option-dropdown__select svg, .config-option-dropdown__wrapper svg, .config-option-textfield__select svg, .config-option-textfield__wrapper svg {
   transition: image-color 0.05s linear-in-out, background-color 0.05s linear-in-out;
 }
 .config-option-dropdown__select:hover, .config-option-dropdown__select:focus, .config-option-dropdown__wrapper:hover, .config-option-dropdown__wrapper:focus, .config-option-textfield__select:hover, .config-option-textfield__select:focus, .config-option-textfield__wrapper:hover, .config-option-textfield__wrapper:focus {
   border-width: 1.1dp;
-  border-color: rgba(255, 255, 255, 0.8);
-  background-color: rgba(255, 255, 255, 0.2);
+  border-color: WhiteA80;
+  background-color: WhiteA20;
 }
 .config-option-dropdown__select selectvalue, .config-option-dropdown__wrapper selectvalue, .config-option-textfield__select selectvalue, .config-option-textfield__wrapper selectvalue {
   display: inline;
@@ -1162,28 +1167,28 @@ scrollbarhorizontal sliderbar {
 }
 .config-option-dropdown__select selectbox, .config-option-dropdown__wrapper selectbox, .config-option-textfield__select selectbox, .config-option-textfield__wrapper selectbox {
   border-width: 1.1dp;
-  border-color: rgba(255, 255, 255, 0.2);
+  border-color: Border;
   margin-top: 2dp;
   padding: 4dp 0;
   border-radius: 12dp;
-  background-color: #191622;
+  background-color: Background3;
 }
 .config-option-dropdown__select selectbox option, .config-option-dropdown__wrapper selectbox option, .config-option-textfield__select selectbox option, .config-option-textfield__wrapper selectbox option {
   transition: color 0.05s linear-in-out, background-color 0.05s linear-in-out;
   padding: 8dp 12dp;
-  background-color: rgba(0, 0, 0, 0);
-  color: #CCCCCC;
+  background-color: Transparent;
+  color: TextDim;
   font-weight: 400;
 }
 .config-option-dropdown__select selectbox option:hover, .config-option-dropdown__select selectbox option:focus, .config-option-dropdown__wrapper selectbox option:hover, .config-option-dropdown__wrapper selectbox option:focus, .config-option-textfield__select selectbox option:hover, .config-option-textfield__select selectbox option:focus, .config-option-textfield__wrapper selectbox option:hover, .config-option-textfield__wrapper selectbox option:focus {
-  background-color: rgba(255, 255, 255, 0.2);
+  background-color: WhiteA20;
 }
 .config-option-dropdown__select selectbox option:hover:not(:checked), .config-option-dropdown__wrapper selectbox option:hover:not(:checked), .config-option-textfield__select selectbox option:hover:not(:checked), .config-option-textfield__wrapper selectbox option:hover:not(:checked) {
   cursor: pointer;
 }
 .config-option-dropdown__select selectbox option:checked, .config-option-dropdown__wrapper selectbox option:checked, .config-option-textfield__select selectbox option:checked, .config-option-textfield__wrapper selectbox option:checked {
-  background-color: rgba(255, 255, 255, 0.05);
-  color: #FFFFFF;
+  background-color: WhiteA5;
+  color: White;
 }
 
 .config-description {
@@ -1194,7 +1199,7 @@ scrollbarhorizontal sliderbar {
   border-radius: 0dp;
   border-bottom-right-radius: 16dp;
   border-bottom-left-radius: 16dp;
-  background-color: rgba(0, 0, 0, 0.35);
+  background-color: BGShadow;
   text-align: left;
 }
 .config-description__contents {
@@ -1203,10 +1208,10 @@ scrollbarhorizontal sliderbar {
   white-space: pre-line;
 }
 .config-description__contents b {
-  color: #B97DF2;
+  color: Primary;
 }
 .config-description__contents i {
-  color: #E9CD35;
+  color: Warning;
   font-style: normal;
 }
 
@@ -1254,7 +1259,7 @@ scrollbarhorizontal sliderbar {
   width: 100%;
   margin: auto 0;
   padding-bottom: 75%;
-  background-color: rgba(0, 0, 0, 0.35);
+  background-color: BGShadow;
 }
 
 .input-config__visual {
@@ -1266,7 +1271,7 @@ scrollbarhorizontal sliderbar {
   left: 16dp;
   flex-direction: column;
   border-radius: 108dp;
-  background-color: rgba(255, 255, 255, 0.05);
+  background-color: WhiteA5;
 }
 
 .input-config__visual-half {
@@ -1452,10 +1457,10 @@ scrollbarhorizontal sliderbar {
 }
 
 .input-viz__button {
-  color: #F2F2F2;
+  color: Text;
 }
 .input-viz__button svg {
-  image-color: #F2F2F2;
+  image-color: Text;
 }
 .input-viz__button--sm {
   width: 64dp;
@@ -1482,19 +1487,19 @@ scrollbarhorizontal sliderbar {
   height: 84dp;
 }
 .input-viz__button--C svg {
-  image-color: #E9CD35;
+  image-color: Warning;
 }
 .input-viz__button--A {
   margin-top: auto;
 }
 .input-viz__button--A svg {
-  image-color: #3333FF;
+  image-color: A;
 }
 .input-viz__button--B svg {
-  image-color: #45D043;
+  image-color: Success;
 }
 .input-viz__button--Start svg {
-  image-color: #F86039;
+  image-color: Danger;
 }
 
 .input-viz__Z {
@@ -1502,7 +1507,7 @@ scrollbarhorizontal sliderbar {
   height: 136dp;
 }
 .input-viz__Z svg {
-  image-color: #E9CD35;
+  image-color: Warning;
 }
 .input-viz__Z > svg {
   width: 136dp;
@@ -1515,7 +1520,7 @@ scrollbarhorizontal sliderbar {
   position: relative;
 }
 .input-viz.input-viz__dpad svg {
-  image-color: #F2F2F2;
+  image-color: Text;
 }
 .input-viz.input-viz__dpad > svg {
   width: 192dp;
@@ -1530,7 +1535,7 @@ scrollbarhorizontal sliderbar {
   width: 200dp;
   height: 200dp;
   border-radius: 100dp;
-  background-color: rgba(255, 255, 255, 0.05);
+  background-color: WhiteA5;
 }
 
 .input-viz__dpad-split,
@@ -1605,7 +1610,7 @@ scrollbarhorizontal sliderbar {
   height: 96dp;
 }
 .input-viz__R svg {
-  image-color: #FFFFFF;
+  image-color: White;
 }
 .input-viz__R > svg {
   width: 96dp;
@@ -1617,7 +1622,7 @@ scrollbarhorizontal sliderbar {
   height: 136dp;
 }
 .input-viz__L svg {
-  image-color: #17D6E8;
+  image-color: Secondary;
 }
 .input-viz__L > svg {
   width: 136dp;
@@ -1662,9 +1667,9 @@ scrollbarhorizontal sliderbar {
 }
 
 .button {
-  border-color: rgba(185, 125, 242, 0.8);
-  background-color: rgba(185, 125, 242, 0.05);
-  color: #CCCCCC;
+  border-color: PrimaryA80;
+  background-color: PrimaryA5;
+  color: TextDim;
   transition: color 0.05s linear-in-out, background-color 0.05s linear-in-out;
   display: block;
   width: auto;
@@ -1674,118 +1679,118 @@ scrollbarhorizontal sliderbar {
   border-radius: 12dp;
 }
 .button:focus, .button:hover {
-  border-color: #B97DF2;
-  background-color: rgba(185, 125, 242, 0.3);
-  color: #F2F2F2;
+  border-color: Primary;
+  background-color: PrimaryA30;
+  color: Text;
 }
 .button:disabled, .button[disabled] {
-  color: rgba(255, 255, 255, 0.6);
+  color: TextInactive;
 }
 .button:active {
-  background-color: rgba(185, 125, 242, 0.2);
-  color: rgb(244.6, 244.6, 244.6);
+  background-color: PrimaryA20;
+  color: TextActive;
 }
 .button--primary {
-  border-color: rgba(185, 125, 242, 0.8);
-  background-color: rgba(185, 125, 242, 0.05);
-  color: #CCCCCC;
+  border-color: PrimaryA80;
+  background-color: PrimaryA5;
+  color: TextDim;
 }
 .button--primary:focus, .button--primary:hover {
-  border-color: #B97DF2;
-  background-color: rgba(185, 125, 242, 0.3);
-  color: #F2F2F2;
+  border-color: Primary;
+  background-color: PrimaryA30;
+  color: Text;
 }
 .button--primary:disabled, .button--primary[disabled] {
-  color: rgba(255, 255, 255, 0.6);
+  color: TextInactive;
 }
 .button--primary:active {
-  background-color: rgba(185, 125, 242, 0.2);
-  color: rgb(244.6, 244.6, 244.6);
+  background-color: PrimaryA20;
+  color: TextActive;
 }
 .button--secondary {
-  border-color: rgba(23, 214, 232, 0.8);
-  background-color: rgba(23, 214, 232, 0.05);
-  color: #CCCCCC;
+  border-color: SecondaryA80;
+  background-color: SecondaryA5;
+  color: TextDim;
 }
 .button--secondary:focus, .button--secondary:hover {
-  border-color: #17D6E8;
-  background-color: rgba(23, 214, 232, 0.3);
-  color: #F2F2F2;
+  border-color: Secondary;
+  background-color: SecondaryA30;
+  color: Text;
 }
 .button--secondary:disabled, .button--secondary[disabled] {
-  color: rgba(255, 255, 255, 0.6);
+  color: TextInactive;
 }
 .button--secondary:active {
-  background-color: rgba(23, 214, 232, 0.2);
-  color: rgb(244.6, 244.6, 244.6);
+  background-color: SecondaryA20;
+  color: TextActive;
 }
 .button--tertiary {
-  border-color: rgba(242, 242, 242, 0.8);
-  background-color: rgba(242, 242, 242, 0.05);
-  color: #CCCCCC;
+  border-color: TextA80;
+  background-color: TextA5;
+  color: TextDim;
 }
 .button--tertiary:focus, .button--tertiary:hover {
-  border-color: #F2F2F2;
-  background-color: rgba(242, 242, 242, 0.3);
-  color: #F2F2F2;
+  border-color: Text;
+  background-color: TextA30;
+  color: Text;
 }
 .button--tertiary:disabled, .button--tertiary[disabled] {
-  color: rgba(255, 255, 255, 0.6);
+  color: TextInactive;
 }
 .button--tertiary:active {
-  background-color: rgba(242, 242, 242, 0.2);
-  color: rgb(244.6, 244.6, 244.6);
+  background-color: TextA20;
+  color: TextActive;
 }
 .button--success {
-  border-color: rgba(69, 208, 67, 0.8);
-  background-color: rgba(69, 208, 67, 0.05);
-  color: #CCCCCC;
+  border-color: SuccessA80;
+  background-color: SuccessA5;
+  color: TextDim;
 }
 .button--success:focus, .button--success:hover {
-  border-color: #45D043;
-  background-color: rgba(69, 208, 67, 0.3);
-  color: #F2F2F2;
+  border-color: Success;
+  background-color: SuccessA30;
+  color: Text;
 }
 .button--success:disabled, .button--success[disabled] {
-  color: rgba(255, 255, 255, 0.6);
+  color: TextInactive;
 }
 .button--success:active {
-  background-color: rgba(69, 208, 67, 0.2);
-  color: rgb(244.6, 244.6, 244.6);
+  background-color: SuccessA20;
+  color: TextActive;
 }
-.button--error {
-  border-color: rgba(248, 96, 57, 0.8);
-  background-color: rgba(248, 96, 57, 0.05);
-  color: #CCCCCC;
+.button--danger {
+  border-color: DangerA80;
+  background-color: DangerA5;
+  color: TextDim;
 }
-.button--error:focus, .button--error:hover {
-  border-color: #F86039;
-  background-color: rgba(248, 96, 57, 0.3);
-  color: #F2F2F2;
+.button--danger:focus, .button--danger:hover {
+  border-color: Danger;
+  background-color: DangerA30;
+  color: Text;
 }
-.button--error:disabled, .button--error[disabled] {
-  color: rgba(255, 255, 255, 0.6);
+.button--danger:disabled, .button--danger[disabled] {
+  color: TextInactive;
 }
-.button--error:active {
-  background-color: rgba(248, 96, 57, 0.2);
-  color: rgb(244.6, 244.6, 244.6);
+.button--danger:active {
+  background-color: DangerA20;
+  color: TextActive;
 }
 .button--warning {
-  border-color: rgba(233, 205, 53, 0.8);
-  background-color: rgba(233, 205, 53, 0.05);
-  color: #CCCCCC;
+  border-color: WarningA80;
+  background-color: WarningA5;
+  color: TextDim;
 }
 .button--warning:focus, .button--warning:hover {
-  border-color: #E9CD35;
-  background-color: rgba(233, 205, 53, 0.3);
-  color: #F2F2F2;
+  border-color: Warning;
+  background-color: WarningA30;
+  color: Text;
 }
 .button--warning:disabled, .button--warning[disabled] {
-  color: rgba(255, 255, 255, 0.6);
+  color: TextInactive;
 }
 .button--warning:active {
-  background-color: rgba(233, 205, 53, 0.2);
-  color: rgb(244.6, 244.6, 244.6);
+  background-color: WarningA20;
+  color: TextActive;
 }
 .button:not([disabled]) {
   cursor: pointer;
@@ -1800,13 +1805,13 @@ scrollbarhorizontal sliderbar {
 
 /*
     <button
-        class="icon-button icon-button--error"
+        class="icon-button icon-button--danger"
     >
         <svg src="icons/Trash.svg" />
     </button>
 */
 .icon-button {
-  color: #CCCCCC;
+  color: TextDim;
   transition: color 0.05s linear-in-out, background-color 0.05s linear-in-out, opacity 0.05s linear-in-out, border-color 0.05s linear-in-out;
   display: flex;
   align-items: center;
@@ -1819,35 +1824,35 @@ scrollbarhorizontal sliderbar {
   max-height: 53.8dp;
   border-width: 1.1dp;
   border-radius: 26.9dp;
-  border-color: rgba(0, 0, 0, 0);
-  background-color: rgba(0, 0, 0, 0);
+  border-color: Transparent;
+  background-color: Transparent;
 }
 .icon-button svg {
-  image-color: #CCCCCC;
+  image-color: TextDim;
 }
 .icon-button svg {
   transition: image-color 0.05s linear-in-out, background-color 0.05s linear-in-out;
 }
 .icon-button:focus, .icon-button:hover {
-  color: #F2F2F2;
-  background-color: rgba(255, 255, 255, 0.2);
+  color: Text;
+  background-color: Border;
 }
 .icon-button:focus svg, .icon-button:hover svg {
-  image-color: #F2F2F2;
+  image-color: Text;
 }
 .icon-button:active {
-  color: rgb(244.6, 244.6, 244.6);
-  background-color: rgba(255, 255, 255, 0.1);
+  color: TextActive;
+  background-color: BorderSoft;
 }
 .icon-button:active svg {
-  image-color: rgb(244.6, 244.6, 244.6);
+  image-color: TextActive;
 }
 .icon-button:disabled, .icon-button[disabled] {
-  color: #CCCCCC;
+  color: TextDim;
   opacity: 0.5;
 }
 .icon-button:disabled svg, .icon-button[disabled] svg {
-  image-color: #CCCCCC;
+  image-color: TextDim;
 }
 .icon-button:not([disabled]) {
   cursor: pointer;
@@ -1857,70 +1862,70 @@ scrollbarhorizontal sliderbar {
   height: 32dp;
 }
 .icon-button--primary {
-  border-color: rgba(185, 125, 242, 0.8);
-  background-color: rgba(185, 125, 242, 0.05);
+  border-color: PrimaryA80;
+  background-color: PrimaryA5;
 }
 .icon-button--primary:focus, .icon-button--primary:hover {
-  border-color: #B97DF2;
-  background-color: rgba(185, 125, 242, 0.3);
+  border-color: Primary;
+  background-color: PrimaryA30;
 }
 .icon-button--primary:active {
-  background-color: rgba(185, 125, 242, 0.2);
+  background-color: PrimaryA20;
 }
 .icon-button--secondary {
-  border-color: rgba(23, 214, 232, 0.8);
-  background-color: rgba(23, 214, 232, 0.05);
+  border-color: SecondaryA80;
+  background-color: SecondaryA5;
 }
 .icon-button--secondary:focus, .icon-button--secondary:hover {
-  border-color: #17D6E8;
-  background-color: rgba(23, 214, 232, 0.3);
+  border-color: Secondary;
+  background-color: SecondaryA30;
 }
 .icon-button--secondary:active {
-  background-color: rgba(23, 214, 232, 0.2);
+  background-color: SecondaryA20;
 }
 .icon-button--tertiary {
-  border-color: rgba(242, 242, 242, 0.8);
-  background-color: rgba(242, 242, 242, 0.05);
+  border-color: TextA80;
+  background-color: TextA5;
 }
 .icon-button--tertiary:focus, .icon-button--tertiary:hover {
-  border-color: #F2F2F2;
-  background-color: rgba(242, 242, 242, 0.3);
+  border-color: Text;
+  background-color: TextA30;
 }
 .icon-button--tertiary:active {
-  background-color: rgba(242, 242, 242, 0.2);
+  background-color: TextA20;
 }
 .icon-button--success {
-  border-color: rgba(69, 208, 67, 0.8);
-  background-color: rgba(69, 208, 67, 0.05);
+  border-color: SuccessA80;
+  background-color: SuccessA5;
 }
 .icon-button--success:focus, .icon-button--success:hover {
-  border-color: #45D043;
-  background-color: rgba(69, 208, 67, 0.3);
+  border-color: Success;
+  background-color: SuccessA30;
 }
 .icon-button--success:active {
-  background-color: rgba(69, 208, 67, 0.2);
+  background-color: SuccessA20;
 }
-.icon-button--error {
-  border-color: rgba(248, 96, 57, 0.8);
-  background-color: rgba(248, 96, 57, 0.05);
+.icon-button--danger {
+  border-color: DangerA80;
+  background-color: DangerA5;
 }
-.icon-button--error:focus, .icon-button--error:hover {
-  border-color: #F86039;
-  background-color: rgba(248, 96, 57, 0.3);
+.icon-button--danger:focus, .icon-button--danger:hover {
+  border-color: Danger;
+  background-color: DangerA30;
 }
-.icon-button--error:active {
-  background-color: rgba(248, 96, 57, 0.2);
+.icon-button--danger:active {
+  background-color: DangerA20;
 }
 .icon-button--warning {
-  border-color: rgba(233, 205, 53, 0.8);
-  background-color: rgba(233, 205, 53, 0.05);
+  border-color: WarningA80;
+  background-color: WarningA5;
 }
 .icon-button--warning:focus, .icon-button--warning:hover {
-  border-color: #E9CD35;
-  background-color: rgba(233, 205, 53, 0.3);
+  border-color: Warning;
+  background-color: WarningA30;
 }
 .icon-button--warning:active {
-  background-color: rgba(233, 205, 53, 0.2);
+  background-color: WarningA20;
 }
 
 .launcher {
@@ -1930,7 +1935,7 @@ scrollbarhorizontal sliderbar {
   justify-content: space-between;
   width: 100%;
   height: 100%;
-  background-color: #08070D;
+  background-color: Background1;
 }
 
 .launcher__vertical-split {
@@ -2027,7 +2032,7 @@ scrollbarhorizontal sliderbar {
 
 */
 .menu-list-item {
-  color: #CCCCCC;
+  color: TextDim;
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -2039,7 +2044,7 @@ scrollbarhorizontal sliderbar {
   cursor: pointer;
 }
 .menu-list-item svg {
-  image-color: #CCCCCC;
+  image-color: TextDim;
 }
 .menu-list-item--right {
   flex-direction: row-reverse;
@@ -2050,14 +2055,14 @@ scrollbarhorizontal sliderbar {
   opacity: 1;
 }
 .menu-list-item--right.menu-list-item:focus:not(:disabled, [disabled]), .menu-list-item--right.menu-list-item:hover:not(:disabled, [disabled]) {
-  decorator: horizontal-gradient(#7A2AC600 #DABAF714);
+  background-color: WhiteA5;
 }
 .menu-list-item:focus:not(:disabled, [disabled]), .menu-list-item:hover:not(:disabled, [disabled]) {
-  color: #B97DF2;
-  decorator: horizontal-gradient(#7A2AC614 #DABAF700);
+  color: Primary;
+  background-color: WhiteA5;
 }
 .menu-list-item:focus:not(:disabled, [disabled]) svg, .menu-list-item:hover:not(:disabled, [disabled]) svg {
-  image-color: #B97DF2;
+  image-color: Primary;
 }
 .menu-list-item:focus:not(:disabled, [disabled]) .menu-list-item__bullet, .menu-list-item:hover:not(:disabled, [disabled]) .menu-list-item__bullet {
   opacity: 1;
@@ -2097,7 +2102,7 @@ scrollbarhorizontal sliderbar {
   height: auto;
   padding: 0;
   background-color: rgba(0, 0, 0, 0);
-  color: #CCCCCC;
+  color: TextDim;
   text-align: left;
   cursor: pointer;
 }
@@ -2108,11 +2113,11 @@ scrollbarhorizontal sliderbar {
   text-align: right;
 }
 .subtitle-title[selected] {
-  color: #F2F2F2;
+  color: Text;
   cursor: default;
 }
 .subtitle-title:focus:not(:disabled, [disabled]), .subtitle-title:hover:not(:disabled, [disabled], [selected]) {
-  color: #B97DF2;
+  color: Primary;
 }
 .subtitle-title:disabled, .subtitle-title[disabled] {
   opacity: 0.5;
@@ -2140,16 +2145,16 @@ scrollbarhorizontal sliderbar {
   height: 72dp;
   border-radius: 36dp;
   opacity: 0.9;
-  background: rgba(0, 0, 0, 0);
+  background: Transparent;
   cursor: pointer;
 }
 .toggle:hover, .toggle:focus-visible, .toggle:focus {
   opacity: 1;
-  background-color: rgba(23, 214, 232, 0.3);
+  background-color: SecondaryA30;
 }
 .toggle:active {
   opacity: 1;
-  background-color: rgba(23, 214, 232, 0.05);
+  background-color: SecondaryA5;
 }
 .toggle .toggle__border {
   position: absolute;
@@ -2158,7 +2163,7 @@ scrollbarhorizontal sliderbar {
   bottom: 1.1dp;
   left: 1.1dp;
   border-width: 1.1dp;
-  border-color: #A2EFF6;
+  border-color: SecondaryL;
   display: block;
   border-radius: 36dp;
 }
@@ -2170,18 +2175,18 @@ scrollbarhorizontal sliderbar {
   height: 64dp;
   transform: translateY(-50%);
   border-radius: 32dp;
-  background: #25A1AD;
+  background: SecondaryD;
 }
 .toggle--checked .toggle__floater {
   left: 78dp;
 }
 .toggle--checked .toggle__icon.toggle__icon--left {
   opacity: 0.9;
-  color: #A2EFF6;
+  color: SecondaryL;
 }
 .toggle--checked .toggle__icon.toggle__icon--right {
   opacity: 1;
-  color: #F2F2F2;
+  color: Text;
 }
 
 .toggle__icons {
@@ -2203,11 +2208,11 @@ scrollbarhorizontal sliderbar {
   justify-content: center;
   width: 56dp;
   height: 56dp;
-  color: #F2F2F2;
+  color: Text;
 }
 .toggle__icon--right {
   opacity: 1;
-  color: #A2EFF6;
+  color: SecondaryL;
 }
 
 .bottom-left {
@@ -2224,7 +2229,7 @@ scrollbarhorizontal sliderbar {
 }
 
 .prompt__overlay {
-  background-color: rgba(190, 184, 219, 0.1);
+  background-color: BGOverlay;
   pointer-events: auto;
 }
 .prompt__overlay, .prompt__content-wrapper {
@@ -2255,8 +2260,8 @@ scrollbarhorizontal sliderbar {
   margin: auto;
   border-width: 1.1dp;
   border-radius: 16dp;
-  border-color: rgba(255, 255, 255, 0.2);
-  background: rgba(8, 7, 13, 0.9);
+  border-color: Border;
+  background: ModalOverlay;
 }
 .prompt__content h3, .prompt__content p {
   margin: 24dp;
@@ -2270,7 +2275,7 @@ scrollbarhorizontal sliderbar {
   justify-content: center;
   padding: 24dp 12dp;
   border-top-width: 1.1dp;
-  border-top-color: rgba(255, 255, 255, 0.1);
+  border-top-color: BorderSoft;
 }
 .prompt__controls .button {
   min-width: 233.3333333333dp;
@@ -2297,10 +2302,10 @@ scrollbarhorizontal sliderbar {
 }
 
 .config-debug-option {
-  color: #CCCCCC;
+  color: TextDim;
   transition: color 0.05s linear-in-out, background-color 0.05s linear-in-out, opacity 0.05s linear-in-out;
   border-bottom-width: 1.1dp;
-  border-bottom-color: rgba(255, 255, 255, 0.1);
+  border-bottom-color: BorderSoft;
   display: block;
   position: relative;
   flex-direction: column;
@@ -2310,17 +2315,17 @@ scrollbarhorizontal sliderbar {
   background-color: rgba(0, 0, 0, 0);
 }
 .config-debug-option svg {
-  image-color: #CCCCCC;
+  image-color: TextDim;
 }
 .config-debug-option svg {
   transition: image-color 0.05s linear-in-out, background-color 0.05s linear-in-out;
 }
 .config-debug-option:focus:not(:disabled, [disabled]), .config-debug-option:focus-visible:not(:disabled, [disabled]), .config-debug-option:hover:not(:disabled, [disabled]) {
-  color: #F2F2F2;
-  background-color: rgba(190, 184, 219, 0.1);
+  color: Text;
+  background-color: BGOverlay;
 }
 .config-debug-option:focus:not(:disabled, [disabled]) svg, .config-debug-option:focus-visible:not(:disabled, [disabled]) svg, .config-debug-option:hover:not(:disabled, [disabled]) svg {
-  image-color: #F2F2F2;
+  image-color: Text;
 }
 .config-debug-option:disabled, .config-debug-option[disabled] {
   opacity: 0.5;
@@ -2396,7 +2401,7 @@ scrollbarhorizontal sliderbar {
 .config-debug__select-wrapper select {
   transition: color 0.05s linear-in-out, background-color 0.05s linear-in-out, opacity 0.05s linear-in-out, border-color 0.05s linear-in-out;
   border-width: 1.1dp;
-  border-color: rgba(255, 255, 255, 0.5);
+  border-color: WhiteA50;
   display: block;
   position: relative;
   box-sizing: border-box;
@@ -2405,7 +2410,7 @@ scrollbarhorizontal sliderbar {
   width: auto;
   height: 48dp;
   border-radius: 12dp;
-  background-color: rgba(255, 255, 255, 0.05);
+  background-color: WhiteA5;
   cursor: pointer;
   align-items: center;
   justify-content: flex-start;
@@ -2416,8 +2421,8 @@ scrollbarhorizontal sliderbar {
 }
 .config-debug__select-wrapper select:hover, .config-debug__select-wrapper select:focus {
   border-width: 1.1dp;
-  border-color: rgba(255, 255, 255, 0.8);
-  background-color: rgba(255, 255, 255, 0.2);
+  border-color: WhiteA80;
+  background-color: WhiteA20;
 }
 .config-debug__select-wrapper select selectvalue {
   display: inline;
@@ -2426,8 +2431,8 @@ scrollbarhorizontal sliderbar {
 }
 .config-debug__select-wrapper select selectbox {
   border-width: 1.1dp;
-  border-color: rgba(255, 255, 255, 0.8);
-  background-color: #191622;
+  border-color: WhiteA80;
+  background-color: Background3;
   padding: 4dp 0;
   margin-top: 2dp;
   border-radius: 12dp;
@@ -2435,25 +2440,19 @@ scrollbarhorizontal sliderbar {
 .config-debug__select-wrapper select selectbox option {
   transition: color 0.05s linear-in-out, background-color 0.05s linear-in-out;
   padding: 8dp 12dp;
-  background-color: rgba(0, 0, 0, 0);
-  color: #CCCCCC;
+  background-color: Transparent;
+  color: TextDim;
   font-weight: 400;
 }
 .config-debug__select-wrapper select selectbox option:hover, .config-debug__select-wrapper select selectbox option:focus {
-  background-color: rgba(255, 255, 255, 0.2);
+  background-color: WhiteA20;
 }
 .config-debug__select-wrapper select selectbox option:hover:not(:checked) {
   cursor: pointer;
 }
 .config-debug__select-wrapper select selectbox option:checked {
-  color: #FFFFFF;
-  background-color: rgba(255, 255, 255, 0.05);
-}
-
-body {
-  box-sizing: border-box;
-  color: #F2F2F2;
-  font-family: LatoLatin;
+  color: White;
+  background-color: WhiteA5;
 }
 
 .rmlui-window {
@@ -2471,42 +2470,42 @@ body {
 }
 
 button {
-  background-color: #7A2AC6;
+  background-color: PrimaryD;
 }
 
 @keyframes blue-pulse {
   0% {
-    color: #17D6E8;
+    color: Secondary;
   }
   50% {
-    color: #A2EFF6;
+    color: SecondaryL;
   }
   100% {
-    color: #17D6E8;
+    color: Secondary;
   }
 }
 @keyframes blue-pulse-with-border {
   0% {
-    border-color: #17D6E8;
-    color: #17D6E8;
+    border-color: Secondary;
+    color: Secondary;
   }
   50% {
-    border-color: #A2EFF6;
-    color: #A2EFF6;
+    border-color: SecondaryL;
+    color: SecondaryL;
   }
   100% {
-    border-color: #17D6E8;
-    color: #17D6E8;
+    border-color: Secondary;
+    color: Secondary;
   }
 }
 @keyframes blue-pulse-background {
   0% {
-    background-color: #17D6E8;
+    background-color: Secondary;
   }
   50% {
-    background-color: #A2EFF6;
+    background-color: SecondaryL;
   }
   100% {
-    background-color: #17D6E8;
+    background-color: Secondary;
   }
 }

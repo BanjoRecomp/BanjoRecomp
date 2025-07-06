@@ -2,22 +2,22 @@
 
 /*
     <button
-        class="icon-button icon-button--error"
+        class="icon-button icon-button--danger"
     >
         <svg src="icons/Trash.svg" />
     </button>
 */
-@mixin create-icon-button-variation($base-col) {
-    border-color: rgba($base-col, 0.8);
-    background-color: rgba($base-col, 0.05);
+@mixin create-icon-button-variation($base-col, $base-col-05, $base-col-20, $base-col-30, $base-col-80) {
+    border-color: $base-col-80;
+    background-color: $base-col-05;
 
     &:focus, &:hover {
         border-color: $base-col;
-        background-color: rgba($base-col, 0.3);
+        background-color: $base-col-30;
     }
 
     &:active {
-        background-color: rgba($base-col, 0.2);
+        background-color: $base-col-20;
     }
 }
 
@@ -47,7 +47,7 @@ $icon-button-size: 56 - ($border-width-thickness-num * 2);
     }
 
     &:active {
-        @include set-color(color.scale($color-text, $lightness: 20%));
+        @include set-color($color-text-active);
         background-color: $color-border-soft;
     }
 
@@ -67,26 +67,26 @@ $icon-button-size: 56 - ($border-width-thickness-num * 2);
     }
 
     &--primary {
-        @include create-icon-button-variation($color-primary);
+        @include create-icon-button-variation($color-primary, $color-primary-a5, $color-primary-a20, $color-primary-a30, $color-primary-a80);
     }
 
     &--secondary {
-        @include create-icon-button-variation($color-secondary);
+        @include create-icon-button-variation($color-secondary, $color-secondary-a5, $color-secondary-a20, $color-secondary-a30, $color-secondary-a80);
     }
 
     &--tertiary {
-        @include create-icon-button-variation($color-text);
+        @include create-icon-button-variation($color-text, $color-text-a5, $color-text-a20, $color-text-a30, $color-text-a80);
     }
 
     &--success {
-        @include create-icon-button-variation($color-success);
+        @include create-icon-button-variation($color-success, $color-success-a5, $color-success-a20, $color-success-a30, $color-success-a80);
     }
 
-    &--error {
-        @include create-icon-button-variation($color-error);
+    &--danger {
+        @include create-icon-button-variation($color-danger, $color-danger-a5, $color-danger-a20, $color-danger-a30, $color-danger-a80);
     }
 
     &--warning {
-        @include create-icon-button-variation($color-warning);
+        @include create-icon-button-variation($color-warning, $color-warning-a5, $color-warning-a20, $color-warning-a30, $color-warning-a80);
     }
 }

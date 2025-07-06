@@ -6,7 +6,11 @@ namespace recompui {
 
     enum class ButtonStyle {
         Primary,
-        Secondary
+        Secondary,
+        Tertiary,
+        Success,
+        Warning,
+        Danger,
     };
 
     class Button : public Element {
@@ -28,6 +32,9 @@ namespace recompui {
         Style* get_focus_style() { return &focus_style; }
         Style* get_disabled_style() { return &disabled_style; }
         Style* get_hover_disabled_style() { return &hover_disabled_style; }
+        void apply_button_style(ButtonStyle new_style);
+    private:
+        void apply_theme_style(recompui::ThemeColor color);
     };
 
 } // namespace recompui

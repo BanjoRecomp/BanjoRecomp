@@ -6,8 +6,11 @@
 
 #include "../core/ui_resource.h"
 #include "ui_types.h"
+#include "ui_theme.h"
 
 namespace recompui {
+    const int ThemeDefaultOpacity = -1; // Represents using the theme color's existing opacity.
+
     class ContextId;
     class Style {
         friend class Element; // For access to property_map without making it visible to element subclasses.
@@ -66,6 +69,13 @@ namespace recompui {
         void set_border_right_color(const Color &color);
         void set_border_bottom_color(const Color &color);
         void set_color(const Color &color);
+        void set_background_color(recompui::ThemeColor color, int opacity = ThemeDefaultOpacity);
+        void set_border_color(recompui::ThemeColor color, int opacity = ThemeDefaultOpacity);
+        void set_border_left_color(recompui::ThemeColor color, int opacity = ThemeDefaultOpacity);
+        void set_border_top_color(recompui::ThemeColor color, int opacity = ThemeDefaultOpacity);
+        void set_border_right_color(recompui::ThemeColor color, int opacity = ThemeDefaultOpacity);
+        void set_border_bottom_color(recompui::ThemeColor color, int opacity = ThemeDefaultOpacity);
+        void set_color(recompui::ThemeColor color, int opacity = ThemeDefaultOpacity);
         void set_cursor(Cursor cursor);
         void set_opacity(float opacity);
         void set_display(Display display);
