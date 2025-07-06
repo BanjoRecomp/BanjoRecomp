@@ -29,7 +29,6 @@
 	<link type="text/template" href="config_menu/sound.rml" />
 	<link type="text/template" href="config_menu/mods.rml" />
 	<link type="text/template" href="config_menu/debug.rml" />
-	<link type="text/template" href="components/prompt.rml" />
 </head>
 <body class="window">
 	<!-- <handle move_target="#document"> -->
