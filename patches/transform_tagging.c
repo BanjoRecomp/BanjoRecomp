@@ -71,6 +71,10 @@ void ml_vec3f_copy(f32 dst[3], f32 src[3]);
 //     sViewportPosition[2] = z;
 // }
 
+extern Vp sViewportStack[];
+extern s32 sViewportStackIndex;
+
+// @recomp Patched to set up an inverse view matrix for better transform interpolation.
 RECOMP_PATCH void viewport_setRenderPerspectiveMatrix(Gfx **gfx, Mtx **mtx, f32 near, f32 far) {
     u16 perspNorm;
 
@@ -103,6 +107,27 @@ RECOMP_PATCH void viewport_setRenderPerspectiveMatrix(Gfx **gfx, Mtx **mtx, f32 
     (*mtx)++;
     guTranslateF(invView->m, -sViewportPosition[0], -sViewportPosition[1], -sViewportPosition[2]);
     gEXSetInvViewMatrixFloat((*gfx)++, invView->m);   
+}
+
+float identity_matrix[4][4] = {
+    { 1.0f, 0.0f, 0.0f, 0.0f },
+    { 0.0f, 1.0f, 0.0f, 0.0f },
+    { 0.0f, 0.0f, 1.0f, 0.0f },
+    { 0.0f, 0.0f, 0.0f, 1.0f }
+};
+
+// @recomp Patched to set up an identity inverse view matrix to prevent bleeding the perspective projection's inverse view matrix.
+RECOMP_PATCH void viewport_setRenderViewportAndOrthoMatrix(Gfx **gfx, Mtx **mtx) {
+    gSPViewport((*gfx)++, &sViewportStack[sViewportStackIndex]);
+
+    guOrtho(*mtx, -(2*(f32)gFramebufferWidth), (2*(f32)gFramebufferWidth), -(2*(f32)gFramebufferHeight), (2*(f32)gFramebufferHeight), 1.0f, 20.0f, 1.0f);
+    gSPMatrix((*gfx)++, OS_K0_TO_PHYSICAL((*mtx)++), G_MTX_NOPUSH | G_MTX_LOAD | G_MTX_PROJECTION);
+    
+    guTranslate(*mtx, 0.0f, 0.0f, 0.0f);
+    gSPMatrix((*gfx)++, OS_K0_TO_PHYSICAL((*mtx)++), G_MTX_NOPUSH | G_MTX_LOAD | G_MTX_MODELVIEW);
+
+    // @recomp Set an identity inverse view matrix.
+    gEXSetInvViewMatrixFloat((*gfx)++, identity_matrix);
 }
 
 typedef void (*GeoListFunc)(Gfx **, Mtx **, void *);

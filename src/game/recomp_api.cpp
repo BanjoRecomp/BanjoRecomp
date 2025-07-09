@@ -215,8 +215,6 @@ extern "C" void osPiReadIo_recomp(RDRAM_ARG recomp_context * ctx) {
     ctx->r2 = 0;
 }
 
-extern "C" void boot___osInitialize_common(uint8_t* rdram, recomp_context* ctx) {}
-
 extern "C" void boot_osPiGetStatus(uint8_t* rdram, recomp_context* ctx) {
 	// PI not busy
 	ctx->r2 = 0;

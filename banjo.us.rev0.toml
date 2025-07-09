@@ -32,7 +32,6 @@ ignored = [
     "boot___ull_divremi",
     "boot___ull_rem",
     "boot___ull_rshift",
-    "boot___osInitialize_common",
     "boot_osPiRawStartDma",
     "boot_osPiGetStatus",
     "boot___osSetSR",
