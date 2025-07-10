@@ -2,13 +2,13 @@
 #include "theme.h"
 
 void recomptheme::set_custom_theme() {
-    recompui::set_theme_color(recompui::ThemeColor::Background1, recompui::Color{2, 7, 18, 255});
-    recompui::set_theme_color(recompui::ThemeColor::Background2, recompui::Color{7, 15, 34, 255});
-    recompui::set_theme_color(recompui::ThemeColor::Background3, recompui::Color{18, 24, 38, 255});
-    recompui::set_theme_color(recompui::ThemeColor::BGOverlay, recompui::Color{182, 194, 221, 26});
-    recompui::set_theme_color(recompui::ThemeColor::ModalOverlay, recompui::Color{2, 7, 18, 229});
+    recompui::set_theme_color(recompui::ThemeColor::Background1, recompui::Color{10, 10, 11, 255});
+    recompui::set_theme_color(recompui::ThemeColor::Background2, recompui::Color{19, 20, 21, 255});
+    recompui::set_theme_color(recompui::ThemeColor::Background3, recompui::Color{27, 27, 29, 255});
+    recompui::set_theme_color(recompui::ThemeColor::BGOverlay, recompui::Color{199, 200, 204, 26});
+    recompui::set_theme_color(recompui::ThemeColor::ModalOverlay, recompui::Color{10, 10, 11, 229});
     recompui::set_theme_color(recompui::ThemeColor::BGShadow, recompui::Color{0, 0, 0, 89});
-    recompui::set_theme_color(recompui::ThemeColor::BGShadow2, recompui::Color{2, 7, 18, 184});
+    recompui::set_theme_color(recompui::ThemeColor::BGShadow2, recompui::Color{10, 10, 11, 184});
     recompui::set_theme_color(recompui::ThemeColor::Text, recompui::Color{242, 242, 242, 255});
     recompui::set_theme_color(recompui::ThemeColor::TextActive, recompui::Color{245, 245, 245, 255});
     recompui::set_theme_color(recompui::ThemeColor::TextDim, recompui::Color{204, 204, 204, 255});
