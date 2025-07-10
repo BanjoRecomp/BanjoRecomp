@@ -110,7 +110,7 @@ void Element::apply_style(Style *style) {
         // Skip redundant SetProperty calls to prevent dirtying unnecessary state.
         // This avoids expensive layout operations when a simple color-only style is applied.
         const Rml::Property* cur_value = base->GetLocalProperty(it.first);
-        if (*cur_value != it.second) {
+        if (cur_value == nullptr || *cur_value != it.second) {
             base->SetProperty(it.first, it.second);
         }
     }

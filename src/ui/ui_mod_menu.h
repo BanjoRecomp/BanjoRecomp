@@ -3,6 +3,7 @@
 
 #include "librecomp/mods.hpp"
 #include "elements/ui_scroll_container.h"
+#include "elements/ui_icon_button.h"
 #include "ui_config_sub_menu.h"
 #include "ui_mod_details_panel.h"
 
@@ -101,7 +102,7 @@ private:
     Container *body_empty_container = nullptr;
     Container *footer_container = nullptr;
     Button *install_mods_button = nullptr;
-    Button *refresh_button = nullptr;
+    IconButton *refresh_button = nullptr;
     Button *mods_folder_button = nullptr;
     int32_t active_mod_index = -1;
     std::vector<ModEntryButton *> mod_entry_buttons;

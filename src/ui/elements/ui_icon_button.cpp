@@ -1,38 +1,74 @@
-#include "ui_button.h"
+#include "ui_icon_button.h"
 
 #include <cassert>
 
 namespace recompui {
+    // Borders add width to the button, so this subtracts from the base size to bring it back to the expected size.
+    static const float border_width_thickness = 1.1f;
 
-    Button::Button(Element *parent, const std::string &text, ButtonStyle style) : Element(parent, Events(EventType::Click, EventType::Hover, EventType::Enable, EventType::Focus), "button", true) {
+    IconButton::IconButton(Element *parent, const std::string &svg_src, ButtonStyle style, IconButtonSize size) : Element(parent, Events(EventType::Click, EventType::Hover, EventType::Enable, EventType::Focus), "button") {
         this->style = style;
+        this->size = size;
+        float float_size_internal = static_cast<float>(size) - (border_width_thickness * 2.0f);
 
         enable_focus();
 
-        set_text(text);
-        set_display(Display::Block);
-        set_padding(23.0f);
-        set_border_width(1.1f);
-        set_border_radius(12.0f);
-        set_font_size(28.0f);
-        set_letter_spacing(3.08f);
-        set_line_height(28.0f);
-        set_font_style(FontStyle::Normal);
-        set_font_weight(700);
+        set_display(Display::Flex);
+        set_align_items(AlignItems::Center);
+        set_justify_content(JustifyContent::Center);
+        set_width(float_size_internal);
+        set_min_width(float_size_internal);
+        set_max_width(float_size_internal);
+        set_height(float_size_internal);
+        set_min_height(float_size_internal);
+        set_max_height(float_size_internal);
+        set_border_width(border_width_thickness);
+        set_border_radius(float_size_internal * 0.5f);
+        set_border_color(ThemeColor::Transparent);
+
         set_cursor(Cursor::Pointer);
-        set_color(ThemeColor::Text);
+        set_color(ThemeColor::TextDim);
         set_tab_index(TabIndex::Auto);
+
         hover_style.set_color(ThemeColor::Text);
         focus_style.set_color(ThemeColor::Text);
-        disabled_style.set_color(ThemeColor::TextDim, 128);
-        hover_disabled_style.set_color(ThemeColor::Text, 128);
+        disabled_style.set_color(ThemeColor::TextDim);
+        disabled_style.set_cursor(Cursor::None);
+        disabled_style.set_opacity(0.5f);
+        hover_disabled_style.set_color(ThemeColor::TextDim);
+
+        float icon_size = 0;
+        switch (size) {
+            case IconButtonSize::Mini:
+                icon_size = 16.0f;
+                break;
+            case IconButtonSize::Small:
+                icon_size = 24.0f;
+                break;
+            case IconButtonSize::Medium:
+                icon_size = 32.0f;
+                break;
+            case IconButtonSize::Large:
+            default:
+                icon_size = 32.0f;
+                break;
+            case IconButtonSize::XLarge:
+                icon_size = 40.0f;
+                break;
+        }
+
+        ContextId context = get_current_context();
+
+        svg = context.create_element<Svg>(this, svg_src);
+        svg->set_width(icon_size);
+        svg->set_color(ThemeColor::TextDim);
 
         apply_button_style(style);
 
         // transition: color 0.05s linear-in-out, background-color 0.05s linear-in-out;
     }
 
-    void Button::process_event(const Event &e) {
+    void IconButton::process_event(const Event &e) {
         switch (e.type) {
         case EventType::Click:
             if (is_enabled()) {
@@ -41,8 +77,12 @@ namespace recompui {
                 }
             }
             break;
-        case EventType::Hover: 
-            set_style_enabled(hover_state, std::get<EventHover>(e.variant).active && is_enabled());
+        case EventType::Hover:
+            {
+                bool hover_active = std::get<EventHover>(e.variant).active && is_enabled();
+                set_style_enabled(hover_state, hover_active);
+                svg->set_color(hover_active ? ThemeColor::Text : ThemeColor::TextDim);
+            }
             break;
         case EventType::Enable:
             {
@@ -51,15 +91,21 @@ namespace recompui {
                 if (enable_active) {
                     set_cursor(Cursor::Pointer);
                     set_focusable(true);
+                    svg->set_color(ThemeColor::TextDim);
                 }
                 else {
                     set_cursor(Cursor::None);
                     set_focusable(false);
+                    svg->set_color(ThemeColor::TextDim);
                 }
             }
             break;
         case EventType::Focus:
-            set_style_enabled(focus_state, std::get<EventFocus>(e.variant).active);
+            {
+                bool focus_active = std::get<EventFocus>(e.variant).active;
+                set_style_enabled(focus_state, focus_active);
+                svg->set_color(focus_active ? ThemeColor::Text : ThemeColor::TextDim);
+            }
             break;
         case EventType::Update:
             break;
@@ -69,11 +115,11 @@ namespace recompui {
         }
     }
 
-    void Button::add_pressed_callback(std::function<void()> callback) {
+    void IconButton::add_pressed_callback(std::function<void()> callback) {
         pressed_callbacks.emplace_back(callback);
     }
 
-    void Button::apply_button_style(ButtonStyle new_style) {
+    void IconButton::apply_button_style(ButtonStyle new_style) {
         style = new_style;
         switch (style) {
         case ButtonStyle::Primary: {
@@ -110,9 +156,9 @@ namespace recompui {
         }
     }
 
-    void Button::apply_theme_style(recompui::ThemeColor color, bool is_basic) {
-        const uint8_t border_opacity = is_basic ? 0 : 204;
+    void IconButton::apply_theme_style(recompui::ThemeColor color, bool is_basic) {
         const uint8_t background_opacity = is_basic ? 0 : 13;
+        const uint8_t border_opacity = is_basic ? 0 : 204;
         const uint8_t background_hover_opacity = 77;
         const uint8_t border_hover_opacity = is_basic ? background_hover_opacity : 255;
 
@@ -122,10 +168,6 @@ namespace recompui {
         hover_style.set_background_color(color, background_hover_opacity);
         focus_style.set_border_color(color, border_hover_opacity);
         focus_style.set_background_color(color, background_hover_opacity);
-        disabled_style.set_border_color(color, border_opacity / 4);
-        disabled_style.set_background_color(color, background_opacity / 4);
-        hover_disabled_style.set_border_color(color, border_hover_opacity / 4);
-        hover_disabled_style.set_background_color(color, background_hover_opacity / 4);
 
         add_style(&hover_style, hover_state);
         add_style(&focus_style, focus_state);

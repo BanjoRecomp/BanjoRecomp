@@ -688,11 +688,11 @@ ModMenu::ModMenu(Element *parent) : Element(parent) {
             Element* footer_spacer = context.create_element<Element>(footer_container);
             footer_spacer->set_flex(1.0f, 0.0f);
 
-            refresh_button = context.create_element<Button>(footer_container, "Refresh", recompui::ButtonStyle::Tertiary);
+            refresh_button = context.create_element<IconButton>(footer_container, "icons/Reset.svg", recompui::ButtonStyle::Secondary, recompui::IconButtonSize::XLarge);
             refresh_button->add_pressed_callback([this](){ refresh_mods(true); });
             refresh_button->set_nav_manual(NavDirection::Up, mod_tab_id);
 
-            mods_folder_button = context.create_element<Button>(footer_container, "Open Mods Folder", recompui::ButtonStyle::Primary);
+            mods_folder_button = context.create_element<Button>(footer_container, "Open Mods Folder", recompui::ButtonStyle::Tertiary);
             mods_folder_button->add_pressed_callback([this](){ open_mods_folder(); });
             mods_folder_button->set_nav(NavDirection::Up, configure_button);
             mods_folder_button->set_nav_manual(NavDirection::Up, mod_tab_id);

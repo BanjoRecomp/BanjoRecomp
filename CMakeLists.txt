@@ -183,6 +183,7 @@ set (SOURCES
     ${CMAKE_SOURCE_DIR}/src/ui/util/hsv.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/core/ui_context.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/elements/ui_button.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/elements/ui_icon_button.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/elements/ui_clickable.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/elements/ui_container.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/elements/ui_element.cpp
@@ -193,6 +194,7 @@ set (SOURCES
     ${CMAKE_SOURCE_DIR}/src/ui/elements/ui_slider.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/elements/ui_span.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/elements/ui_style.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/elements/ui_svg.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/elements/ui_text_input.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/elements/ui_theme.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/elements/ui_toggle.cpp
