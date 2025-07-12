@@ -433,7 +433,7 @@ scrollbarhorizontal sliderbar {
   height: 100%;
   margin: auto;
   border-width: 1.1dp;
-  border-radius: 16dp;
+  border-radius: 24dp;
   border-color: Border;
   background: ModalOverlay;
 }
@@ -488,7 +488,7 @@ scrollbarhorizontal sliderbar {
   width: 100%;
   height: auto;
   padding: 4dp 16dp 4dp 20dp;
-  border-radius: 8dp;
+  border-radius: 12dp;
   background-color: rgba(0, 0, 0, 0);
 }
 .control-option svg {
@@ -560,7 +560,7 @@ scrollbarhorizontal sliderbar {
   margin: 0 4dp;
   padding: 8dp;
   border-width: 1.1dp;
-  border-radius: 8dp;
+  border-radius: 12dp;
   border-color: BGOverlay;
   background-color: BGOverlay;
 }
@@ -722,8 +722,8 @@ scrollbarhorizontal sliderbar {
   justify-content: space-between;
   width: 100%;
   height: 100%;
-  border-bottom-right-radius: 16dp;
-  border-bottom-left-radius: 16dp;
+  border-bottom-right-radius: 24dp;
+  border-bottom-left-radius: 24dp;
 }
 
 .config__wrapper {
@@ -732,8 +732,8 @@ scrollbarhorizontal sliderbar {
   height: auto;
   padding: 16dp;
   border-radius: 0dp;
-  border-bottom-right-radius: 16dp;
-  border-bottom-left-radius: 16dp;
+  border-bottom-right-radius: 24dp;
+  border-bottom-left-radius: 24dp;
   background-color: BGShadow;
   text-align: left;
 }
@@ -778,8 +778,8 @@ scrollbarhorizontal sliderbar {
   border-top-width: 1.1dp;
   border-top-color: BorderSoft;
   padding: 20dp 20dp;
-  border-bottom-right-radius: 16dp;
-  border-bottom-left-radius: 16dp;
+  border-bottom-right-radius: 24dp;
+  border-bottom-left-radius: 24dp;
 }
 
 .config__header-left {
@@ -891,7 +891,7 @@ scrollbarhorizontal sliderbar {
   width: 32dp;
   height: 32dp;
   margin: 4dp 12dp 0;
-  border-radius: 8dp;
+  border-radius: 12dp;
   opacity: 0.5;
   background-color: BGOverlay;
   cursor: pointer;
@@ -1016,7 +1016,7 @@ scrollbarhorizontal sliderbar {
   width: 88dp;
   height: 100%;
   border-width: 1.1dp;
-  border-radius: 16dp;
+  border-radius: 24dp;
   border-color: Border;
 }
 .config-option-color__hsv-wrapper {
@@ -1149,7 +1149,7 @@ scrollbarhorizontal sliderbar {
   box-sizing: border-box;
   flex: 1 1 100%;
   width: auto;
-  border-radius: 12dp;
+  border-radius: 18dp;
   background-color: WhiteA5;
 }
 .config-option-dropdown__select svg, .config-option-dropdown__wrapper svg, .config-option-textfield__select svg, .config-option-textfield__wrapper svg {
@@ -1170,7 +1170,7 @@ scrollbarhorizontal sliderbar {
   border-color: Border;
   margin-top: 2dp;
   padding: 4dp 0;
-  border-radius: 12dp;
+  border-radius: 18dp;
   background-color: Background3;
 }
 .config-option-dropdown__select selectbox option, .config-option-dropdown__wrapper selectbox option, .config-option-textfield__select selectbox option, .config-option-textfield__wrapper selectbox option {
@@ -1197,8 +1197,8 @@ scrollbarhorizontal sliderbar {
   height: auto;
   padding: 16dp;
   border-radius: 0dp;
-  border-bottom-right-radius: 16dp;
-  border-bottom-left-radius: 16dp;
+  border-bottom-right-radius: 24dp;
+  border-bottom-left-radius: 24dp;
   background-color: BGShadow;
   text-align: left;
 }
@@ -1254,7 +1254,7 @@ scrollbarhorizontal sliderbar {
   height: auto;
   padding: 23dp;
   border-width: 1.1dp;
-  border-radius: 12dp;
+  border-radius: 18dp;
 }
 .button:focus, .button:hover {
   border-color: Primary;
@@ -1617,7 +1617,7 @@ scrollbarhorizontal sliderbar {
   width: 100%;
   height: auto;
   padding: 16dp;
-  border-radius: 8dp;
+  border-radius: 12dp;
   background-color: rgba(0, 0, 0, 0);
   cursor: pointer;
 }
@@ -1837,7 +1837,7 @@ scrollbarhorizontal sliderbar {
   height: auto;
   margin: auto;
   border-width: 1.1dp;
-  border-radius: 16dp;
+  border-radius: 24dp;
   border-color: Border;
   background: ModalOverlay;
 }
@@ -1987,7 +1987,7 @@ scrollbarhorizontal sliderbar {
   flex: 1 1 100%;
   width: auto;
   height: 48dp;
-  border-radius: 12dp;
+  border-radius: 18dp;
   background-color: WhiteA5;
   cursor: pointer;
   align-items: center;
@@ -2013,7 +2013,7 @@ scrollbarhorizontal sliderbar {
   background-color: Background3;
   padding: 4dp 0;
   margin-top: 2dp;
-  border-radius: 12dp;
+  border-radius: 18dp;
 }
 .config-debug__select-wrapper select selectbox option {
   transition: color 0.05s linear-in-out, background-color 0.05s linear-in-out;

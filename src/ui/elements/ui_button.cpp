@@ -12,20 +12,20 @@ namespace recompui {
         set_text(text);
         set_display(Display::Block);
         set_padding(23.0f);
-        set_border_width(1.1f);
-        set_border_radius(12.0f);
+        set_border_width(theme::border::width);
+        set_border_radius(theme::border::radius_md);
         set_font_size(28.0f);
         set_letter_spacing(3.08f);
         set_line_height(28.0f);
         set_font_style(FontStyle::Normal);
         set_font_weight(700);
         set_cursor(Cursor::Pointer);
-        set_color(ThemeColor::Text);
+        set_color(theme::color::Text);
         set_tab_index(TabIndex::Auto);
-        hover_style.set_color(ThemeColor::Text);
-        focus_style.set_color(ThemeColor::Text);
-        disabled_style.set_color(ThemeColor::TextDim, 128);
-        hover_disabled_style.set_color(ThemeColor::Text, 128);
+        hover_style.set_color(theme::color::Text);
+        focus_style.set_color(theme::color::Text);
+        disabled_style.set_color(theme::color::TextDim, 128);
+        hover_disabled_style.set_color(theme::color::Text, 128);
 
         apply_button_style(style);
 
@@ -77,31 +77,31 @@ namespace recompui {
         style = new_style;
         switch (style) {
         case ButtonStyle::Primary: {
-            apply_theme_style(ThemeColor::Primary);
+            apply_theme_style(theme::color::Primary);
             break;
         }
         case ButtonStyle::Secondary: {
-            apply_theme_style(ThemeColor::Secondary);
+            apply_theme_style(theme::color::Secondary);
             break;
         }
         case ButtonStyle::Tertiary: {
-            apply_theme_style(ThemeColor::Text);
+            apply_theme_style(theme::color::Text);
             break;
         }
         case ButtonStyle::Success: {
-            apply_theme_style(ThemeColor::Success);
+            apply_theme_style(theme::color::Success);
             break;
         }
         case ButtonStyle::Warning: {
-            apply_theme_style(ThemeColor::Warning);
+            apply_theme_style(theme::color::Warning);
             break;
         }
         case ButtonStyle::Danger: {
-            apply_theme_style(ThemeColor::Danger);
+            apply_theme_style(theme::color::Danger);
             break;
         }
         case ButtonStyle::Basic: {
-            apply_theme_style(ThemeColor::Text, true);
+            apply_theme_style(theme::color::Text, true);
             break;
         }
         default:
@@ -110,7 +110,7 @@ namespace recompui {
         }
     }
 
-    void Button::apply_theme_style(recompui::ThemeColor color, bool is_basic) {
+    void Button::apply_theme_style(recompui::theme::color color, bool is_basic) {
         const uint8_t border_opacity = is_basic ? 0 : 204;
         const uint8_t background_opacity = is_basic ? 0 : 13;
         const uint8_t background_hover_opacity = 77;

@@ -61,10 +61,10 @@ void recompui::init_prompt_context() {
     Element* window = context.create_element<Element>(context.get_root_element());
     window->set_display(Display::Flex);
     window->set_flex_direction(FlexDirection::Column);
-    window->set_background_color(ThemeColor::Transparent);
+    window->set_background_color(theme::color::Transparent);
 
     Element* prompt_overlay = context.create_element<Element>(window);
-    prompt_overlay->set_background_color(ThemeColor::BGOverlay);
+    prompt_overlay->set_background_color(theme::color::BGOverlay);
     prompt_overlay->set_position(Position::Absolute);
     prompt_overlay->set_top(0);
     prompt_overlay->set_right(0);
@@ -91,10 +91,10 @@ void recompui::init_prompt_context() {
     prompt_content->set_max_width(700, Unit::Dp);
     prompt_content->set_height_auto();
     prompt_content->set_margin_auto();
-    prompt_content->set_border_width(1.1, Unit::Dp);
-    prompt_content->set_border_radius(16, Unit::Dp);
-    prompt_content->set_border_color(ThemeColor::WhiteA20);
-    prompt_content->set_background_color(ThemeColor::ModalOverlay);
+    prompt_content->set_border_width(theme::border::width, Unit::Dp);
+    prompt_content->set_border_radius(theme::border::radius_lg, Unit::Dp);
+    prompt_content->set_border_color(theme::color::WhiteA20);
+    prompt_content->set_background_color(theme::color::ModalOverlay);
     
     prompt_state.prompt_header = context.create_element<Label>(prompt_content, "", LabelStyle::Large);
     prompt_state.prompt_header->set_margin(24, Unit::Dp);
@@ -112,8 +112,8 @@ void recompui::init_prompt_context() {
     prompt_state.prompt_controls->set_padding_bottom(24, Unit::Dp);
     prompt_state.prompt_controls->set_padding_left(12, Unit::Dp);
     prompt_state.prompt_controls->set_padding_right(12, Unit::Dp);
-    prompt_state.prompt_controls->set_border_top_width(1.1, Unit::Dp);
-    prompt_state.prompt_controls->set_border_top_color(ThemeColor::BorderSoft);
+    prompt_state.prompt_controls->set_border_top_width(theme::border::width, Unit::Dp);
+    prompt_state.prompt_controls->set_border_top_color(theme::color::BorderSoft);
 
     prompt_state.confirm_button = context.create_element<Button>(prompt_state.prompt_controls, "", ButtonStyle::Success);
     prompt_state.confirm_button->set_min_width(185.0f, Unit::Dp);

@@ -38,9 +38,9 @@ namespace recompui {
         html_colours["transparent"] = Rml::Colourb(0, 0, 0, 0);
         html_colours["whitesmoke"] = Rml::Colourb(245, 245, 245);
 
-        for (std::size_t i = 0; i < (std::size_t)recompui::ThemeColor::size; i++) {
-            const char *color_name = recompui::get_theme_color_name((recompui::ThemeColor)i);
-            const recompui::Color color_value = recompui::get_theme_color((recompui::ThemeColor)i);
+        for (std::size_t i = 0; i < (std::size_t)recompui::theme::color::size; i++) {
+            const char *color_name = recompui::theme::get_theme_color_name((recompui::theme::color)i);
+            const recompui::Color color_value = recompui::theme::get_theme_color((recompui::theme::color)i);
             Rml::String color_name_lower = Rml::StringUtilities::ToLower(color_name);
             html_colours[color_name_lower] = Rml::Colourb(color_value.r, color_value.g, color_value.b, color_value.a);
         }

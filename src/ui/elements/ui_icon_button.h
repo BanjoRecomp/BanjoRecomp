@@ -37,7 +37,7 @@ namespace recompui {
         Style* get_hover_disabled_style() { return &hover_disabled_style; }
         void apply_button_style(ButtonStyle new_style);
     private:
-        void apply_theme_style(recompui::ThemeColor color, bool is_basic = false);
+        void apply_theme_style(recompui::theme::color color, bool is_basic = false);
     };
 
 } // namespace recompui

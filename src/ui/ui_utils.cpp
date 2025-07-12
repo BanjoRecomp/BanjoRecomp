@@ -18,8 +18,8 @@ recompui::Color recompui::get_pulse_color(uint32_t pulse_milliseconds) {
     
     float factor = std::abs((2.0f * anim_offset / pulse_milliseconds) - 1.0f);
     return lerp_color(
-        recompui::get_theme_color(ThemeColor::Secondary),
-        recompui::get_theme_color(ThemeColor::SecondaryL),
+        recompui::theme::get_theme_color(theme::color::Secondary),
+        recompui::theme::get_theme_color(theme::color::SecondaryL),
         factor
     );
 }

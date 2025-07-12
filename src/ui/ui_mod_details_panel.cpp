@@ -11,7 +11,7 @@ ModDetailsPanel::ModDetailsPanel(Element *parent) : Element(parent) {
     set_height(100.0f, Unit::Percent);
     set_display(Display::Flex);
     set_flex_direction(FlexDirection::Column);
-    set_background_color(ThemeColor::BGOverlay);
+    set_background_color(theme::color::BGOverlay);
 
     ContextId context = get_current_context();
 
@@ -19,9 +19,9 @@ ModDetailsPanel::ModDetailsPanel(Element *parent) : Element(parent) {
     header_container->set_flex(0.0f, 0.0f);
     header_container->set_padding(16.0f);
     header_container->set_gap(16.0f);
-    header_container->set_background_color(ThemeColor::BGShadow);
-    header_container->set_border_bottom_width(1.1f);
-    header_container->set_border_bottom_color(ThemeColor::BorderSoft);
+    header_container->set_background_color(theme::color::BGShadow);
+    header_container->set_border_bottom_width(theme::border::width);
+    header_container->set_border_bottom_color(theme::color::BorderSoft);
     {
         thumbnail_container = context.create_element<Container>(header_container, FlexDirection::Column, JustifyContent::SpaceEvenly);
         thumbnail_container->set_flex(0.0f, 0.0f);
@@ -29,7 +29,7 @@ ModDetailsPanel::ModDetailsPanel(Element *parent) : Element(parent) {
             thumbnail_image = context.create_element<Image>(thumbnail_container, "");
             thumbnail_image->set_width(100.0f);
             thumbnail_image->set_height(100.0f);
-            thumbnail_image->set_background_color(ThemeColor::BGOverlay);
+            thumbnail_image->set_background_color(theme::color::BGOverlay);
         }
 
         header_details_container = context.create_element<Container>(header_container, FlexDirection::Column, JustifyContent::SpaceEvenly);
@@ -55,9 +55,9 @@ ModDetailsPanel::ModDetailsPanel(Element *parent) : Element(parent) {
     buttons_container->set_flex(0.0f, 0.0f);
     buttons_container->set_padding(16.0f);
     buttons_container->set_justify_content(JustifyContent::SpaceBetween);
-    buttons_container->set_border_top_width(1.1f);
-    buttons_container->set_border_top_color(ThemeColor::BorderSoft);
-    buttons_container->set_background_color(ThemeColor::BGShadow);
+    buttons_container->set_border_top_width(theme::border::width);
+    buttons_container->set_border_top_color(theme::color::BorderSoft);
+    buttons_container->set_background_color(theme::color::BGShadow);
     {
         enable_container = context.create_element<Container>(buttons_container, FlexDirection::Row, JustifyContent::FlexStart);
         enable_container->set_align_items(AlignItems::Center);

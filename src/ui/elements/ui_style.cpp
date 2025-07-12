@@ -388,7 +388,7 @@ namespace recompui {
         set_property(Rml::PropertyId::BorderBottomRightRadius, Rml::Property(radius, to_rml(unit)));
     }
 
-    static Color get_theme_color_with_opacity(ThemeColor color, int opacity) {
+    static Color get_theme_color_with_opacity(theme::color color, int opacity) {
         Color theme_color = get_theme_color(color);
         if (opacity == recompui::ThemeDefaultOpacity) {
             opacity = theme_color.a; // Use the existing opacity if not specified.
@@ -402,7 +402,7 @@ namespace recompui {
         set_property(Rml::PropertyId::BackgroundColor, property);
     }
 
-    void Style::set_background_color(recompui::ThemeColor color, int opacity) {
+    void Style::set_background_color(recompui::theme::color color, int opacity) {
         set_background_color(get_theme_color_with_opacity(color, opacity));
     }
 
@@ -414,7 +414,7 @@ namespace recompui {
         set_property(Rml::PropertyId::BorderRightColor, property);
     }
 
-    void Style::set_border_color(recompui::ThemeColor color, int opacity) {
+    void Style::set_border_color(recompui::theme::color color, int opacity) {
         set_border_color(get_theme_color_with_opacity(color, opacity));
     }
 
@@ -423,7 +423,7 @@ namespace recompui {
         set_property(Rml::PropertyId::BorderLeftColor, property);
     }
 
-    void Style::set_border_left_color(recompui::ThemeColor color, int opacity) {
+    void Style::set_border_left_color(recompui::theme::color color, int opacity) {
         set_border_left_color(get_theme_color_with_opacity(color, opacity));
     }
 
@@ -432,7 +432,7 @@ namespace recompui {
         set_property(Rml::PropertyId::BorderTopColor, property);
     }
 
-    void Style::set_border_top_color(recompui::ThemeColor color, int opacity) {
+    void Style::set_border_top_color(recompui::theme::color color, int opacity) {
         set_border_top_color(get_theme_color_with_opacity(color, opacity));
     }
 
@@ -441,7 +441,7 @@ namespace recompui {
         set_property(Rml::PropertyId::BorderRightColor, property);
     }
 
-    void Style::set_border_right_color(recompui::ThemeColor color, int opacity) {
+    void Style::set_border_right_color(recompui::theme::color color, int opacity) {
         set_border_right_color(get_theme_color_with_opacity(color, opacity));
     }
 
@@ -450,7 +450,7 @@ namespace recompui {
         set_property(Rml::PropertyId::BorderBottomColor, property);
     }
 
-    void Style::set_border_bottom_color(recompui::ThemeColor color, int opacity) {
+    void Style::set_border_bottom_color(recompui::theme::color color, int opacity) {
         set_border_bottom_color(get_theme_color_with_opacity(color, opacity));
     }
 
@@ -459,8 +459,17 @@ namespace recompui {
         set_property(Rml::PropertyId::Color, property);
     }
 
-    void Style::set_color(recompui::ThemeColor color, int opacity) {
+    void Style::set_color(recompui::theme::color color, int opacity) {
         set_color(get_theme_color_with_opacity(color, opacity));
+    }
+
+    void Style::set_image_color(const Color &color) {
+        Rml::Property property(Rml::Colourb(color.r, color.g, color.b, color.a), Rml::Unit::COLOUR);
+        set_property(Rml::PropertyId::ImageColor, property);
+    }
+
+    void Style::set_image_color(recompui::theme::color color, int opacity) {
+        set_image_color(get_theme_color_with_opacity(color, opacity));
     }
 
     void Style::set_cursor(Cursor cursor) {
@@ -645,5 +654,46 @@ namespace recompui {
         set_property(Rml::PropertyId::Focus, focusable ? Rml::Style::Focus::Auto : Rml::Style::Focus::None);
     }
 
+    Rml::TransformPtr Style::get_existing_transform() {
+        if (property_map.find(Rml::PropertyId::Transform) != property_map.end()) {
+            auto curTransform = property_map[Rml::PropertyId::Transform].Get<Rml::TransformPtr>();
+            if (curTransform != nullptr) {
+                return curTransform;
+            }
+        }
+
+        return nullptr;
+    }
+
+    void Style::set_or_add_transformation(const Rml::TransformPrimitive& primitive) {
+        Rml::TransformPtr transform = Rml::MakeShared<Rml::Transform>();
+        Rml::TransformPtr existing_transform = get_existing_transform();
+        bool added_new = false;
+        if (existing_transform != nullptr) {
+            auto& primitives = existing_transform->GetPrimitives();
+            for (int i = 0; i < primitives.size(); i++) {
+                if (primitives[i].type == primitive.type) {
+                    transform->AddPrimitive(primitive);
+                    added_new = true;
+                } else {
+                    transform->AddPrimitive(primitives[i]);
+                }
+            }
+        }
+
+        if (!added_new) {
+            transform->AddPrimitive(primitive);
+        }
+
+        set_property(Rml::PropertyId::Transform, Rml::Property(Rml::Variant(std::move(transform)), Rml::Unit::TRANSFORM));
+    }
+
+    void Style::set_translate_2D(float x, float y, Unit unit) {
+        set_or_add_transformation(Rml::Transforms::Translate2D(x, y, to_rml(unit)));
+    }
+
+    void Style::set_scale_2D(float scale_x, float scale_y) {
+        set_or_add_transformation(Rml::Transforms::Scale2D(scale_x, scale_y));
+    }
 
 } // namespace recompui

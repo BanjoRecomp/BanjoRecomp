@@ -17,16 +17,16 @@ namespace recompui {
         set_line_height(20.0f);
         set_font_weight(400);
         set_font_style(FontStyle::Normal);
-        set_border_color(ThemeColor::Text, 0);
+        set_border_color(theme::color::Text, 0);
         set_border_bottom_width(1.0f);
-        set_color(ThemeColor::TextInactive);
+        set_color(theme::color::TextInactive);
         set_padding_bottom(8.0f);
         set_text_transform(TextTransform::Uppercase);
         set_height_auto();
-        hover_style.set_color(ThemeColor::WhiteA80);
-        checked_style.set_color(ThemeColor::White);
-        checked_style.set_border_color(ThemeColor::Text);
-        pulsing_style.set_border_color(ThemeColor::SecondaryA80);
+        hover_style.set_color(theme::color::WhiteA80);
+        checked_style.set_color(theme::color::White);
+        checked_style.set_border_color(theme::color::Text);
+        pulsing_style.set_border_color(theme::color::SecondaryA80);
 
         add_style(&hover_style, { hover_state });
         add_style(&checked_style, { checked_state });

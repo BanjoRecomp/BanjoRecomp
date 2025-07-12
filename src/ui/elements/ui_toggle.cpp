@@ -5,29 +5,34 @@
 #include <ultramodern/ultramodern.hpp>
 
 namespace recompui {
+    static constexpr float toggle_height = 72.0f;
+    static constexpr float toggle_width = 162.0f;
+
+    static constexpr float toggle_floater_height = 64.0f;
+    static constexpr float toggle_floater_width = 80.0f;
 
     Toggle::Toggle(Element *parent) : Element(parent, Events(EventType::Click, EventType::Focus, EventType::Hover, EventType::Enable), "button") {
         enable_focus();
 
-        set_width(162.0f);
-        set_height(72.0f);
-        set_border_radius(36.0f);
+        set_width(toggle_width);
+        set_height(toggle_height);
+        set_border_radius(toggle_height * 0.5f);
         set_opacity(0.9f);
         set_cursor(Cursor::Pointer);
-        set_border_width(2.0f);
-        set_border_color(ThemeColor::BW50);
-        set_background_color(ThemeColor::Transparent);
-        checked_style.set_border_color(ThemeColor::Primary);
-        hover_style.set_border_color(ThemeColor::BW50);
-        hover_style.set_background_color(ThemeColor::WhiteA5);
-        focus_style.set_border_color(ThemeColor::BW50);
-        focus_style.set_background_color(ThemeColor::WhiteA5);
-        checked_hover_style.set_border_color(ThemeColor::Primary);
-        checked_hover_style.set_background_color(ThemeColor::PrimaryA30);
-        checked_focus_style.set_border_color(ThemeColor::Primary);
-        checked_focus_style.set_background_color(ThemeColor::PrimaryA30);
-        disabled_style.set_border_color(ThemeColor::BW50, 128);
-        checked_disabled_style.set_border_color(ThemeColor::PrimaryD, 128);
+        set_border_width(theme::border::width);
+        set_border_color(theme::color::BW50);
+        set_background_color(theme::color::Transparent);
+        checked_style.set_border_color(theme::color::Primary);
+        hover_style.set_border_color(theme::color::BW50);
+        hover_style.set_background_color(theme::color::WhiteA5);
+        focus_style.set_border_color(theme::color::BW50);
+        focus_style.set_background_color(theme::color::WhiteA5);
+        checked_hover_style.set_border_color(theme::color::Primary);
+        checked_hover_style.set_background_color(theme::color::PrimaryA30);
+        checked_focus_style.set_border_color(theme::color::Primary);
+        checked_focus_style.set_background_color(theme::color::PrimaryA30);
+        disabled_style.set_border_color(theme::color::BW50, 128);
+        checked_disabled_style.set_border_color(theme::color::PrimaryD, 128);
         add_style(&checked_style, checked_state);
         add_style(&hover_style, hover_state);
         add_style(&focus_style, focus_state);
@@ -41,13 +46,13 @@ namespace recompui {
         floater = context.create_element<Element>(this);
         floater->set_position(Position::Relative);
         floater->set_top(2.0f);
-        floater->set_width(80.0f);
-        floater->set_height(64.0f);
-        floater->set_border_radius(32.0f);
-        floater->set_background_color(ThemeColor::TextDim);
-        floater_checked_style.set_background_color(ThemeColor::Primary);
-        floater_disabled_style.set_background_color(ThemeColor::TextDim, 128);
-        floater_disabled_checked_style.set_background_color(ThemeColor::PrimaryD, 128);
+        floater->set_width(toggle_floater_width);
+        floater->set_height(toggle_floater_height);
+        floater->set_border_radius(toggle_height * 0.5f);
+        floater->set_background_color(theme::color::TextDim);
+        floater_checked_style.set_background_color(theme::color::Primary);
+        floater_disabled_style.set_background_color(theme::color::TextDim, 128);
+        floater_disabled_checked_style.set_background_color(theme::color::PrimaryD, 128);
         floater->add_style(&floater_checked_style, checked_state);
         floater->add_style(&floater_disabled_style, disabled_state);
         floater->add_style(&floater_disabled_checked_style, { checked_state, disabled_state });

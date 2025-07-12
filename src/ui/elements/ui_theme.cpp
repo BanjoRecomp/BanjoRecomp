@@ -1,9 +1,14 @@
 #include <array>
 #include "ui_theme.h"
 
-using ThemeColor = recompui::ThemeColor;
+using ThemeColor = recompui::theme::color;
 using ThemeColorArray = std::array<recompui::Color, (std::size_t)(ThemeColor::size)>;
 using ThemeColorNameArray = std::array<const char *, (std::size_t)(ThemeColor::size)>;
+
+float recompui::theme::border::radius_sm = 8.0f;
+float recompui::theme::border::radius_md = 12.0f;
+float recompui::theme::border::radius_lg = 16.0f;
+float recompui::theme::border::width = 1.1f;
 
 constexpr ThemeColorArray get_default_theme_color_array() {
     ThemeColorArray colors;
@@ -194,14 +199,14 @@ constexpr ThemeColorNameArray get_default_theme_color_names() {
 static ThemeColorArray theme_colors = get_default_theme_color_array();
 static ThemeColorNameArray theme_color_names = get_default_theme_color_names();
 
-void recompui::set_theme_color(ThemeColor color, const recompui::Color &value) {
+void recompui::theme::set_theme_color(recompui::theme::color color, const recompui::Color &value) {
     theme_colors[(std::size_t)color] = value;
 }
 
-const recompui::Color &recompui::get_theme_color(recompui::ThemeColor color) {
+const recompui::Color &recompui::theme::get_theme_color(recompui::theme::color color) {
     return theme_colors[(std::size_t)color];
 }
 
-const char *recompui::get_theme_color_name(recompui::ThemeColor color) {
+const char *recompui::theme::get_theme_color_name(recompui::theme::color color) {
     return theme_color_names[(std::size_t)color];
 }

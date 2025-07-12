@@ -17,6 +17,8 @@ namespace recompui {
         friend class ContextId;
     private:
         std::map<Rml::PropertyId, Rml::Property> property_map;
+        Rml::TransformPtr get_existing_transform();
+        void set_or_add_transformation(const Rml::TransformPrimitive& primitive);
     protected:
         virtual void set_property(Rml::PropertyId property_id, const Rml::Property &property);
         ResourceId resource_id = ResourceId::null();
@@ -69,13 +71,15 @@ namespace recompui {
         void set_border_right_color(const Color &color);
         void set_border_bottom_color(const Color &color);
         void set_color(const Color &color);
-        void set_background_color(recompui::ThemeColor color, int opacity = ThemeDefaultOpacity);
-        void set_border_color(recompui::ThemeColor color, int opacity = ThemeDefaultOpacity);
-        void set_border_left_color(recompui::ThemeColor color, int opacity = ThemeDefaultOpacity);
-        void set_border_top_color(recompui::ThemeColor color, int opacity = ThemeDefaultOpacity);
-        void set_border_right_color(recompui::ThemeColor color, int opacity = ThemeDefaultOpacity);
-        void set_border_bottom_color(recompui::ThemeColor color, int opacity = ThemeDefaultOpacity);
-        void set_color(recompui::ThemeColor color, int opacity = ThemeDefaultOpacity);
+        void set_image_color(const Color &color);
+        void set_background_color(recompui::theme::color color, int opacity = ThemeDefaultOpacity);
+        void set_border_color(recompui::theme::color color, int opacity = ThemeDefaultOpacity);
+        void set_border_left_color(recompui::theme::color color, int opacity = ThemeDefaultOpacity);
+        void set_border_top_color(recompui::theme::color color, int opacity = ThemeDefaultOpacity);
+        void set_border_right_color(recompui::theme::color color, int opacity = ThemeDefaultOpacity);
+        void set_border_bottom_color(recompui::theme::color color, int opacity = ThemeDefaultOpacity);
+        void set_color(recompui::theme::color color, int opacity = ThemeDefaultOpacity);
+        void set_image_color(recompui::theme::color color, int opacity = ThemeDefaultOpacity);
         void set_cursor(Cursor cursor);
         void set_opacity(float opacity);
         void set_display(Display display);
@@ -104,6 +108,8 @@ namespace recompui {
         void set_drag(Drag drag);
         void set_tab_index(TabIndex focus);
         void set_font_family(std::string_view family);
+        void set_translate_2D(float x, float y, Unit unit = Unit::Dp);
+        void set_scale_2D(float scale_x, float scale_y);
         virtual void set_nav_auto(NavDirection dir);
         virtual void set_nav_none(NavDirection dir);
         virtual void set_nav(NavDirection dir, Element* element);

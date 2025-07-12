@@ -42,17 +42,17 @@ ModEntryView::ModEntryView(Element *parent) : Element(parent, Events(EventType::
     set_height_auto();
     set_padding(modEntryPadding);
     set_border_left_width(2.0f);
-    set_border_color(ThemeColor::BorderSoft);
-    set_background_color(ThemeColor::BorderSoft);
+    set_border_color(theme::color::BorderSoft);
+    set_background_color(theme::color::BorderSoft);
     set_cursor(Cursor::Pointer);
-    set_color(ThemeColor::Text);
+    set_color(theme::color::Text);
 
-    checked_style.set_border_color(ThemeColor::BorderSolid);
-    checked_style.set_color(ThemeColor::White);
-    checked_style.set_background_color(recompui::ThemeColor::Background3);
-    hover_style.set_border_color(ThemeColor::BorderHard);
-    checked_hover_style.set_border_color(ThemeColor::Text);
-    pulsing_style.set_border_color(ThemeColor::SecondaryA80);
+    checked_style.set_border_color(theme::color::BorderSolid);
+    checked_style.set_color(theme::color::White);
+    checked_style.set_background_color(recompui::theme::color::Background3);
+    hover_style.set_border_color(theme::color::BorderHard);
+    checked_hover_style.set_border_color(theme::color::Text);
+    pulsing_style.set_border_color(theme::color::SecondaryA80);
 
     {
         thumbnail_image = context.create_element<Image>(this, "");
@@ -60,7 +60,7 @@ ModEntryView::ModEntryView(Element *parent) : Element(parent, Events(EventType::
         thumbnail_image->set_height(modEntryHeight);
         thumbnail_image->set_min_width(modEntryHeight);
         thumbnail_image->set_min_height(modEntryHeight);
-        thumbnail_image->set_background_color(ThemeColor::BGOverlay);
+        thumbnail_image->set_background_color(theme::color::BGOverlay);
 
 
         body_container = context.create_element<Element>(this);
@@ -75,7 +75,7 @@ ModEntryView::ModEntryView(Element *parent) : Element(parent, Events(EventType::
             name_label = context.create_element<Label>(body_container, LabelStyle::Normal);
             description_label = context.create_element<Label>(body_container, LabelStyle::Small);
             description_label->set_margin_top(4.0f);
-            description_label->set_color(ThemeColor::TextDim);
+            description_label->set_color(theme::color::TextDim);
         } // body_container
     } // this
 
@@ -650,7 +650,7 @@ ModMenu::ModMenu(Element *parent) : Element(parent) {
             list_container->set_flex_basis(100.0f);
             list_container->set_align_items(AlignItems::Center);
             list_container->set_height(100.0f, Unit::Percent);
-            list_container->set_background_color(ThemeColor::BGShadow);
+            list_container->set_background_color(theme::color::BGShadow);
             list_container->set_border_bottom_left_radius(16.0f);
             {
                 list_scroll_container = context.create_element<ScrollContainer>(list_container, ScrollDirection::Vertical);
@@ -673,9 +673,9 @@ ModMenu::ModMenu(Element *parent) : Element(parent) {
         footer_container = context.create_element<Container>(this, FlexDirection::Row, JustifyContent::FlexStart);
         footer_container->set_width(100.0f, recompui::Unit::Percent);
         footer_container->set_align_items(recompui::AlignItems::Center);
-        footer_container->set_background_color(ThemeColor::BGShadow);
-        footer_container->set_border_top_width(1.1f);
-        footer_container->set_border_top_color(ThemeColor::BorderSoft);
+        footer_container->set_background_color(theme::color::BGShadow);
+        footer_container->set_border_top_width(theme::border::width);
+        footer_container->set_border_top_color(theme::color::BorderSoft);
         footer_container->set_padding(20.0f);
         footer_container->set_gap(20.0f);
         footer_container->set_border_bottom_left_radius(16.0f);
