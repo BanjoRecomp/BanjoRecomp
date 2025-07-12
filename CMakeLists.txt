@@ -182,6 +182,7 @@ set (SOURCES
     ${CMAKE_SOURCE_DIR}/src/ui/ui_utils.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/util/hsv.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/core/ui_context.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/elements/ui_binding_button.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/elements/ui_button.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/elements/ui_icon_button.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/elements/ui_clickable.cpp
