@@ -129,6 +129,19 @@ namespace recomp {
         j.at("input_type").get_to(field.input_type);
         j.at("input_id").get_to(field.input_id);
     }
+
+    void to_json(json& j, const ControllerGUID& guid) {
+        j = json{ {"serial", guid.serial}, {"vendor", guid.vendor}, {"product", guid.product}, {"version", guid.version}, {"crc16", guid.crc16}, {"player_index", guid.player_index} };
+    }
+
+    void from_json(const json& j, ControllerGUID& guid) {
+        j.at("serial").get_to(guid.serial);
+        j.at("vendor").get_to(guid.vendor);
+        j.at("product").get_to(guid.product);
+        j.at("version").get_to(guid.version);
+        j.at("crc16").get_to(guid.crc16);
+        j.at("player_index").get_to(guid.player_index);
+    }
 }
 
 std::filesystem::path banjo::get_app_folder_path() {
@@ -268,17 +281,19 @@ bool load_general_config(const std::filesystem::path& path) {
 
 void assign_mapping(recomp::InputDevice device, recomp::GameInput input, const std::vector<recomp::InputField>& value) {
     for (size_t binding_index = 0; binding_index < std::min(value.size(), recomp::bindings_per_input); binding_index++) {
-        recomp::set_input_binding(input, binding_index, device, value[binding_index]);
+        // TODO: Needs the active controller tab.
+        recomp::set_input_binding(0, input, binding_index, device, value[binding_index]);
     }
 };
 
 // same as assign_mapping, except will clear unassigned bindings if not in value
 void assign_mapping_complete(recomp::InputDevice device, recomp::GameInput input, const std::vector<recomp::InputField>& value) {
+    // TODO: Needs the active controller tab.
     for (size_t binding_index = 0; binding_index < recomp::bindings_per_input; binding_index++) {
         if (binding_index >= value.size()) {
-            recomp::set_input_binding(input, binding_index, device, recomp::InputField{});
+            recomp::set_input_binding(0, input, binding_index, device, recomp::InputField{});
         } else {
-            recomp::set_input_binding(input, binding_index, device, value[binding_index]);
+            recomp::set_input_binding(0, input, binding_index, device, value[binding_index]);
         }
     }
 };
@@ -368,32 +383,36 @@ bool load_graphics_config(const std::filesystem::path& path) {
     return true;
 }
 
-void add_input_bindings(nlohmann::json& out, recomp::GameInput input, recomp::InputDevice device) {
+void add_input_bindings(nlohmann::json& out, int controller_num, recomp::GameInput input, recomp::InputDevice device) {
     const std::string& input_name = recomp::get_input_enum_name(input);
     nlohmann::json& out_array = out[input_name];
     out_array = nlohmann::json::array();
     for (size_t binding_index = 0; binding_index < recomp::bindings_per_input; binding_index++) {
-        out_array[binding_index] = recomp::get_input_binding(input, binding_index, device);
+        out_array[binding_index] = recomp::get_input_binding(controller_num, input, binding_index, device);
     }
 };
 
 bool save_controls_config(const std::filesystem::path& path) {
     nlohmann::json config_json{};
+    config_json["players"] = std::vector<nlohmann::json>(4);
+    for (size_t i = 0; i < config_json["players"].size(); i++) {
+        nlohmann::json &player = config_json["players"][i];
+        player["keyboard"] = {};
+        player["controller"] = {};
 
-    config_json["keyboard"] = {};
-    config_json["controller"] = {};
+        for (size_t j = 0; j < recomp::get_num_inputs(); j++) {
+            recomp::GameInput cur_input = static_cast<recomp::GameInput>(j);
+            add_input_bindings(player["keyboard"], i, cur_input, recomp::InputDevice::Keyboard);
+            add_input_bindings(player["controller"], i, cur_input, recomp::InputDevice::Controller);
+        }
 
-    for (size_t i = 0; i < recomp::get_num_inputs(); i++) {
-        recomp::GameInput cur_input = static_cast<recomp::GameInput>(i);
-
-        add_input_bindings(config_json["keyboard"], cur_input, recomp::InputDevice::Keyboard);
-        add_input_bindings(config_json["controller"], cur_input, recomp::InputDevice::Controller);
+        player["controller"]["guid"] = recomp::get_input_controller_guid(i);
     }
 
     return save_json_with_backups(path, config_json);
 }
 
-bool load_input_device_from_json(const nlohmann::json& config_json, recomp::InputDevice device, const std::string& key) {
+bool load_input_device_from_json(const nlohmann::json& config_json, int controller_num, recomp::InputDevice device, const std::string& key) {
     // Check if the json object for the given key exists.
     auto find_it = config_json.find(key);
     if (find_it == config_json.end()) {
@@ -427,7 +446,7 @@ bool load_input_device_from_json(const nlohmann::json& config_json, recomp::Inpu
         for (size_t binding_index = 0; binding_index < std::min(recomp::bindings_per_input, input_json.size()); binding_index++) {
             recomp::InputField cur_field{};
             recomp::from_json(input_json[binding_index], cur_field);
-            recomp::set_input_binding(cur_input, binding_index, device, cur_field);
+            recomp::set_input_binding(controller_num, cur_input, binding_index, device, cur_field);
         }
     }
 
@@ -440,13 +459,28 @@ bool load_controls_config(const std::filesystem::path& path) {
         return false;
     }
 
-    if (!load_input_device_from_json(config_json, recomp::InputDevice::Keyboard, "keyboard")) {
-        assign_all_mappings(recomp::InputDevice::Keyboard, recomp::default_n64_keyboard_mappings);
+    auto players_it = config_json.find("players");
+    for (size_t i = 0; i < 4; i++) {
+        const bool player_exists = players_it != config_json.end() && players_it->is_array() && (players_it->size() > i);
+        const nlohmann::json &player = player_exists ? (*players_it)[i] : nlohmann::json();
+        if (!load_input_device_from_json(player, i, recomp::InputDevice::Keyboard, "keyboard")) {
+            assign_all_mappings(recomp::InputDevice::Keyboard, recomp::default_n64_keyboard_mappings);
+        }
+
+        if (!load_input_device_from_json(player, i, recomp::InputDevice::Controller, "controller")) {
+            assign_all_mappings(recomp::InputDevice::Controller, recomp::default_n64_controller_mappings);
+        }
+
+        auto controller_it = player.find("controller");
+        if (controller_it != player.end()) {
+            const nlohmann::json &controller = *controller_it;
+            auto guid_it = controller.find("guid");
+            if (guid_it != controller.end()) {
+                recomp::set_input_controller_guid(i, *guid_it);
+            }
+        }
     }
 
-    if (!load_input_device_from_json(config_json, recomp::InputDevice::Controller, "controller")) {
-        assign_all_mappings(recomp::InputDevice::Controller, recomp::default_n64_controller_mappings);
-    }
     return true;
 }
 
@@ -516,6 +550,14 @@ void banjo::save_config() {
     }
 
     std::filesystem::create_directories(recomp_dir);
+
+    /// TODO: Move where this is relevant on the controller UI.
+    recomp::refresh_controller_options();
+    auto controller_options = recomp::get_controller_options();
+    if (!controller_options.empty()) {
+        recomp::set_input_controller_guid(0, controller_options.back().guid);
+    }
+    ///
 
     // TODO error handling for failing to save config files.
 

@@ -157,7 +157,7 @@ extern "C" void recomp_get_camera_inputs(uint8_t* rdram, recomp_context* ctx) {
 
     float x, y;
 
-    recomp::get_right_analog(&x, &y);
+    recomp::get_right_analog(0, &x, &y);
 
     float magnitude = sqrtf(x * x + y * y);
 
