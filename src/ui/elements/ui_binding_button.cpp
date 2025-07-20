@@ -4,29 +4,13 @@
 
 namespace recompui {
     static const float padding = 8.0f;
-    static const float height = 56.0f - (theme::border::width * 2.0f);
 
     BindingButton::BindingButton(Element *parent, const std::string &mapped_binding) : Element(parent, Events(EventType::Click, EventType::Hover, EventType::Enable, EventType::Focus), "button") {
         this->mapped_binding = mapped_binding;
 
         enable_focus();
+        apply_sizing_styling(this);
 
-        set_display(Display::Flex);
-        set_position(Position::Relative);
-
-        set_flex_grow(1.0f);
-        set_flex_shrink(1.0f);
-        set_flex_basis(100.0f, recompui::Unit::Percent);
-
-        set_align_items(AlignItems::Center);
-        set_justify_content(JustifyContent::Center);
-
-        set_width(100.0f, recompui::Unit::Percent);
-        set_height(height);
-        set_padding(padding);
-
-        set_border_width(theme::border::width);
-        set_border_radius(theme::border::radius_sm);
         set_border_color(theme::color::WhiteA5);
         set_background_color(theme::color::WhiteA5);
         set_color(theme::color::TextDim);
@@ -60,6 +44,28 @@ namespace recompui {
         recording_edge = context.create_element<Element>(recording_parent);
         recording_svg = context.create_element<Svg>(recording_edge, "icons/RecordBorder.svg");
         apply_recording_style();
+    }
+
+    void BindingButton::apply_sizing_styling(Element *el) {
+        const float height = 56.0f - (theme::border::width * 2.0f);
+        el->set_display(Display::Flex);
+        el->set_position(Position::Relative);
+
+        el->set_flex_grow(1.0f);
+        el->set_flex_shrink(1.0f);
+        el->set_flex_basis(100.0f, recompui::Unit::Percent);
+
+        el->set_align_items(AlignItems::Center);
+        el->set_justify_content(JustifyContent::Center);
+
+        el->set_width(100.0f, recompui::Unit::Percent);
+        el->set_height(height);
+        el->set_padding(padding);
+
+        el->set_border_width(theme::border::width);
+        el->set_border_radius(theme::border::radius_sm);
+        el->set_border_color(theme::color::Transparent);
+        el->set_background_color(theme::color::Transparent);
     }
 
     void BindingButton::apply_recording_style() {

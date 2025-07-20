@@ -107,6 +107,15 @@ constexpr ThemeColorArray get_default_theme_color_array() {
     colors[(std::size_t)ThemeColor::BW75] = recompui::Color{191, 191, 191, 255};
     colors[(std::size_t)ThemeColor::BW90] = recompui::Color{229, 229, 229, 255};
 
+    colors[(std::size_t)ThemeColor::Player1] = recompui::Color{0, 185, 253, 255};
+    colors[(std::size_t)ThemeColor::Player2] = recompui::Color{253, 76, 0, 255};
+    colors[(std::size_t)ThemeColor::Player3] = recompui::Color{253, 194, 0, 255};
+    colors[(std::size_t)ThemeColor::Player4] = recompui::Color{147, 253, 0, 255};
+    colors[(std::size_t)ThemeColor::Player5] = recompui::Color{0, 253, 164, 255};
+    colors[(std::size_t)ThemeColor::Player6] = recompui::Color{253, 0, 189, 255};
+    colors[(std::size_t)ThemeColor::Player7] = recompui::Color{140, 74, 255, 255};
+    colors[(std::size_t)ThemeColor::Player8] = recompui::Color{255, 186, 118, 255};
+
     return colors;
 }
 
@@ -193,6 +202,14 @@ constexpr ThemeColorNameArray get_default_theme_color_names() {
     names[(std::size_t)ThemeColor::BW50] = "BW50";
     names[(std::size_t)ThemeColor::BW75] = "BW75";
     names[(std::size_t)ThemeColor::BW90] = "BW90";
+    names[(std::size_t)ThemeColor::Player1] = "Player1";
+    names[(std::size_t)ThemeColor::Player2] = "Player2";
+    names[(std::size_t)ThemeColor::Player3] = "Player3";
+    names[(std::size_t)ThemeColor::Player4] = "Player4";
+    names[(std::size_t)ThemeColor::Player5] = "Player5";
+    names[(std::size_t)ThemeColor::Player6] = "Player6";
+    names[(std::size_t)ThemeColor::Player7] = "Player7";
+    names[(std::size_t)ThemeColor::Player8] = "Player8";
     return names;
 }
 

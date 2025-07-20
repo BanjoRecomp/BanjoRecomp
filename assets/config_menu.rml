@@ -78,6 +78,20 @@
 						<panel class="config" data-model="debug_model">
 							<template src="config-menu__debug" />
 						</panel>
+						<tab class="tab" id="tab_controls2">
+							<div>Controls new</div>
+							<div class="tab__indicator"></div>
+						</tab>
+						<panel class="config">
+							<recomp-config-page-controls />
+						</panel>
+						<tab class="tab" id="tab_example">
+							<div>Example</div>
+							<div class="tab__indicator"></div>
+						</tab>
+						<panel class="config">
+							<recomp-config-page-example />
+						</panel>
 					</tabset>
 					<div class="config__icon-buttons">
 						<button

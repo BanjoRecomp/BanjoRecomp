@@ -34,6 +34,8 @@ namespace recompui {
         Style* get_focus_style() { return &focus_style; }
         Style* get_disabled_style() { return &disabled_style; }
         Style* get_hover_disabled_style() { return &hover_disabled_style; }
+        // This is exposed for placeholder elements
+        static void apply_sizing_styling(Element *el);
     private:
         void apply_recording_style();
         void apply_binding_style();

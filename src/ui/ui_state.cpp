@@ -26,6 +26,7 @@
 #include "ui_mod_menu.h"
 #include "ui_mod_installer.h"
 #include "ui_renderer.h"
+#include "ui_assign_players_modal.h"
 
 bool can_focus(Rml::Element* element) {
     return element->GetOwnerDocument() != nullptr && element->GetProperty(Rml::PropertyId::TabIndex)->Get<Rml::Style::TabIndex>() != Rml::Style::TabIndex::None;
@@ -237,6 +238,7 @@ public:
         launcher_menu_controller->load_document();
         config_menu_controller->load_document();
         recompui::init_prompt_context();
+        recompui::init_assign_players_modal();
     }
 
     void unload() {
@@ -469,8 +471,8 @@ int cont_button_to_key(SDL_ControllerButtonEvent& button) {
     auto menuAcceptBinding0 = recomp::get_input_binding(0, recomp::GameInput::ACCEPT_MENU, 0, recomp::InputDevice::Controller);
     auto menuAcceptBinding1 = recomp::get_input_binding(0, recomp::GameInput::ACCEPT_MENU, 1, recomp::InputDevice::Controller);
     // note - magic number: 0 is InputType::None
-    if ((menuAcceptBinding0.input_type != 0 && button.button == menuAcceptBinding0.input_id) ||
-        (menuAcceptBinding1.input_type != 0 && button.button == menuAcceptBinding1.input_id)) {
+    if ((menuAcceptBinding0.input_type != recomp::InputType::None && button.button == menuAcceptBinding0.input_id) ||
+        (menuAcceptBinding1.input_type != recomp::InputType::None && button.button == menuAcceptBinding1.input_id)) {
         return SDLK_RETURN;
     }
 
@@ -478,8 +480,8 @@ int cont_button_to_key(SDL_ControllerButtonEvent& button) {
     auto menuApplyBinding0 = recomp::get_input_binding(0, recomp::GameInput::APPLY_MENU, 0, recomp::InputDevice::Controller);
     auto menuApplyBinding1 = recomp::get_input_binding(0, recomp::GameInput::APPLY_MENU, 1, recomp::InputDevice::Controller);
     // note - magic number: 0 is InputType::None
-    if ((menuApplyBinding0.input_type != 0 && button.button == menuApplyBinding0.input_id) ||
-        (menuApplyBinding1.input_type != 0 && button.button == menuApplyBinding1.input_id)) {
+    if ((menuApplyBinding0.input_type != recomp::InputType::None && button.button == menuApplyBinding0.input_id) ||
+        (menuApplyBinding1.input_type != recomp::InputType::None && button.button == menuApplyBinding1.input_id)) {
         return SDLK_f;
     } 
 
@@ -487,8 +489,8 @@ int cont_button_to_key(SDL_ControllerButtonEvent& button) {
     auto menuToggleBinding0 = recomp::get_input_binding(0, recomp::GameInput::TOGGLE_MENU, 0, recomp::InputDevice::Controller);
     auto menuToggleBinding1 = recomp::get_input_binding(0, recomp::GameInput::TOGGLE_MENU, 1, recomp::InputDevice::Controller);
     // note - magic number: 0 is InputType::None
-    if ((menuToggleBinding0.input_type != 0 && button.button == menuToggleBinding0.input_id) ||
-        (menuToggleBinding1.input_type != 0 && button.button == menuToggleBinding1.input_id)) {
+    if ((menuToggleBinding0.input_type != recomp::InputType::None && button.button == menuToggleBinding0.input_id) ||
+        (menuToggleBinding1.input_type != recomp::InputType::None && button.button == menuToggleBinding1.input_id)) {
         return SDLK_ESCAPE;
     }
 
@@ -718,8 +720,8 @@ void draw_hook(RT64::RenderCommandList* command_list, RT64::RenderFramebuffer* s
                 auto menuToggleBinding0 = recomp::get_input_binding(0, recomp::GameInput::TOGGLE_MENU, 0, recomp::InputDevice::Controller);
                 auto menuToggleBinding1 = recomp::get_input_binding(0, recomp::GameInput::TOGGLE_MENU, 1, recomp::InputDevice::Controller);
                 // note - magic number: 0 is InputType::None
-                if ((menuToggleBinding0.input_type != 0 && cur_event.cbutton.button == menuToggleBinding0.input_id) ||
-                    (menuToggleBinding1.input_type != 0 && cur_event.cbutton.button == menuToggleBinding1.input_id)) {
+                if ((menuToggleBinding0.input_type != recomp::InputType::None && cur_event.cbutton.button == menuToggleBinding0.input_id) ||
+                    (menuToggleBinding1.input_type != recomp::InputType::None && cur_event.cbutton.button == menuToggleBinding1.input_id)) {
                     open_config = true;
                 }
                 break;

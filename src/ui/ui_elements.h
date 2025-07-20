@@ -6,6 +6,8 @@
 
 #include "ui_mod_menu.h"
 #include "ui_config_sub_menu.h"
+#include "ui_config_page_example.h"
+#include "ui_config_page_controls_element.h"
 
 namespace recompui {
     void register_custom_elements();

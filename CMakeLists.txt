@@ -168,6 +168,10 @@ set (SOURCES
     ${CMAKE_SOURCE_DIR}/src/ui/ui_state.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/ui_launcher.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/ui_config.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/ui_assign_players_modal.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/ui_config_page_example.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/ui_config_page_controls.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/ui_config_page_controls_element.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/ui_prompt.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/ui_config_sub_menu.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/ui_color_hack.cpp
@@ -186,10 +190,12 @@ set (SOURCES
     ${CMAKE_SOURCE_DIR}/src/ui/elements/ui_button.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/elements/ui_icon_button.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/elements/ui_clickable.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/elements/ui_config_page.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/elements/ui_container.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/elements/ui_element.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/elements/ui_image.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/elements/ui_label.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/elements/ui_pill_button.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/elements/ui_radio.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/elements/ui_scroll_container.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/elements/ui_slider.cpp
@@ -288,7 +294,7 @@ if (WIN32)
         PROPERTIES
             LINK_FLAGS_DEBUG "/SUBSYSTEM:CONSOLE"
             LINK_FLAGS_RELEASE "/SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup"
-            LINK_FLAGS_RELWITHDEBINFO "/SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup"
+            LINK_FLAGS_RELWITHDEBINFO  "/SUBSYSTEM:CONSOLE" # "/SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup"
             LINK_FLAGS_MINSIZEREL "/SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup"
     )
 

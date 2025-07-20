@@ -62,8 +62,19 @@ namespace recomp {
     };
     #undef DEFINE_INPUT
 
+    // What type of source an input comes from (SDL_Scancode, SDL_GameControllerButton, SDL_GameControllerAxis, SDL_BUTTON, etc.)
+    enum class InputType {
+        None = 0, // Using zero for None ensures that default initialized InputFields are unbound.
+        Keyboard,
+        Mouse,
+        ControllerDigital,
+        ControllerAnalog // Axis input_id values are the SDL value + 1
+    };
+
+    // A single input. Combines the source of the input (see InputType) and a specific key/button/axis.
     struct InputField {
-        uint32_t input_type;
+        InputType input_type;
+        // Represents a single source input. e.g. A keyboard's shift key, or a controller's R trigger
         int32_t input_id;
         std::string to_string() const;
         auto operator<=>(const InputField& rhs) const = default;
@@ -220,6 +231,37 @@ namespace recomp {
 
     bool game_input_disabled();
     bool all_input_disabled();
+
+}
+
+namespace recompinput {
+    struct BindingState {
+        bool is_scanning = false;
+        bool found_binding = false;
+        int player_index = -1;
+        recomp::GameInput game_input = recomp::GameInput::COUNT;
+        int binding_index = -1;
+        recomp::InputField new_binding = {};
+    };
+
+    void start_scanning_for_binding(int player_index, recomp::GameInput game_input, int binding_index);
+    void stop_scanning_for_binding();
+
+    BindingState& get_binding_state();
+
+    int get_num_players();
+    bool get_player_is_assigned(int player_index);
+    
+    struct PlayerAssignmentState {
+        bool is_assigning = false;
+        int player_index = 0;
+    };
+
+    void start_player_assignment(void);
+    void stop_player_assignment(void);
+    bool is_player_assignment_active();
+
+    bool does_player_have_controller(int player_index);
 }
 
 #endif

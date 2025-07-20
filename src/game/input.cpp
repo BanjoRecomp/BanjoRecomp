@@ -9,6 +9,7 @@
 #include "SDL.h"
 #include "promptfont.h"
 #include "GamepadMotion.hpp"
+#include "../ui/ui_assign_players_modal.h"
 
 constexpr float axis_threshold = 0.5f;
 
@@ -23,6 +24,12 @@ struct ControllerState {
     };
 };
 
+struct AssignedPlayer {
+    SDL_GameController* controller = nullptr;
+    bool is_assigned = false;
+    bool keyboard_enabled = false;
+};
+
 static struct {
     const Uint8* keys = nullptr;
     SDL_Keymod keymod = SDL_Keymod::KMOD_NONE;
@@ -31,9 +38,9 @@ static struct {
     std::mutex controllers_mutex;
     std::vector<SDL_GameController*> detected_controllers{};
     std::vector<recomp::ControllerOption> detected_controller_options{};
-    std::array<SDL_GameController*, 4> assigned_controllers{}; // Only used when Multiplayer is enabled.
+    std::array<AssignedPlayer, 4> assigned_controllers{}; // Only used when Multiplayer is enabled.
     std::unordered_map<SDL_JoystickID, ControllerState> controller_states;
-    bool single_controller = true;
+    bool single_controller = false;
 
     std::array<float, 2> rotation_delta{};
     std::array<float, 2> mouse_delta{};
@@ -52,13 +59,121 @@ static struct {
 std::atomic<recomp::InputDevice> scanning_device = recomp::InputDevice::COUNT;
 std::atomic<recomp::InputField> scanned_input;
 
-enum class InputType {
-    None = 0, // Using zero for None ensures that default initialized InputFields are unbound.
-    Keyboard,
-    Mouse,
-    ControllerDigital,
-    ControllerAnalog // Axis input_id values are the SDL value + 1
-};
+static recompinput::BindingState binding_state;
+static recompinput::PlayerAssignmentState player_assignment_state;
+
+void recompinput::start_scanning_for_binding(int player_index, recomp::GameInput game_input, int binding_index) {
+    binding_state.is_scanning = true;
+    binding_state.found_binding = false;
+    binding_state.player_index = player_index;
+    binding_state.game_input = game_input;
+    binding_state.binding_index = binding_index;
+}
+
+void recompinput::stop_scanning_for_binding() {
+    binding_state.is_scanning = false;
+    binding_state.found_binding = false;
+    binding_state.player_index = -1;
+    binding_state.game_input = recomp::GameInput::COUNT;
+    binding_state.binding_index = -1;
+}
+
+recompinput::BindingState& recompinput::get_binding_state() {
+    return binding_state;
+}
+
+int recompinput::get_num_players() {
+    return static_cast<int>(InputState.assigned_controllers.size());
+}
+
+bool recompinput::get_player_is_assigned(int player_index) {
+    if (player_index < 0 || player_index >= recompinput::get_num_players()) {
+        return false;
+    }
+
+    return InputState.assigned_controllers[player_index].is_assigned;
+}
+
+void recompinput::start_player_assignment() {
+    player_assignment_state.is_assigning = true;
+    player_assignment_state.player_index = 0;
+
+    for (auto& player : InputState.assigned_controllers) {
+        player.controller = nullptr;
+        player.is_assigned = false;
+        player.keyboard_enabled = false;
+    }
+}
+
+void recompinput::stop_player_assignment() {
+    player_assignment_state.is_assigning = false;
+    player_assignment_state.player_index = -1;
+    recompui::assign_players_modal->close();
+}
+
+bool recompinput::is_player_assignment_active() {
+    return player_assignment_state.is_assigning;
+}
+
+bool recompinput::does_player_have_controller(int player_index) {
+    if (player_index < 0 || player_index >= recompinput::get_num_players()) {
+        return false;
+    }
+    return InputState.assigned_controllers[player_index].controller != nullptr;
+}
+
+void process_player_assignment(SDL_Event* event) {
+    if (!player_assignment_state.is_assigning) {
+        return;
+    }
+
+    recomp::refresh_controller_options();
+
+    switch (event->type) {
+    case SDL_EventType::SDL_KEYDOWN: {
+        SDL_KeyboardEvent* keyevent = &event->key;
+
+        switch (keyevent->keysym.scancode) {
+        case SDL_Scancode::SDL_SCANCODE_ESCAPE:
+            // TODO: Restore previous assignment?
+            recompinput::stop_player_assignment();
+            return;
+        case SDL_Scancode::SDL_SCANCODE_SPACE:
+            InputState.assigned_controllers[player_assignment_state.player_index].is_assigned = true;
+            InputState.assigned_controllers[player_assignment_state.player_index].keyboard_enabled = true;
+            player_assignment_state.player_index++;
+            printf("Assigned keyboard to player %d\n", player_assignment_state.player_index - 1);
+            break;
+        }
+        break;
+    }
+    case SDL_EventType::SDL_CONTROLLERBUTTONDOWN: {
+        SDL_ControllerButtonEvent* button_event = &event->cbutton;
+        SDL_JoystickID joystick_id = button_event->which;
+        auto controller_state = InputState.controller_states[joystick_id];
+
+        bool can_be_mapped = true;
+        for (int i = 0; i < player_assignment_state.player_index; i++) {
+            if (InputState.assigned_controllers[i].controller == controller_state.controller) {
+                can_be_mapped = false;
+                break;
+            }
+        }
+        if (can_be_mapped) {
+            InputState.assigned_controllers[player_assignment_state.player_index].is_assigned = true;
+            InputState.assigned_controllers[player_assignment_state.player_index].controller = controller_state.controller;
+            player_assignment_state.player_index++;
+            printf("Assigned controller %d to player %d\n", joystick_id, player_assignment_state.player_index - 1);
+        }
+
+        break;
+    }
+    }
+
+    if (player_assignment_state.player_index >= recompinput::get_num_players()) {
+        recompinput::stop_player_assignment();
+    }
+}
 
 void set_scanned_input(recomp::InputField value) {
     scanning_device.store(recomp::InputDevice::COUNT);
@@ -125,7 +240,7 @@ bool sdl_event_filter(void* userdata, SDL_Event* event) {
                 recomp::cancel_scanning_input();
             }
             else if (scanning_device == recomp::InputDevice::Keyboard) {
-                set_scanned_input({ (uint32_t)InputType::Keyboard, keyevent->keysym.scancode });
+                set_scanned_input({ recomp::InputType::Keyboard, keyevent->keysym.scancode });
             }
         }
         else {
@@ -142,6 +257,7 @@ bool sdl_event_filter(void* userdata, SDL_Event* event) {
         printf("Controller added: %d\n", controller_event->which);
         if (controller != nullptr) {
             printf("  Instance ID: %d\n", SDL_JoystickInstanceID(SDL_GameControllerGetJoystick(controller)));
+            printf("  Path: %s\n", SDL_JoystickPath(SDL_GameControllerGetJoystick(controller)));
             ControllerState& state = InputState.controller_states[SDL_JoystickInstanceID(SDL_GameControllerGetJoystick(controller))];
             state.controller = controller;
 
@@ -182,8 +298,8 @@ bool sdl_event_filter(void* userdata, SDL_Event* event) {
             auto menuToggleBinding0 = recomp::get_input_binding(0, recomp::GameInput::TOGGLE_MENU, 0, recomp::InputDevice::Controller);
             auto menuToggleBinding1 = recomp::get_input_binding(0, recomp::GameInput::TOGGLE_MENU, 1, recomp::InputDevice::Controller);
             // note - magic number: 0 is InputType::None
-            if ((menuToggleBinding0.input_type != 0 && event->cbutton.button == menuToggleBinding0.input_id) ||
-                (menuToggleBinding1.input_type != 0 && event->cbutton.button == menuToggleBinding1.input_id)) {
+            if ((menuToggleBinding0.input_type != recomp::InputType::None && event->cbutton.button == menuToggleBinding0.input_id) ||
+                (menuToggleBinding1.input_type != recomp::InputType::None && event->cbutton.button == menuToggleBinding1.input_id)) {
                 recomp::cancel_scanning_input();
             }
             else if (scanning_device == recomp::InputDevice::Controller) {
@@ -199,7 +315,7 @@ bool sdl_event_filter(void* userdata, SDL_Event* event) {
                     break;
                 }
 
-                set_scanned_input({ (uint32_t)InputType::ControllerDigital, button_event->button });
+                set_scanned_input({ recomp::InputType::ControllerDigital, button_event->button });
             }
         }
         else {
@@ -225,7 +341,7 @@ bool sdl_event_filter(void* userdata, SDL_Event* event) {
                 set_stick_return_event.user.data2 = nullptr;
                 recompui::queue_event(set_stick_return_event);
 
-                set_scanned_input({ (uint32_t)InputType::ControllerAnalog, axis_event->axis + 1 });
+                set_scanned_input({ recomp::InputType::ControllerAnalog, axis_event->axis + 1 });
             }
             else if (axis_value < -axis_threshold) {
                 SDL_Event set_stick_return_event;
@@ -235,7 +351,7 @@ bool sdl_event_filter(void* userdata, SDL_Event* event) {
                 set_stick_return_event.user.data2 = nullptr;
                 recompui::queue_event(set_stick_return_event);
 
-                set_scanned_input({ (uint32_t)InputType::ControllerAnalog, -axis_event->axis - 1 });
+                set_scanned_input({ recomp::InputType::ControllerAnalog, -axis_event->axis - 1 });
             }
         }
         else {
@@ -304,6 +420,7 @@ bool sdl_event_filter(void* userdata, SDL_Event* event) {
         queue_if_enabled(event);
         break;
     }
+    process_player_assignment(event);
     return false;
 }
 
@@ -340,144 +457,172 @@ constexpr SDL_GameControllerButton SDL_CONTROLLER_BUTTON_NORTH = SDL_CONTROLLER_
 
 const recomp::DefaultN64Mappings recomp::default_n64_keyboard_mappings = {
     .a = {
-        {.input_type = (uint32_t)InputType::Keyboard, .input_id = SDL_SCANCODE_SPACE}
+        {.input_type = InputType::Keyboard, .input_id = SDL_SCANCODE_SPACE}
     },
     .b = {
-        {.input_type = (uint32_t)InputType::Keyboard, .input_id = SDL_SCANCODE_LSHIFT}
+        {.input_type = InputType::Keyboard, .input_id = SDL_SCANCODE_LSHIFT}
     },
     .l = {
-        {.input_type = (uint32_t)InputType::Keyboard, .input_id = SDL_SCANCODE_E}
+        {.input_type = InputType::Keyboard, .input_id = SDL_SCANCODE_E}
     },
     .r = {
-        {.input_type = (uint32_t)InputType::Keyboard, .input_id = SDL_SCANCODE_R}
+        {.input_type = InputType::Keyboard, .input_id = SDL_SCANCODE_R}
     },
     .z = {
-        {.input_type = (uint32_t)InputType::Keyboard, .input_id = SDL_SCANCODE_Q}
+        {.input_type = InputType::Keyboard, .input_id = SDL_SCANCODE_Q}
     },
     .start = {
-        {.input_type = (uint32_t)InputType::Keyboard, .input_id = SDL_SCANCODE_RETURN}
+        {.input_type = InputType::Keyboard, .input_id = SDL_SCANCODE_RETURN}
     },
     .c_left = {
-        {.input_type = (uint32_t)InputType::Keyboard, .input_id = SDL_SCANCODE_LEFT}
+        {.input_type = InputType::Keyboard, .input_id = SDL_SCANCODE_LEFT}
     },
     .c_right = {
-        {.input_type = (uint32_t)InputType::Keyboard, .input_id = SDL_SCANCODE_RIGHT}
+        {.input_type = InputType::Keyboard, .input_id = SDL_SCANCODE_RIGHT}
     },
     .c_up = {
-        {.input_type = (uint32_t)InputType::Keyboard, .input_id = SDL_SCANCODE_UP}
+        {.input_type = InputType::Keyboard, .input_id = SDL_SCANCODE_UP}
     },
     .c_down = {
-        {.input_type = (uint32_t)InputType::Keyboard, .input_id = SDL_SCANCODE_DOWN}
+        {.input_type = InputType::Keyboard, .input_id = SDL_SCANCODE_DOWN}
     },
     .dpad_left = {
-        {.input_type = (uint32_t)InputType::Keyboard, .input_id = SDL_SCANCODE_J}
+        {.input_type = InputType::Keyboard, .input_id = SDL_SCANCODE_J}
     },
     .dpad_right = {
-        {.input_type = (uint32_t)InputType::Keyboard, .input_id = SDL_SCANCODE_L}
+        {.input_type = InputType::Keyboard, .input_id = SDL_SCANCODE_L}
     },
     .dpad_up = {
-        {.input_type = (uint32_t)InputType::Keyboard, .input_id = SDL_SCANCODE_I}
+        {.input_type = InputType::Keyboard, .input_id = SDL_SCANCODE_I}
     },
     .dpad_down = {
-        {.input_type = (uint32_t)InputType::Keyboard, .input_id = SDL_SCANCODE_K}
+        {.input_type = InputType::Keyboard, .input_id = SDL_SCANCODE_K}
     },
     .analog_left = {
-        {.input_type = (uint32_t)InputType::Keyboard, .input_id = SDL_SCANCODE_A}
+        {.input_type = InputType::Keyboard, .input_id = SDL_SCANCODE_A}
     },
     .analog_right = {
-        {.input_type = (uint32_t)InputType::Keyboard, .input_id = SDL_SCANCODE_D}
+        {.input_type = InputType::Keyboard, .input_id = SDL_SCANCODE_D}
     },
     .analog_up = {
-        {.input_type = (uint32_t)InputType::Keyboard, .input_id = SDL_SCANCODE_W}
+        {.input_type = InputType::Keyboard, .input_id = SDL_SCANCODE_W}
     },
     .analog_down = {
-        {.input_type = (uint32_t)InputType::Keyboard, .input_id = SDL_SCANCODE_S}
+        {.input_type = InputType::Keyboard, .input_id = SDL_SCANCODE_S}
     },
     .toggle_menu = {
-        {.input_type = (uint32_t)InputType::Keyboard, .input_id = SDL_SCANCODE_ESCAPE}
+        {.input_type = InputType::Keyboard, .input_id = SDL_SCANCODE_ESCAPE}
     },
     .accept_menu = {
-        {.input_type = (uint32_t)InputType::Keyboard, .input_id = SDL_SCANCODE_RETURN}
+        {.input_type = InputType::Keyboard, .input_id = SDL_SCANCODE_RETURN}
     },
     .apply_menu = {
-        {.input_type = (uint32_t)InputType::Keyboard, .input_id = SDL_SCANCODE_F}
+        {.input_type = InputType::Keyboard, .input_id = SDL_SCANCODE_F}
     }
 };
 
 const recomp::DefaultN64Mappings recomp::default_n64_controller_mappings = {
     .a = {
-        {.input_type = (uint32_t)InputType::ControllerDigital, .input_id = SDL_CONTROLLER_BUTTON_SOUTH},
+        {.input_type = InputType::ControllerDigital, .input_id = SDL_CONTROLLER_BUTTON_SOUTH},
     },
     .b = {
-        {.input_type = (uint32_t)InputType::ControllerDigital, .input_id = SDL_CONTROLLER_BUTTON_WEST},
+        {.input_type = InputType::ControllerDigital, .input_id = SDL_CONTROLLER_BUTTON_WEST},
     },
     .l = {
-        {.input_type = (uint32_t)InputType::ControllerDigital, .input_id = SDL_CONTROLLER_BUTTON_LEFTSHOULDER},
+        {.input_type = InputType::ControllerDigital, .input_id = SDL_CONTROLLER_BUTTON_LEFTSHOULDER},
     },
     .r = {
-        {.input_type = (uint32_t)InputType::ControllerAnalog, .input_id = SDL_CONTROLLER_AXIS_TRIGGERRIGHT + 1},
+        {.input_type = InputType::ControllerAnalog, .input_id = SDL_CONTROLLER_AXIS_TRIGGERRIGHT + 1},
     },
     .z = {
-        {.input_type = (uint32_t)InputType::ControllerAnalog, .input_id = SDL_CONTROLLER_AXIS_TRIGGERLEFT + 1},
+        {.input_type = InputType::ControllerAnalog, .input_id = SDL_CONTROLLER_AXIS_TRIGGERLEFT + 1},
     },
     .start = {
-        {.input_type = (uint32_t)InputType::ControllerDigital, .input_id = SDL_CONTROLLER_BUTTON_START},
+        {.input_type = InputType::ControllerDigital, .input_id = SDL_CONTROLLER_BUTTON_START},
     },
     .c_left = {
-        {.input_type = (uint32_t)InputType::ControllerAnalog, .input_id = -(SDL_CONTROLLER_AXIS_RIGHTX + 1)},
-        {.input_type = (uint32_t)InputType::ControllerDigital, .input_id = SDL_CONTROLLER_BUTTON_NORTH},
+        {.input_type = InputType::ControllerAnalog, .input_id = -(SDL_CONTROLLER_AXIS_RIGHTX + 1)},
+        {.input_type = InputType::ControllerDigital, .input_id = SDL_CONTROLLER_BUTTON_NORTH},
     },
     .c_right = {
-        {.input_type = (uint32_t)InputType::ControllerAnalog, .input_id = SDL_CONTROLLER_AXIS_RIGHTX + 1},
-        {.input_type = (uint32_t)InputType::ControllerDigital, .input_id = SDL_CONTROLLER_BUTTON_EAST},
+        {.input_type = InputType::ControllerAnalog, .input_id = SDL_CONTROLLER_AXIS_RIGHTX + 1},
+        {.input_type = InputType::ControllerDigital, .input_id = SDL_CONTROLLER_BUTTON_EAST},
     },
     .c_up = {
-        {.input_type = (uint32_t)InputType::ControllerAnalog, .input_id = -(SDL_CONTROLLER_AXIS_RIGHTY + 1)},
-        {.input_type = (uint32_t)InputType::ControllerDigital, .input_id = SDL_CONTROLLER_BUTTON_RIGHTSTICK},
+        {.input_type = InputType::ControllerAnalog, .input_id = -(SDL_CONTROLLER_AXIS_RIGHTY + 1)},
+        {.input_type = InputType::ControllerDigital, .input_id = SDL_CONTROLLER_BUTTON_RIGHTSTICK},
     },
     .c_down = {
-        {.input_type = (uint32_t)InputType::ControllerAnalog, .input_id = SDL_CONTROLLER_AXIS_RIGHTY + 1},
-        {.input_type = (uint32_t)InputType::ControllerDigital, .input_id = SDL_CONTROLLER_BUTTON_RIGHTSHOULDER},
+        {.input_type = InputType::ControllerAnalog, .input_id = SDL_CONTROLLER_AXIS_RIGHTY + 1},
+        {.input_type = InputType::ControllerDigital, .input_id = SDL_CONTROLLER_BUTTON_RIGHTSHOULDER},
     },
     .dpad_left = {
-        {.input_type = (uint32_t)InputType::ControllerDigital, .input_id = SDL_CONTROLLER_BUTTON_DPAD_LEFT},
+        {.input_type = InputType::ControllerDigital, .input_id = SDL_CONTROLLER_BUTTON_DPAD_LEFT},
     },
     .dpad_right = {
-        {.input_type = (uint32_t)InputType::ControllerDigital, .input_id = SDL_CONTROLLER_BUTTON_DPAD_RIGHT},
+        {.input_type = InputType::ControllerDigital, .input_id = SDL_CONTROLLER_BUTTON_DPAD_RIGHT},
     },
     .dpad_up = {
-        {.input_type = (uint32_t)InputType::ControllerDigital, .input_id = SDL_CONTROLLER_BUTTON_DPAD_UP},
+        {.input_type = InputType::ControllerDigital, .input_id = SDL_CONTROLLER_BUTTON_DPAD_UP},
     },
     .dpad_down = {
-        {.input_type = (uint32_t)InputType::ControllerDigital, .input_id = SDL_CONTROLLER_BUTTON_DPAD_DOWN},
+        {.input_type = InputType::ControllerDigital, .input_id = SDL_CONTROLLER_BUTTON_DPAD_DOWN},
     },
     .analog_left = {
-        {.input_type = (uint32_t)InputType::ControllerAnalog, .input_id = -(SDL_CONTROLLER_AXIS_LEFTX + 1)},
+        {.input_type = InputType::ControllerAnalog, .input_id = -(SDL_CONTROLLER_AXIS_LEFTX + 1)},
     },
     .analog_right = {
-        {.input_type = (uint32_t)InputType::ControllerAnalog, .input_id = SDL_CONTROLLER_AXIS_LEFTX + 1},
+        {.input_type = InputType::ControllerAnalog, .input_id = SDL_CONTROLLER_AXIS_LEFTX + 1},
     },
     .analog_up = {
-        {.input_type = (uint32_t)InputType::ControllerAnalog, .input_id = -(SDL_CONTROLLER_AXIS_LEFTY + 1)},
+        {.input_type = InputType::ControllerAnalog, .input_id = -(SDL_CONTROLLER_AXIS_LEFTY + 1)},
     },
     .analog_down = {
-        {.input_type = (uint32_t)InputType::ControllerAnalog, .input_id = SDL_CONTROLLER_AXIS_LEFTY + 1},
+        {.input_type = InputType::ControllerAnalog, .input_id = SDL_CONTROLLER_AXIS_LEFTY + 1},
     },
     .toggle_menu = {
-        {.input_type = (uint32_t)InputType::ControllerDigital, .input_id = SDL_CONTROLLER_BUTTON_BACK},
+        {.input_type = InputType::ControllerDigital, .input_id = SDL_CONTROLLER_BUTTON_BACK},
     },
     .accept_menu = {
-        {.input_type = (uint32_t)InputType::ControllerDigital, .input_id = SDL_CONTROLLER_BUTTON_SOUTH},
+        {.input_type = InputType::ControllerDigital, .input_id = SDL_CONTROLLER_BUTTON_SOUTH},
     },
     .apply_menu = {
-        {.input_type = (uint32_t)InputType::ControllerDigital, .input_id = SDL_CONTROLLER_BUTTON_WEST},
-        {.input_type = (uint32_t)InputType::ControllerDigital, .input_id = SDL_CONTROLLER_BUTTON_START}
+        {.input_type = InputType::ControllerDigital, .input_id = SDL_CONTROLLER_BUTTON_WEST},
+        {.input_type = InputType::ControllerDigital, .input_id = SDL_CONTROLLER_BUTTON_START}
     }
 };
+
+// Returns true if the guid can be fetched.
+static bool get_controller_guid_from_sdl_controller(SDL_GameController* controller, recomp::ControllerGUID *guid) {
+    if (controller == nullptr) {
+        return false;
+    }
+
+    SDL_Joystick *joystick = SDL_GameControllerGetJoystick(controller);
+    if (joystick == nullptr) {
+        return false;
+    }
+
+    Uint16 vendor, product, version, crc16;
+    const char *joystick_name = SDL_JoystickName(joystick);
+    const char *joystick_serial = SDL_JoystickGetSerial(joystick);
+    std::string joystick_name_string = joystick_name != nullptr ? std::string(joystick_name) : "Unknown controller";
+    SDL_JoystickGUID joystick_guid = SDL_JoystickGetGUID(joystick);
+    int joystick_player_index = SDL_JoystickGetPlayerIndex(joystick);
+    SDL_GetJoystickGUIDInfo(joystick_guid, &vendor, &product, &version, &crc16);
+
+    *guid = { joystick_serial != nullptr ? std::string(joystick_serial) : std::string(), vendor, product, version, crc16, joystick_player_index };
+    return true;
+}
+
+static bool compare_controller_guid(const recomp::ControllerGUID& a, const recomp::ControllerGUID& b) {
+    return a.vendor == b.vendor && a.product == b.product && a.version == b.version && a.crc16 == b.crc16 && a.serial == b.serial;
+}
 
 void recomp::poll_inputs() {
     InputState.keys = SDL_GetKeyboardState(&InputState.numkeys);
     InputState.keymod = SDL_GetModState();
+    static bool first_poll = true;
 
     {
         std::lock_guard lock{ InputState.controllers_mutex };
@@ -495,51 +640,63 @@ void recomp::poll_inputs() {
             }
         }
 
-        // Assign controllers based on configuration.
-        InputState.assigned_controllers.fill(nullptr);
-        
-        // FIXME: Use active player count instead of iterating on all possible players.
-        Uint16 vendor, product, version, crc16;
-        for (size_t i = 0; i < 4; i++) {
-            recomp::ControllerGUID controller_guid = recomp::get_input_controller_guid(i);
-            int min_index_difference = INT_MAX;
-            size_t j = 0;
-            while (j < free_controllers.size()) {
-                SDL_GameController *controller = InputState.detected_controllers[free_controllers[j]];
-                SDL_Joystick *joystick = SDL_GameControllerGetJoystick(controller);
-                if (joystick != nullptr) {
-                    SDL_JoystickGUID joystick_guid = SDL_JoystickGetGUID(joystick);
-                    const char *joystick_serial = SDL_JoystickGetSerial(joystick);
-                    SDL_GetJoystickGUIDInfo(joystick_guid, &vendor, &product, &version, &crc16);
+        if (first_poll) {
+            first_poll = false;
 
-                    bool empty_serials = controller_guid.serial.empty() && joystick_serial == nullptr;
-                    bool matching_serials = joystick_serial != nullptr && strcmp(joystick_serial, controller_guid.serial.c_str()) == 0;
-                    if (vendor == controller_guid.vendor && product == controller_guid.product && version == controller_guid.version && crc16 == controller_guid.crc16 && (empty_serials || matching_serials)) {
-                        // The controller seems to be a match, but we use the controller with the least difference in player index to sort out potential duplicates.
-                        int joystick_player_index = SDL_JoystickGetPlayerIndex(joystick);
-                        int index_difference = abs(controller_guid.player_index - joystick_player_index);
-                        if (min_index_difference > index_difference) {
-                            InputState.assigned_controllers[i] = controller;
-                            min_index_difference = index_difference;
-                            free_controllers.erase(free_controllers.begin() + j);
-                            continue;
-                        }
+            // Assign controllers based on configuration.
+            for (auto& player : InputState.assigned_controllers) {
+                player.controller = nullptr;
+                player.is_assigned = false;
+                player.keyboard_enabled = false;
+            }
+            
+            // FIXME: Use active player count instead of iterating on all possible players.
+            Uint16 vendor, product, version, crc16;
+            for (size_t i = 0; i < 4; i++) {
+                recomp::ControllerGUID controller_guid = recomp::get_input_controller_guid(i);
+                int min_index_difference = INT_MAX;
+                size_t j = 0;
+                while (j < free_controllers.size()) {
+                    SDL_GameController *controller = InputState.detected_controllers[free_controllers[j]];
+                    recomp::ControllerGUID controller_guid_from_sdl;
+                    if (!get_controller_guid_from_sdl_controller(controller, &controller_guid_from_sdl)) {
+                        // If we can't get the controller guid, skip this controller.
+                        j++;
+                        continue;
                     }
+                    if (!compare_controller_guid(controller_guid, controller_guid_from_sdl)) {
+                        // If the controller guid doesn't match, skip this controller.
+                        j++;
+                        continue;
+                    }
+    
+                    // The controller seems to be a match, but we use the controller with the least difference in player index to sort out potential duplicates.
+                    int index_difference = abs(controller_guid.player_index - controller_guid_from_sdl.player_index);
+                    if (min_index_difference > index_difference) {
+                        InputState.assigned_controllers[i].controller = controller;
+                        min_index_difference = index_difference;
+                        free_controllers.erase(free_controllers.begin() + j);
+                        continue;
+                    }
+    
+                    j++;
                 }
-
-                j++;
             }
         }
 
         // Do a second pass to assign controllers that are currently unused to the remaining players that failed to be assigned a controller.
         for (int i = 0; i < 4; i++) {
-            if (InputState.assigned_controllers[i] != nullptr) {
+            if (i == 0) {
+                InputState.assigned_controllers[i].keyboard_enabled = true;
+            }
+
+            if (InputState.assigned_controllers[i].controller != nullptr) {
                 continue;
             }
 
             if (!free_controllers.empty()) {
                 // Assign a free controller only.
-                InputState.assigned_controllers[i] = InputState.detected_controllers[free_controllers.front()];
+                InputState.assigned_controllers[i].controller = InputState.detected_controllers[free_controllers.front()];
                 free_controllers.erase(free_controllers.begin());
             }
             else {
@@ -610,8 +767,8 @@ void recomp::update_rumble() {
                 }
             }
             else {
-                if (InputState.assigned_controllers[i] != nullptr) {
-                    SDL_GameControllerRumble(InputState.assigned_controllers[i], 0, rumble_strength, duration);
+                if (InputState.assigned_controllers[i].controller != nullptr) {
+                    SDL_GameControllerRumble(InputState.assigned_controllers[i].controller, 0, rumble_strength, duration);
                 }
             }
         }
@@ -630,8 +787,8 @@ bool controller_button_state(int controller_num, int32_t input_id) {
                 }
             }
             else {
-                if (InputState.assigned_controllers[controller_num] != nullptr) {
-                    ret |= SDL_GameControllerGetButton(InputState.assigned_controllers[controller_num], button);
+                if (InputState.assigned_controllers[controller_num].controller != nullptr) {
+                    ret |= SDL_GameControllerGetButton(InputState.assigned_controllers[controller_num].controller, button);
                 }
             }
         }
@@ -671,8 +828,8 @@ float controller_axis_state(int controller_num, int32_t input_id, bool allow_sup
                 }
             }
             else {
-                if (InputState.assigned_controllers[controller_num] != nullptr) {
-                    gather_axis_state(InputState.assigned_controllers[controller_num]);
+                if (InputState.assigned_controllers[controller_num].controller != nullptr) {
+                    gather_axis_state(InputState.assigned_controllers[controller_num].controller);
                 }
             }
         }
@@ -683,7 +840,7 @@ float controller_axis_state(int controller_num, int32_t input_id, bool allow_sup
 }
 
 float recomp::get_input_analog(int controller_num, const recomp::InputField& field) {
-    switch ((InputType)field.input_type) {
+    switch (field.input_type) {
     case InputType::Keyboard:
         if (InputState.keys && field.input_id >= 0 && field.input_id < InputState.numkeys) {
             if (should_override_keystate(static_cast<SDL_Scancode>(field.input_id), InputState.keymod)) {
@@ -713,7 +870,7 @@ float recomp::get_input_analog(int controller_num, const std::span<const recomp:
 }
 
 bool recomp::get_input_digital(int controller_num, const recomp::InputField& field) {
-    switch ((InputType)field.input_type) {
+    switch (field.input_type) {
     case InputType::Keyboard:
         if (InputState.keys && field.input_id >= 0 && field.input_id < InputState.numkeys) {
             if (should_override_keystate(static_cast<SDL_Scancode>(field.input_id), InputState.keymod)) {
@@ -813,7 +970,7 @@ bool recomp::game_input_disabled() {
 
 bool recomp::all_input_disabled() {
     // Disable all input if an input is being polled.
-    return scanning_device != recomp::InputDevice::COUNT;
+    return scanning_device != recomp::InputDevice::COUNT || recompinput::is_player_assignment_active();
 }
 
 bool recomp::get_single_controller_mode() {
@@ -976,7 +1133,7 @@ std::string controller_axis_to_string(int axis) {
 }
 
 std::string recomp::InputField::to_string() const {
-    switch ((InputType)input_type) {
+    switch (input_type) {
     case InputType::None:
         return "";
     case InputType::ControllerDigital:
@@ -986,15 +1143,22 @@ std::string recomp::InputField::to_string() const {
     case InputType::Keyboard:
         return keyboard_input_to_string((SDL_Scancode)input_id);
     default:
-        return std::to_string(input_type) + "," + std::to_string(input_id);
+        return std::to_string((uint32_t)input_type) + "," + std::to_string(input_id);
     }
 }
 
 void recomp::refresh_controller_options() {
-    // TODO: Is it okay to use this to make sure the detected controllers are up to date here?
-    recomp::poll_inputs();
-
     std::lock_guard lock{ InputState.controllers_mutex };
+    InputState.detected_controllers.clear();
+    
+    for (const auto& [id, state] : InputState.controller_states) {
+        (void)id; // Avoid unused variable warning.
+        SDL_GameController* controller = state.controller;
+        if (controller != nullptr) {
+            InputState.detected_controllers.push_back(controller);
+        }
+    }
+
     InputState.detected_controller_options.clear();
     for (SDL_GameController* controller : InputState.detected_controllers) {
         SDL_Joystick *joystick = SDL_GameControllerGetJoystick(controller);
