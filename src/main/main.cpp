@@ -663,6 +663,9 @@ int main(int argc, char** argv) {
     // Register the .rtz texture pack file format with the previous content type as its only allowed content type.
     recomp::mods::register_mod_container_type("rtz", std::vector{ texture_pack_content_type_id }, false);
 
+    // TODO: Where is it best to place this?
+    recomp::set_single_controller_mode(false);
+
     recomp::start(
         project_version,
         {},
