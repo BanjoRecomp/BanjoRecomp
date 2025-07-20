@@ -281,7 +281,7 @@ bool load_general_config(const std::filesystem::path& path) {
 
 void assign_mapping(int controller_num, recomp::InputDevice device, recomp::GameInput input, const std::vector<recomp::InputField>& value) {
     for (size_t binding_index = 0; binding_index < std::min(value.size(), recomp::bindings_per_input); binding_index++) {
-        recomp::set_input_binding(0, input, binding_index, device, value[binding_index]);
+        recomp::set_input_binding(controller_num, input, binding_index, device, value[binding_index]);
     }
 };
 
@@ -289,9 +289,9 @@ void assign_mapping(int controller_num, recomp::InputDevice device, recomp::Game
 void assign_mapping_complete(int controller_num, recomp::InputDevice device, recomp::GameInput input, const std::vector<recomp::InputField>& value) {
     for (size_t binding_index = 0; binding_index < recomp::bindings_per_input; binding_index++) {
         if (binding_index >= value.size()) {
-            recomp::set_input_binding(0, input, binding_index, device, recomp::InputField{});
+            recomp::set_input_binding(controller_num, input, binding_index, device, recomp::InputField{});
         } else {
-            recomp::set_input_binding(0, input, binding_index, device, value[binding_index]);
+            recomp::set_input_binding(controller_num, input, binding_index, device, value[binding_index]);
         }
     }
 };
@@ -394,8 +394,11 @@ void add_input_bindings(nlohmann::json& out, int controller_num, recomp::GameInp
     }
 };
 
+constexpr int controls_version = 2;
+
 bool save_controls_config(const std::filesystem::path& path) {
     nlohmann::json config_json{};
+    config_json["version"] = controls_version;
     config_json["players"] = std::vector<nlohmann::json>(4);
     for (size_t i = 0; i < config_json["players"].size(); i++) {
         nlohmann::json &player = config_json["players"][i];
@@ -456,31 +459,47 @@ bool load_input_device_from_json(const nlohmann::json& config_json, int controll
     return true;
 }
 
+void load_bindings_config(const nlohmann::json &config_json, int controller_num) {
+    if (!load_input_device_from_json(config_json, controller_num, recomp::InputDevice::Keyboard, "keyboard")) {
+        assign_all_mappings(controller_num, recomp::InputDevice::Keyboard, recomp::default_n64_keyboard_mappings);
+    }
+
+    if (!load_input_device_from_json(config_json, controller_num, recomp::InputDevice::Controller, "controller")) {
+        assign_all_mappings(controller_num, recomp::InputDevice::Controller, recomp::default_n64_controller_mappings);
+    }
+}
+
 bool load_controls_config(const std::filesystem::path& path) {
     nlohmann::json config_json{};
     if (!read_json_with_backups(path, config_json)) {
         return false;
     }
 
-    auto players_it = config_json.find("players");
-    for (size_t i = 0; i < 4; i++) {
-        const bool player_exists = players_it != config_json.end() && players_it->is_array() && (players_it->size() > i);
-        const nlohmann::json &player = player_exists ? (*players_it)[i] : nlohmann::json();
-        if (!load_input_device_from_json(player, i, recomp::InputDevice::Keyboard, "keyboard")) {
-            assign_all_mappings((int)(i), recomp::InputDevice::Keyboard, recomp::default_n64_keyboard_mappings);
-        }
+    auto version_it = config_json.find("version");
+    if (version_it != config_json.end()) {
+        auto players_it = config_json.find("players");
+        for (size_t i = 0; i < 4; i++) {
+            const bool player_exists = players_it != config_json.end() && players_it->is_array() && (players_it->size() > i);
+            const nlohmann::json &player = player_exists ? (*players_it)[i] : nlohmann::json();
+            load_bindings_config(player, (int)(i));
 
-        if (!load_input_device_from_json(player, i, recomp::InputDevice::Controller, "controller")) {
-            assign_all_mappings((int)(i), recomp::InputDevice::Controller, recomp::default_n64_controller_mappings);
-        }
-
-        auto controller_it = player.find("controller");
-        if (controller_it != player.end()) {
-            const nlohmann::json &controller = *controller_it;
-            auto guid_it = controller.find("guid");
-            if (guid_it != controller.end()) {
-                recomp::set_input_controller_guid((int)(i), *guid_it);
+            auto controller_it = player.find("controller");
+            if (controller_it != player.end()) {
+                const nlohmann::json &controller = *controller_it;
+                auto guid_it = controller.find("guid");
+                if (guid_it != controller.end()) {
+                    recomp::set_input_controller_guid((int)(i), *guid_it);
+                }
             }
+        }
+    }
+    else {
+        // Version 1 of the format only had bindings for Player 1 on the root element.
+        load_bindings_config(config_json, 0);
+
+        for (int i = 1; i < 4; i++) {
+            // Assign defaults for every other controller.
+            assign_all_mappings(i, recomp::InputDevice::Controller, recomp::default_n64_controller_mappings);
         }
     }
 
