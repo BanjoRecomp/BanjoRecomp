@@ -646,9 +646,11 @@ public:
         constructor.BindEventCallback("reset_input_bindings_to_defaults",
             [](Rml::DataModelHandle model_handle, Rml::Event& event, const Rml::VariantList& inputs) {
                 if (cur_device == recomp::InputDevice::Controller) {
-                    banjo::reset_cont_input_bindings();
+                    // TODO: Needs the active controller tab.
+                    banjo::reset_cont_input_bindings(0);
                 } else {
-                    banjo::reset_kb_input_bindings();
+                    // TODO: Needs the active controller tab.
+                    banjo::reset_kb_input_bindings(0);
                 }
                 model_handle.DirtyAllVariables();
                 nav_help_model_handle.DirtyVariable("nav_help__accept");
@@ -669,8 +671,9 @@ public:
 
         constructor.BindEventCallback("reset_single_input_binding_to_default",
             [](Rml::DataModelHandle model_handle, Rml::Event& event, const Rml::VariantList& inputs) {
+                // TODO: Needs the active controller tab.
                 recomp::GameInput input = static_cast<recomp::GameInput>(inputs.at(0).Get<size_t>());
-                banjo::reset_single_input_binding(cur_device, input);
+                banjo::reset_single_input_binding(0, cur_device, input);
                 model_handle.DirtyVariable("inputs");
                 nav_help_model_handle.DirtyVariable("nav_help__accept");
                 nav_help_model_handle.DirtyVariable("nav_help__exit");

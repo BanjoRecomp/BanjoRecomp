@@ -15,9 +15,9 @@ namespace banjo {
     void save_config();
     
     void reset_input_bindings();
-    void reset_cont_input_bindings();
-    void reset_kb_input_bindings();
-    void reset_single_input_binding(recomp::InputDevice device, recomp::GameInput input);
+    void reset_cont_input_bindings(int controller_num);
+    void reset_kb_input_bindings(int controller_num);
+    void reset_single_input_binding(int controller_num, recomp::InputDevice device, recomp::GameInput input);
 
     std::filesystem::path get_app_folder_path();
     
