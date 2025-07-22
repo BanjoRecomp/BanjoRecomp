@@ -7,67 +7,6 @@ namespace recompui {
 
 recompui::ContextId assign_players_modal_context;
 
-static constexpr float assign_player_card_size = 128.0f;
-static constexpr float assign_player_card_icon_size = 64.0f;
-AssignPlayerCard::AssignPlayerCard(Element *parent) : Element(parent, 0, "div", false) {
-    set_display(Display::Flex);
-    set_flex_direction(FlexDirection::Column);
-    set_align_items(AlignItems::Center);
-    set_justify_content(JustifyContent::Center);
-    set_width(assign_player_card_size);
-    set_height(assign_player_card_size);
-    set_border_color(theme::color::BorderSoft);
-    set_border_width(theme::border::width, Unit::Dp);
-    set_border_radius(theme::border::radius_sm, Unit::Dp);
-    set_background_color(theme::color::Transparent);
-
-    recompui::ContextId context = get_current_context();
-    icon = context.create_element<Svg>(this, "assets/icons/RecordBorder.svg");
-    icon->set_width(assign_player_card_icon_size, Unit::Dp);
-    icon->set_height(assign_player_card_icon_size, Unit::Dp);
-    icon->set_color(theme::color::TextDim);
-}
-
-AssignPlayerCard::~AssignPlayerCard() {
-}
-
-void AssignPlayerCard::update_player_card(int player_index) {
-    static const float scale_anim_duration = 0.25f;
-    bool is_assigned = recompinput::get_player_is_assigned(player_index);
-    if (!is_assigned) {
-        icon->set_scale_2D(1.0f, 1.0f);
-        set_background_color(theme::color::Transparent);
-        icon->set_color(theme::color::TextDim);
-        icon->set_src("assets/icons/RecordBorder.svg");
-        return;
-    }
-
-    set_background_color(theme::color::PrimaryA20);
-
-    bool has_controller =recompinput::does_player_have_controller(player_index);
-
-    std::chrono::steady_clock::duration time_since_last_button_press = recompinput::get_player_time_since_last_button_press(player_index);
-    auto millis = static_cast<float>(std::chrono::duration_cast<std::chrono::milliseconds>(time_since_last_button_press).count());
-    float seconds = millis / 1000.0f;
-
-    if (seconds > 0 && seconds < scale_anim_duration) {
-        float t = 1.0f - (seconds / scale_anim_duration);
-        float scale = 1.0f + t * 0.15f;
-        icon->set_scale_2D(scale, scale);
-        icon->set_color(theme::color::Text, 200 + static_cast<int>(t * 55.0f));
-    } else {
-        icon->set_scale_2D(1.0f, 1.0f);
-        icon->set_color(theme::color::Text, 200);
-    }
-
-    if (has_controller) {
-        icon->set_src("assets/icons/Cont.svg");
-    } else {
-        icon->set_src("assets/icons/Keyboard.svg");
-    }
-
-}
-
 static const float assignPlayersHFPaddingVert = 20.0f;
 static const float assignPlayersHFPaddingHorz = 20.0f;
 
@@ -179,7 +118,7 @@ void AssignPlayersModal::process_event(const Event &e) {
         }
 
         for (int i = 0; i < recompinput::get_num_players(); i++) {
-            player_elements[i]->update_player_card(i);
+            player_elements[i]->update_assignment_player_card();
         }
 
         if (!recompinput::is_player_assignment_active()) {
@@ -215,7 +154,7 @@ void AssignPlayersModal::create_player_elements() {
     recompui::ContextId context = get_current_context();
 
     for (int i = 0; i < recompinput::get_num_players(); i++) {
-        AssignPlayerCard* player_element = context.create_element<AssignPlayerCard>(player_elements_wrapper);
+        PlayerCard* player_element = context.create_element<PlayerCard>(player_elements_wrapper, i, true);
         player_elements.push_back(player_element);
     }
 }

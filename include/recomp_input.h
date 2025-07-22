@@ -273,6 +273,8 @@ namespace recompinput {
         PlayerAssignmentState() : is_assigning(false), player_index(0), temp_assigned_players{} {};
     };
 
+    AssignedPlayer& get_assigned_player(int player_index, bool temp_player = false);
+
     bool get_player_is_assigned(int player_index);
     void start_player_assignment(void);
     void stop_player_assignment(void);

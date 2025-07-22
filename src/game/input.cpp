@@ -80,6 +80,14 @@ int recompinput::get_num_players() {
     return static_cast<int>(InputState.assigned_controllers.size());
 }
 
+recompinput::AssignedPlayer& recompinput::get_assigned_player(int player_index, bool temp_player) {
+    if (temp_player) {
+        return player_assignment_state.temp_assigned_players[player_index];
+    } else {
+        return InputState.assigned_controllers[player_index];
+    }
+}
+
 bool recompinput::get_player_is_assigned(int player_index) {
     if (player_index < 0 || player_index >= recompinput::get_num_players()) {
         return false;

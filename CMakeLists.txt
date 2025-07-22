@@ -173,6 +173,7 @@ set (SOURCES
     ${CMAKE_SOURCE_DIR}/src/ui/ui_config_page_controls.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/ui_config_page_controls_element.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/ui_prompt.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/ui_player_card.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/ui_config_sub_menu.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/ui_color_hack.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/ui_rml_hacks.cpp

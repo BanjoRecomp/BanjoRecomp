@@ -4,20 +4,9 @@
 #include "elements/ui_element.h"
 #include "elements/ui_svg.h"
 #include "elements/ui_button.h"
+#include "ui_player_card.h"
 
 namespace recompui {
-
-class AssignPlayerCard : public Element {
-protected:
-    bool is_open = false;
-    Svg* icon = nullptr; 
-
-    std::string_view get_type_name() override { return "AssignPlayerCard"; }
-public:
-    AssignPlayerCard(Element *parent);
-    virtual ~AssignPlayerCard();
-    void update_player_card(int player_index);
-};
 
 class AssignPlayersModal : public Element {
 protected:
@@ -25,7 +14,7 @@ protected:
     bool was_assigning = false;
     Element* player_elements_wrapper = nullptr;
     Element* fake_focus_button = nullptr;
-    std::vector<AssignPlayerCard*> player_elements = {};
+    std::vector<PlayerCard*> player_elements = {};
 
     Button* close_button = nullptr;
     Button* retry_button = nullptr;
