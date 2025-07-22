@@ -27,6 +27,7 @@ namespace recompui {
         set_cursor(Cursor::Pointer);
         set_color(theme::color::TextDim);
         set_tab_index(TabIndex::Auto);
+        set_opacity(1.0f);
 
         hover_style.set_color(theme::color::Text);
         focus_style.set_color(theme::color::Text);
