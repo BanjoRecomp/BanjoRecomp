@@ -13,6 +13,9 @@
 
 #include "json/json.hpp"
 
+#include "SDL.h"
+#include "chrono"
+
 namespace recomp {
     // x-macros to build input enums and arrays.
     // First parameter is the enum name, second parameter is the bit field for the input (or 0 if there is no associated one), third is the readable name.
@@ -250,16 +253,33 @@ namespace recompinput {
     BindingState& get_binding_state();
 
     int get_num_players();
-    bool get_player_is_assigned(int player_index);
-    
+
+    struct AssignedPlayer {
+        SDL_GameController* controller = nullptr;
+        bool is_assigned = false;
+        bool keyboard_enabled = false;
+        std::chrono::high_resolution_clock::duration last_button_press_timestamp = std::chrono::high_resolution_clock::duration::zero();
+
+        AssignedPlayer() : controller(nullptr), is_assigned(false), keyboard_enabled(false), last_button_press_timestamp(std::chrono::high_resolution_clock::duration::zero()) {};
+    };
+
+    constexpr size_t temp_max_players = 4;
+
     struct PlayerAssignmentState {
         bool is_assigning = false;
         int player_index = 0;
+        std::array<AssignedPlayer, temp_max_players> temp_assigned_players;
+
+        PlayerAssignmentState() : is_assigning(false), player_index(0), temp_assigned_players{} {};
     };
 
+    bool get_player_is_assigned(int player_index);
     void start_player_assignment(void);
     void stop_player_assignment(void);
+    void stop_player_assignment_and_close_modal(void);
+    void commit_player_assignment(void);
     bool is_player_assignment_active();
+    std::chrono::steady_clock::duration get_player_time_since_last_button_press(int player_index);
 
     bool does_player_have_controller(int player_index);
 }

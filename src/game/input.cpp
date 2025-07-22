@@ -24,12 +24,6 @@ struct ControllerState {
     };
 };
 
-struct AssignedPlayer {
-    SDL_GameController* controller = nullptr;
-    bool is_assigned = false;
-    bool keyboard_enabled = false;
-};
-
 static struct {
     const Uint8* keys = nullptr;
     SDL_Keymod keymod = SDL_Keymod::KMOD_NONE;
@@ -38,7 +32,7 @@ static struct {
     std::mutex controllers_mutex;
     std::vector<SDL_GameController*> detected_controllers{};
     std::vector<recomp::ControllerOption> detected_controller_options{};
-    std::array<AssignedPlayer, 4> assigned_controllers{}; // Only used when Multiplayer is enabled.
+    std::array<recompinput::AssignedPlayer, recompinput::temp_max_players> assigned_controllers{}; // Only used when Multiplayer is enabled.
     std::unordered_map<SDL_JoystickID, ControllerState> controller_states;
     bool single_controller = false;
 
@@ -60,7 +54,7 @@ std::atomic<recomp::InputDevice> scanning_device = recomp::InputDevice::COUNT;
 std::atomic<recomp::InputField> scanned_input;
 
 static recompinput::BindingState binding_state;
-static recompinput::PlayerAssignmentState player_assignment_state;
+static recompinput::PlayerAssignmentState player_assignment_state{};
 
 void recompinput::start_scanning_for_binding(int player_index, recomp::GameInput game_input, int binding_index) {
     binding_state.is_scanning = true;
@@ -91,24 +85,36 @@ bool recompinput::get_player_is_assigned(int player_index) {
         return false;
     }
 
-    return InputState.assigned_controllers[player_index].is_assigned;
+    return player_assignment_state.temp_assigned_players[player_index].is_assigned;
 }
 
 void recompinput::start_player_assignment() {
     player_assignment_state.is_assigning = true;
     player_assignment_state.player_index = 0;
 
-    for (auto& player : InputState.assigned_controllers) {
-        player.controller = nullptr;
-        player.is_assigned = false;
-        player.keyboard_enabled = false;
+    for (auto& player : player_assignment_state.temp_assigned_players) {
+        player = AssignedPlayer{};
     }
 }
+
+static bool queue_close_player_assignment_modal = false;
 
 void recompinput::stop_player_assignment() {
     player_assignment_state.is_assigning = false;
     player_assignment_state.player_index = -1;
-    recompui::assign_players_modal->close();
+}
+
+void recompinput::stop_player_assignment_and_close_modal() {
+    recompinput::stop_player_assignment();
+    queue_close_player_assignment_modal = true;
+}
+
+void recompinput::commit_player_assignment() {
+    recompinput::stop_player_assignment_and_close_modal();
+
+    for (int i = 0; i < recompinput::get_num_players(); i++) {
+        InputState.assigned_controllers[i] = player_assignment_state.temp_assigned_players[i];
+    }
 }
 
 bool recompinput::is_player_assignment_active() {
@@ -119,10 +125,22 @@ bool recompinput::does_player_have_controller(int player_index) {
     if (player_index < 0 || player_index >= recompinput::get_num_players()) {
         return false;
     }
-    return InputState.assigned_controllers[player_index].controller != nullptr;
+    return player_assignment_state.temp_assigned_players[player_index].controller != nullptr;
+}
+
+std::chrono::steady_clock::duration recompinput::get_player_time_since_last_button_press(int player_index) {
+    if (player_index < 0 || player_index >= recompinput::get_num_players()) {
+        return std::chrono::steady_clock::duration::zero();
+    }
+    return ultramodern::time_since_start() - player_assignment_state.temp_assigned_players[player_index].last_button_press_timestamp;
 }
 
 void process_player_assignment(SDL_Event* event) {
+    if (queue_close_player_assignment_modal) {
+        recompui::assign_players_modal->close();
+        queue_close_player_assignment_modal = false;
+    }
+
     if (!player_assignment_state.is_assigning) {
         return;
     }
@@ -139,10 +157,17 @@ void process_player_assignment(SDL_Event* event) {
             recompinput::stop_player_assignment();
             return;
         case SDL_Scancode::SDL_SCANCODE_SPACE:
-            InputState.assigned_controllers[player_assignment_state.player_index].is_assigned = true;
-            InputState.assigned_controllers[player_assignment_state.player_index].keyboard_enabled = true;
+            player_assignment_state.temp_assigned_players[player_assignment_state.player_index].is_assigned = true;
+            player_assignment_state.temp_assigned_players[player_assignment_state.player_index].keyboard_enabled = true;
             player_assignment_state.player_index++;
             printf("Assigned keyboard to player %d\n", player_assignment_state.player_index - 1);
+            break;
+        default:
+            for (int i = 0; i < player_assignment_state.player_index; i++) {
+                if (player_assignment_state.temp_assigned_players[i].keyboard_enabled && player_assignment_state.temp_assigned_players[i].controller == nullptr) {
+                    player_assignment_state.temp_assigned_players[i].last_button_press_timestamp = ultramodern::time_since_start();
+                }
+            }
             break;
         }
         break;
@@ -154,14 +179,18 @@ void process_player_assignment(SDL_Event* event) {
 
         bool can_be_mapped = true;
         for (int i = 0; i < player_assignment_state.player_index; i++) {
-            if (InputState.assigned_controllers[i].controller == controller_state.controller) {
+            if (player_assignment_state.temp_assigned_players[i].controller == controller_state.controller) {
                 can_be_mapped = false;
+                player_assignment_state.temp_assigned_players[i].last_button_press_timestamp = ultramodern::time_since_start();
                 break;
             }
         }
+
         if (can_be_mapped) {
-            InputState.assigned_controllers[player_assignment_state.player_index].is_assigned = true;
-            InputState.assigned_controllers[player_assignment_state.player_index].controller = controller_state.controller;
+            recompinput::AssignedPlayer& assigned_player = player_assignment_state.temp_assigned_players[player_assignment_state.player_index];
+            assigned_player.is_assigned = true;
+            assigned_player.controller = controller_state.controller;
+            assigned_player.last_button_press_timestamp = ultramodern::time_since_start();
             player_assignment_state.player_index++;
             printf("Assigned controller %d to player %d\n", joystick_id, player_assignment_state.player_index - 1);
         }
