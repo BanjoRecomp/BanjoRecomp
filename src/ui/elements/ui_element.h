@@ -71,6 +71,7 @@ public:
     bool remove_child(Element *child) { return remove_child(child->get_resource_id()); }
     void add_style(Style *style, std::string_view style_name);
     void add_style(Style *style, const std::initializer_list<std::string_view> &style_names);
+    Element get_element_with_tag_name(std::string_view tag_name);
     void set_enabled(bool enabled);
     bool is_enabled() const;
     void set_text(std::string_view text);
@@ -99,6 +100,8 @@ public:
     void set_input_value_float(float val) { set_input_value(val); }
     void set_input_value_double(double val) { set_input_value(val); }
     const std::string& get_id() { return id; }
+
+    Element *select_add_option(std::string_view text, std::string_view value);
 };
 
 void queue_ui_callback(recompui::ResourceId resource, const Event& e, const UICallback& callback);

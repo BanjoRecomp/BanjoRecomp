@@ -513,4 +513,32 @@ void Element::register_callback(ContextId context, PTR(void) callback, PTR(void)
     callbacks.emplace_back(UICallback{.context = context, .callback = callback, .userdata = userdata});
 }
 
+Element *Element::select_add_option(std::string_view text, std::string_view value) {
+    if (base->GetTagName() != "select") {
+        return nullptr;
+    }
+
+    Rml::ElementFormControlSelect* select = (Rml::ElementFormControlSelect *)(base);
+    if (!select) {
+        return nullptr;
+    }
+
+    ContextId context = get_current_context();
+    Element *option_element = context.create_element<Element>(this, 0, "option", true);
+    option_element->set_text(text);
+    option_element->set_input_text(value);
+
+    return option_element;
 }
+
+Element Element::get_element_with_tag_name(std::string_view tag_name) {
+    for (int i = 0; i < base->GetNumChildren(true); i++) {
+        Rml::Element* child = base->GetChild(i);
+        if (child->GetTagName() == tag_name) {
+            return Element(child);
+        }
+    }
+    throw std::runtime_error("Select element has no child with the specified tag name");
+}
+
+} // namespace recompui
