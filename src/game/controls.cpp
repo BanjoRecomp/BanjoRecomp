@@ -15,11 +15,13 @@ struct InputProfile {
     std::string name;
     recomp::InputDevice device;
     input_mapping_array mappings;
+    bool custom = false;
 };
 
-static std::vector<InputProfile> input_profiles;
+static std::vector<InputProfile> input_profiles{};
 static std::array<std::pair<int, int>, 4> players_input_profile_indices{};
 static std::unordered_map<std::string, int> input_profile_key_index_map{};
+static std::vector<int> input_profile_custom_indices[2]{};
 
 struct Controller {
     recomp::ControllerGUID guid;
@@ -90,7 +92,7 @@ void recomp::set_input_binding(int profile_index, recomp::GameInput input, size_
     }
 }
 
-int recomp::add_input_profile(const std::string &key, const std::string &name, InputDevice device) {
+int recomp::add_input_profile(const std::string &key, const std::string &name, InputDevice device, bool custom) {
     auto it = input_profile_key_index_map.find(key);
     if (it != input_profile_key_index_map.end()) {
         return it->second;
@@ -101,8 +103,24 @@ int recomp::add_input_profile(const std::string &key, const std::string &name, I
     profile.key = key;
     profile.name = name;
     profile.device = device;
+    profile.custom = custom;
     input_profiles.emplace_back(profile);
     input_profile_key_index_map.emplace(key, index);
+
+    if (custom) {
+        switch (device) {
+        case InputDevice::Controller:
+            input_profile_custom_indices[0].emplace_back(index);
+            break;
+        case InputDevice::Keyboard:
+            input_profile_custom_indices[1].emplace_back(index);
+            break;
+        default:
+            assert(false && "Unknown input device.");
+            break;
+        }
+    }
+
     return index;
 }
 
@@ -128,8 +146,26 @@ recomp::InputDevice recomp::get_input_profile_device(int profile_index) {
     return input_profiles[profile_index].device;
 }
 
+bool recomp::is_input_profile_custom(int profile_index) {
+    return input_profiles[profile_index].custom;
+}
+
 int recomp::get_input_profile_count() {
     return (int)(input_profiles.size());
+}
+
+const std::vector<int> recomp::get_indices_for_custom_profiles(InputDevice device) {
+    static std::vector<int> empty;
+
+    switch (device) {
+    case InputDevice::Controller:
+        return input_profile_custom_indices[0];
+    case InputDevice::Keyboard:
+        return input_profile_custom_indices[1];
+    default:
+        assert(false && "Unknown input device.");
+        return empty;
+    }
 }
 
 void recomp::set_input_profile_for_player(int player_index, int profile_index, InputDevice device) {

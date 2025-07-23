@@ -306,7 +306,7 @@ bool sdl_event_filter(void* userdata, SDL_Event* event) {
             std::string default_profile_key = recomp::get_string_from_controller_guid(guid);
             int profile_index = recomp::get_input_profile_by_key(default_profile_key);
             if (profile_index < 0) {
-                profile_index = recomp::add_input_profile(default_profile_key, "Controller", recomp::InputDevice::Controller);
+                profile_index = recomp::add_input_profile(default_profile_key, "Controller", recomp::InputDevice::Controller, false);
                 banjo::reset_cont_input_bindings(profile_index);
             }
 

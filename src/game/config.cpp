@@ -329,8 +329,8 @@ void assign_all_mappings(int profile_index, const recomp::DefaultN64Mappings& va
 };
 
 void banjo::initialize_input_bindings() {
-    keyboard_sp_profile_index = recomp::add_input_profile(keyboard_sp_profile_key, keyboard_sp_profile_name, recomp::InputDevice::Keyboard);
-    controller_sp_profile_index = recomp::add_input_profile(controller_sp_profile_key, controller_sp_profile_name, recomp::InputDevice::Controller);
+    keyboard_sp_profile_index = recomp::add_input_profile(keyboard_sp_profile_key, keyboard_sp_profile_name, recomp::InputDevice::Keyboard, false);
+    controller_sp_profile_index = recomp::add_input_profile(controller_sp_profile_key, controller_sp_profile_name, recomp::InputDevice::Controller, false);
 
     // Set Player 1 to the SP profiles by default.
     recomp::set_input_profile_for_player(0, keyboard_sp_profile_index, recomp::InputDevice::Keyboard);
@@ -421,6 +421,7 @@ bool save_controls_config(const std::filesystem::path& path) {
         profile["key"] = recomp::get_input_profile_key(i);
         profile["name"] = recomp::get_input_profile_name(i);
         profile["device"] = recomp::get_input_profile_device(i);
+        profile["custom"] = recomp::is_input_profile_custom(i);
         profile["mappings"] = nlohmann::json();
         
         for (int j = 0; j < (int)(recomp::GameInput::COUNT); j++) {
@@ -498,8 +499,9 @@ bool load_controls_config(const std::filesystem::path& path) {
             std::string key = profile.value("key", std::string());
             std::string name = profile.value("name", std::string());
             recomp::InputDevice device = profile.value("device", recomp::InputDevice::COUNT);
+            bool custom = profile.value("custom", false);
             if (!key.empty() && !name.empty() && device != recomp::InputDevice::COUNT) {
-                int profile_index = recomp::add_input_profile(key, name, device);
+                int profile_index = recomp::add_input_profile(key, name, device, custom);
                 if (!load_input_device_from_json(profile, profile_index, device, "mappings")) {
                     assign_all_mappings(profile_index, device == recomp::InputDevice::Keyboard ? recomp::default_n64_keyboard_mappings : recomp::default_n64_controller_mappings);
                 }
