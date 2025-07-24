@@ -1,5 +1,7 @@
 #include <array>
 
+#include "xxHash/xxh3.h"
+
 #include "librecomp/helpers.hpp"
 #include "recomp_input.h"
 #include "ultramodern/ultramodern.hpp"
@@ -7,9 +9,27 @@
 // Arrays that hold the mappings for every input for keyboard and controller respectively.
 using input_mapping = std::array<recomp::InputField, recomp::bindings_per_input>;
 using input_mapping_array = std::array<input_mapping, static_cast<size_t>(recomp::GameInput::COUNT)>;
-static std::array<input_mapping_array, 4> keyboard_input_mappings{};
-static std::array<input_mapping_array, 4> controller_input_mappings{};
-static std::array<recomp::ControllerGUID, 4> controller_guids{};
+
+struct InputProfile {
+    std::string key;
+    std::string name;
+    recomp::InputDevice device;
+    input_mapping_array mappings;
+    bool custom = false;
+};
+
+static std::vector<InputProfile> input_profiles{};
+static std::array<std::pair<int, int>, 4> players_input_profile_indices{};
+static std::unordered_map<std::string, int> input_profile_key_index_map{};
+static std::vector<int> input_profile_custom_indices[2]{};
+
+struct Controller {
+    recomp::ControllerGUID guid;
+    int profile_index;
+};
+
+static std::vector<Controller> controllers;
+static std::unordered_map<uint64_t, int> controller_hash_index_map{};
 
 // Make the button value array, which maps a button index to its bit field.
 #define DEFINE_INPUT(name, value, readable) uint16_t(value##u),
@@ -54,10 +74,8 @@ recomp::GameInput recomp::get_input_from_enum_name(const std::string_view enum_n
 }
 
 // Due to an RmlUi limitation this can't be const. Ideally it would return a const reference or even just a straight up copy.
-recomp::InputField& recomp::get_input_binding(int controller_num, GameInput input, size_t binding_index, recomp::InputDevice device) {
-    input_mapping_array& device_mappings = (device == recomp::InputDevice::Controller) ? controller_input_mappings[controller_num] : keyboard_input_mappings[controller_num];
-    input_mapping& cur_input_mapping = device_mappings.at(static_cast<size_t>(input));
-
+recomp::InputField& recomp::get_input_binding(int profile_index, GameInput input, size_t binding_index) {
+    input_mapping& cur_input_mapping = input_profiles[profile_index].mappings.at(static_cast<size_t>(input));
     if (binding_index < cur_input_mapping.size()) {
         return cur_input_mapping[binding_index];
     }
@@ -67,49 +85,223 @@ recomp::InputField& recomp::get_input_binding(int controller_num, GameInput inpu
     }
 }
 
-void recomp::set_input_binding(int controller_num, recomp::GameInput input, size_t binding_index, recomp::InputDevice device, recomp::InputField value) {
-    input_mapping_array &device_mappings = (device == recomp::InputDevice::Controller) ? controller_input_mappings[controller_num] : keyboard_input_mappings[controller_num];
-    input_mapping& cur_input_mapping = device_mappings.at(static_cast<size_t>(input));
-
+void recomp::set_input_binding(int profile_index, recomp::GameInput input, size_t binding_index, recomp::InputField value) {
+    input_mapping& cur_input_mapping = input_profiles[profile_index].mappings.at(static_cast<size_t>(input));
     if (binding_index < cur_input_mapping.size()) {
         cur_input_mapping[binding_index] = value;
     }
 }
 
-void recomp::set_input_controller_guid(int controller_num, const ControllerGUID &guid) {
-    controller_guids[controller_num] = guid;
+int recomp::add_input_profile(const std::string &key, const std::string &name, InputDevice device, bool custom) {
+    auto it = input_profile_key_index_map.find(key);
+    if (it != input_profile_key_index_map.end()) {
+        return it->second;
+    }
+
+    int index = (int)(input_profiles.size());
+    InputProfile profile;
+    profile.key = key;
+    profile.name = name;
+    profile.device = device;
+    profile.custom = custom;
+    input_profiles.emplace_back(profile);
+    input_profile_key_index_map.emplace(key, index);
+
+    if (custom) {
+        switch (device) {
+        case InputDevice::Controller:
+            input_profile_custom_indices[0].emplace_back(index);
+            break;
+        case InputDevice::Keyboard:
+            input_profile_custom_indices[1].emplace_back(index);
+            break;
+        default:
+            assert(false && "Unknown input device.");
+            break;
+        }
+    }
+
+    return index;
 }
 
-recomp::ControllerGUID recomp::get_input_controller_guid(int controller_num) {
-    return controller_guids[controller_num];
+int recomp::get_input_profile_by_key(const std::string &key) {
+    auto it = input_profile_key_index_map.find(key);
+    if (it != input_profile_key_index_map.end()) {
+        return it->second;
+    }
+    else {
+        return -1;
+    }
 }
 
-bool recomp::get_n64_input(int controller_num, uint16_t* buttons_out, float* x_out, float* y_out) {
+const std::string &recomp::get_input_profile_key(int profile_index) {
+    return input_profiles[profile_index].key;
+}
+
+const std::string &recomp::get_input_profile_name(int profile_index) {
+    return input_profiles[profile_index].name;
+}
+
+recomp::InputDevice recomp::get_input_profile_device(int profile_index) {
+    return input_profiles[profile_index].device;
+}
+
+bool recomp::is_input_profile_custom(int profile_index) {
+    return input_profiles[profile_index].custom;
+}
+
+int recomp::get_input_profile_count() {
+    return (int)(input_profiles.size());
+}
+
+const std::vector<int> recomp::get_indices_for_custom_profiles(InputDevice device) {
+    static std::vector<int> empty;
+
+    switch (device) {
+    case InputDevice::Controller:
+        return input_profile_custom_indices[0];
+    case InputDevice::Keyboard:
+        return input_profile_custom_indices[1];
+    default:
+        assert(false && "Unknown input device.");
+        return empty;
+    }
+}
+
+void recomp::set_input_profile_for_player(int player_index, int profile_index, InputDevice device) {
+    switch (device) {
+    case InputDevice::Controller:
+        players_input_profile_indices[player_index].first = profile_index;
+        break;
+    case InputDevice::Keyboard:
+        players_input_profile_indices[player_index].second = profile_index;
+        break;
+    default:
+        assert(false && "Unknown input device.");
+        break;
+    }
+}
+
+int recomp::get_input_profile_for_player(int player_index, InputDevice device) {
+    switch (device) {
+    case InputDevice::Controller:
+        return players_input_profile_indices[player_index].first;
+    case InputDevice::Keyboard:
+        return players_input_profile_indices[player_index].second;
+    default:
+        assert(false && "Unknown input device.");
+        return -1;
+    }
+}
+
+int recomp::add_controller(ControllerGUID guid, int profile_index) {
+    auto it = controller_hash_index_map.find(guid.hash);
+    if (it != controller_hash_index_map.end()) {
+        controllers[it->second].profile_index = profile_index;
+        return it->second;
+    }
+
+    int index = (int)(controllers.size());
+    Controller controller;
+    controller.guid = guid;
+    controller.profile_index = profile_index;
+    controllers.emplace_back(controller);
+    controller_hash_index_map.emplace(guid.hash, index);
+    return index;
+}
+
+const recomp::ControllerGUID &recomp::get_controller_guid(int controller_index) {
+    return controllers[controller_index].guid;
+}
+
+int recomp::get_controller_profile_index(int controller_index) {
+    return controllers[controller_index].profile_index;
+}
+
+int recomp::get_controller_by_guid(ControllerGUID guid) {
+    auto it = controller_hash_index_map.find(guid.hash);
+    if (it != controller_hash_index_map.end()) {
+        return it->second;
+    }
+    else {
+        return -1;
+    }
+}
+
+int recomp::get_controller_count() {
+    return (int)(controllers.size());
+}
+
+recomp::ControllerGUID recomp::get_guid_from_sdl_controller(SDL_GameController *game_controller) {
+    if (game_controller == nullptr) {
+        return {};
+    }
+
+    SDL_Joystick *joystick = SDL_GameControllerGetJoystick(game_controller);
+    if (joystick == nullptr) {
+        return {};
+    }
+
+    Uint16 vendor, product, version, crc16;
+    const char *joystick_serial = SDL_JoystickGetSerial(joystick);
+    SDL_JoystickGUID joystick_guid = SDL_JoystickGetGUID(joystick);
+    SDL_GetJoystickGUIDInfo(joystick_guid, &vendor, &product, &version, &crc16);
+
+    recomp::ControllerGUID guid;
+    guid.serial = joystick_serial != nullptr ? joystick_serial : "";
+    guid.vendor = vendor;
+    guid.product = product;
+    guid.version = version;
+    guid.crc16 = crc16;
+
+    // Compute the hash from the GUID.
+    XXH3_state_t state;
+    XXH3_64bits_reset(&state);
+    XXH3_64bits_update(&state, &guid.vendor, sizeof(guid.vendor));
+    XXH3_64bits_update(&state, &guid.product, sizeof(guid.product));
+    XXH3_64bits_update(&state, &guid.version, sizeof(guid.version));
+    XXH3_64bits_update(&state, &guid.crc16, sizeof(guid.crc16));
+    guid.hash = XXH3_64bits_digest(&state);
+
+    return guid;
+}
+
+std::string recomp::get_string_from_controller_guid(ControllerGUID guid) {
+    return "SERIAL_" + guid.serial + "_VID_" + std::to_string(guid.vendor) + "_PID_" + std::to_string(guid.product) +"_VERSION_" + std::to_string(guid.version) +"_CRC16_" + std::to_string(guid.crc16);
+}
+
+bool recomp::get_n64_input(int player_index, uint16_t* buttons_out, float* x_out, float* y_out) {
     uint16_t cur_buttons = 0;
     float cur_x = 0.0f;
     float cur_y = 0.0f;
     if (!recomp::game_input_disabled()) {
-        for (size_t i = 0; i < n64_button_values.size(); i++) {
-            size_t input_index = (size_t)GameInput::N64_BUTTON_START + i;
-            cur_buttons |= recomp::get_input_digital(controller_num, keyboard_input_mappings[controller_num][input_index]) ? n64_button_values[i] : 0;
-            cur_buttons |= recomp::get_input_digital(controller_num, controller_input_mappings[controller_num][input_index]) ? n64_button_values[i] : 0;
-        }
+        auto check_buttons = [&](int profile_index) {
+            if (profile_index < 0) {
+                return;
+            }
 
-        float joystick_deadzone = recomp::get_joystick_deadzone() / 100.0f;
+            const input_mapping_array &mappings = input_profiles[profile_index].mappings;
+            for (size_t i = 0; i < n64_button_values.size(); i++) {
+                cur_buttons |= recomp::get_input_digital(player_index, mappings[(size_t)(GameInput::N64_BUTTON_START) + i]) ? n64_button_values[i] : 0;
+            }
+        };
 
-        float joystick_x = recomp::get_input_analog(controller_num, controller_input_mappings[controller_num][(size_t)GameInput::X_AXIS_POS])
-                        - recomp::get_input_analog(controller_num, controller_input_mappings[controller_num][(size_t)GameInput::X_AXIS_NEG]);
+        auto check_joystick = [&](int profile_index) {
+            if (profile_index < 0) {
+                return;
+            }
 
-        float joystick_y = recomp::get_input_analog(controller_num, controller_input_mappings[controller_num][(size_t)GameInput::Y_AXIS_POS])
-                        - recomp::get_input_analog(controller_num, controller_input_mappings[controller_num][(size_t)GameInput::Y_AXIS_NEG]);
+            const input_mapping_array &mappings = input_profiles[profile_index].mappings;
+            cur_x += recomp::get_input_analog(player_index, mappings[(size_t)GameInput::X_AXIS_POS]) - recomp::get_input_analog(player_index, mappings[(size_t)GameInput::X_AXIS_NEG]);
+            cur_y += recomp::get_input_analog(player_index, mappings[(size_t)GameInput::Y_AXIS_POS]) - recomp::get_input_analog(player_index, mappings[(size_t)GameInput::Y_AXIS_NEG]);
+        };
 
-        recomp::apply_joystick_deadzone(joystick_x, joystick_y, &joystick_x, &joystick_y);
+        check_buttons(players_input_profile_indices[player_index].first);
+        check_buttons(players_input_profile_indices[player_index].second);
 
-        cur_x = recomp::get_input_analog(controller_num, keyboard_input_mappings[controller_num][(size_t)GameInput::X_AXIS_POS])
-                - recomp::get_input_analog(controller_num, keyboard_input_mappings[controller_num][(size_t)GameInput::X_AXIS_NEG]) + joystick_x;
-
-        cur_y = recomp::get_input_analog(controller_num, keyboard_input_mappings[controller_num][(size_t)GameInput::Y_AXIS_POS])
-                - recomp::get_input_analog(controller_num, keyboard_input_mappings[controller_num][(size_t)GameInput::Y_AXIS_NEG]) + joystick_y;
+        check_joystick(players_input_profile_indices[player_index].first);
+        recomp::apply_joystick_deadzone(cur_x, cur_y, &cur_x, &cur_y);
+        check_joystick(players_input_profile_indices[player_index].second);
     }
 
     *buttons_out = cur_buttons;

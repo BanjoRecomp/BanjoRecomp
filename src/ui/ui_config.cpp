@@ -110,8 +110,8 @@ int recomp::get_scanned_input_index() {
 }
 
 void recomp::finish_scanning_input(recomp::InputField scanned_field) {
-    // TODO: Needs the active controller tab.
-    recomp::set_input_binding(0, static_cast<recomp::GameInput>(scanned_input_index), scanned_binding_index, cur_device, scanned_field);
+    // TODO: Needs the profile index.
+    recomp::set_input_binding(0, static_cast<recomp::GameInput>(scanned_input_index), scanned_binding_index, scanned_field);
     scanned_input_index = -1;
     scanned_binding_index = -1;
     controls_model_handle.DirtyVariable("inputs");
@@ -594,14 +594,14 @@ public:
         
         constructor.BindFunc("gfx_help__apply", [](Rml::Variant& out) {
             if (cont_active) {
-                // TODO: Needs the active controller tab.
+                // TODO: Needs the profile index.
                 out = \
-                    (recomp::get_input_binding(0, recomp::GameInput::APPLY_MENU, 0, recomp::InputDevice::Controller).to_string() != "" ?
-                        " " + recomp::get_input_binding(0, recomp::GameInput::APPLY_MENU, 0, recomp::InputDevice::Controller).to_string() :
+                    (recomp::get_input_binding(0, recomp::GameInput::APPLY_MENU, 0).to_string() != "" ?
+                        " " + recomp::get_input_binding(0, recomp::GameInput::APPLY_MENU, 0).to_string() :
                         ""
                     ) + \
-                    (recomp::get_input_binding(0, recomp::GameInput::APPLY_MENU, 1, recomp::InputDevice::Controller).to_string() != "" ?
-                        " " + recomp::get_input_binding(0, recomp::GameInput::APPLY_MENU, 1, recomp::InputDevice::Controller).to_string() :
+                    (recomp::get_input_binding(1, recomp::GameInput::APPLY_MENU, 1).to_string() != "" ?
+                        " " + recomp::get_input_binding(1, recomp::GameInput::APPLY_MENU, 1).to_string() :
                         ""
                     );
             } else {
@@ -646,10 +646,10 @@ public:
         constructor.BindEventCallback("reset_input_bindings_to_defaults",
             [](Rml::DataModelHandle model_handle, Rml::Event& event, const Rml::VariantList& inputs) {
                 if (cur_device == recomp::InputDevice::Controller) {
-                    // TODO: Needs the active controller tab.
+                    // TODO: Needs the profile index.
                     banjo::reset_cont_input_bindings(0);
                 } else {
-                    // TODO: Needs the active controller tab.
+                    // TODO: Needs the profile index.
                     banjo::reset_kb_input_bindings(0);
                 }
                 model_handle.DirtyAllVariables();
@@ -662,8 +662,8 @@ public:
             [](Rml::DataModelHandle model_handle, Rml::Event& event, const Rml::VariantList& inputs) {
                 recomp::GameInput input = static_cast<recomp::GameInput>(inputs.at(0).Get<size_t>());
                 for (size_t binding_index = 0; binding_index < recomp::bindings_per_input; binding_index++) {
-                    // TODO: Needs the active controller tab.
-                    recomp::set_input_binding(0, input, binding_index, cur_device, recomp::InputField{});
+                    // TODO: Needs the profile index.
+                    recomp::set_input_binding(0, input, binding_index, recomp::InputField{});
                 }
                 model_handle.DirtyVariable("inputs");
                 graphics_model_handle.DirtyVariable("gfx_help__apply");
@@ -671,7 +671,7 @@ public:
 
         constructor.BindEventCallback("reset_single_input_binding_to_default",
             [](Rml::DataModelHandle model_handle, Rml::Event& event, const Rml::VariantList& inputs) {
-                // TODO: Needs the active controller tab.
+                // TODO: Needs the profile index.
                 recomp::GameInput input = static_cast<recomp::GameInput>(inputs.at(0).Get<size_t>());
                 banjo::reset_single_input_binding(0, cur_device, input);
                 model_handle.DirtyVariable("inputs");
@@ -710,8 +710,8 @@ public:
             virtual int Size(void* ptr) override { return recomp::bindings_per_input; }
             virtual Rml::DataVariable Child(void* ptr, const Rml::DataAddressEntry& address) override {
                 recomp::GameInput input = static_cast<recomp::GameInput>((uintptr_t)ptr);
-                // TODO: Needs the active controller tab.
-                return Rml::DataVariable{&input_field_definition_instance, &recomp::get_input_binding(0, input, address.index, cur_device)};
+                // TODO: Needs the profile index.
+                return Rml::DataVariable{&input_field_definition_instance, &recomp::get_input_binding(0, input, address.index)};
             }
         };
         // Static instance of the InputField array variable definition to have a fixed pointer to return to RmlUi.
@@ -801,22 +801,22 @@ public:
         });
 
         constructor.BindFunc("nav_help__accept", [](Rml::Variant& out) {
-            // TODO: Needs the active controller tab.
+            // TODO: Needs the profile index.
             if (cont_active) {
                 out = \
-                    recomp::get_input_binding(0, recomp::GameInput::ACCEPT_MENU, 0, recomp::InputDevice::Controller).to_string() + \
-                    recomp::get_input_binding(0, recomp::GameInput::ACCEPT_MENU, 1, recomp::InputDevice::Controller).to_string();
+                    recomp::get_input_binding(0, recomp::GameInput::ACCEPT_MENU, 0).to_string() + \
+                    recomp::get_input_binding(0, recomp::GameInput::ACCEPT_MENU, 1).to_string();
             } else {
                 out = PF_KEYBOARD_ENTER;
             }
         });
 
         constructor.BindFunc("nav_help__exit", [](Rml::Variant& out) {
-            // TODO: Needs the active controller tab.
+            // TODO: Needs the profile index.
             if (cont_active) {
                 out = \
-                    recomp::get_input_binding(0, recomp::GameInput::TOGGLE_MENU, 0, recomp::InputDevice::Controller).to_string() + \
-                    recomp::get_input_binding(0, recomp::GameInput::TOGGLE_MENU, 1, recomp::InputDevice::Controller).to_string();
+                    recomp::get_input_binding(0, recomp::GameInput::TOGGLE_MENU, 0).to_string() + \
+                    recomp::get_input_binding(0, recomp::GameInput::TOGGLE_MENU, 1).to_string();
             } else {
                 out = PF_KEYBOARD_ESCAPE;
             }

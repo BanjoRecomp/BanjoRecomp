@@ -34,6 +34,13 @@ constexpr int ds_default              = 1;
 constexpr int rr_manual_default       = 60;
 constexpr bool developer_mode_default = false;
 
+static std::string keyboard_sp_profile_key = "keyboard_sp";
+static std::string controller_sp_profile_key = "controller_sp";
+static std::string keyboard_sp_profile_name = "Keyboard (SP)";
+static std::string controller_sp_profile_name = "Controller (SP)";
+static int keyboard_sp_profile_index = -1;
+static int controller_sp_profile_index = -1;
+
 static bool is_steam_deck = false;
 
 ultramodern::renderer::WindowMode wm_default() {
@@ -131,7 +138,7 @@ namespace recomp {
     }
 
     void to_json(json& j, const ControllerGUID& guid) {
-        j = json{ {"serial", guid.serial}, {"vendor", guid.vendor}, {"product", guid.product}, {"version", guid.version}, {"crc16", guid.crc16}, {"player_index", guid.player_index} };
+        j = json{ {"serial", guid.serial}, {"vendor", guid.vendor}, {"product", guid.product}, {"version", guid.version}, {"crc16", guid.crc16} };
     }
 
     void from_json(const json& j, ControllerGUID& guid) {
@@ -140,7 +147,6 @@ namespace recomp {
         j.at("product").get_to(guid.product);
         j.at("version").get_to(guid.version);
         j.at("crc16").get_to(guid.crc16);
-        j.at("player_index").get_to(guid.player_index);
     }
 }
 
@@ -279,69 +285,74 @@ bool load_general_config(const std::filesystem::path& path) {
     return true;
 }
 
-void assign_mapping(int controller_num, recomp::InputDevice device, recomp::GameInput input, const std::vector<recomp::InputField>& value) {
+void assign_mapping(int profile_index, recomp::GameInput input, const std::vector<recomp::InputField>& value) {
     for (size_t binding_index = 0; binding_index < std::min(value.size(), recomp::bindings_per_input); binding_index++) {
-        recomp::set_input_binding(controller_num, input, binding_index, device, value[binding_index]);
+        recomp::set_input_binding(profile_index, input, binding_index, value[binding_index]);
     }
 };
 
 // same as assign_mapping, except will clear unassigned bindings if not in value
-void assign_mapping_complete(int controller_num, recomp::InputDevice device, recomp::GameInput input, const std::vector<recomp::InputField>& value) {
+void assign_mapping_complete(int profile_index, recomp::GameInput input, const std::vector<recomp::InputField>& value) {
     for (size_t binding_index = 0; binding_index < recomp::bindings_per_input; binding_index++) {
         if (binding_index >= value.size()) {
-            recomp::set_input_binding(controller_num, input, binding_index, device, recomp::InputField{});
+            recomp::set_input_binding(profile_index, input, binding_index, recomp::InputField{});
         } else {
-            recomp::set_input_binding(controller_num, input, binding_index, device, value[binding_index]);
+            recomp::set_input_binding(profile_index, input, binding_index, value[binding_index]);
         }
     }
 };
 
-void assign_all_mappings(int controller_num, recomp::InputDevice device, const recomp::DefaultN64Mappings& values) {
-    assign_mapping_complete(controller_num, device, recomp::GameInput::A, values.a);
-    assign_mapping_complete(controller_num, device, recomp::GameInput::B, values.b);
-    assign_mapping_complete(controller_num, device, recomp::GameInput::Z, values.z);
-    assign_mapping_complete(controller_num, device, recomp::GameInput::START, values.start);
-    assign_mapping_complete(controller_num, device, recomp::GameInput::DPAD_UP, values.dpad_up);
-    assign_mapping_complete(controller_num, device, recomp::GameInput::DPAD_DOWN, values.dpad_down);
-    assign_mapping_complete(controller_num, device, recomp::GameInput::DPAD_LEFT, values.dpad_left);
-    assign_mapping_complete(controller_num, device, recomp::GameInput::DPAD_RIGHT, values.dpad_right);
-    assign_mapping_complete(controller_num, device, recomp::GameInput::L, values.l);
-    assign_mapping_complete(controller_num, device, recomp::GameInput::R, values.r);
-    assign_mapping_complete(controller_num, device, recomp::GameInput::C_UP, values.c_up);
-    assign_mapping_complete(controller_num, device, recomp::GameInput::C_DOWN, values.c_down);
-    assign_mapping_complete(controller_num, device, recomp::GameInput::C_LEFT, values.c_left);
-    assign_mapping_complete(controller_num, device, recomp::GameInput::C_RIGHT, values.c_right);
+void assign_all_mappings(int profile_index, const recomp::DefaultN64Mappings& values) {
+    assign_mapping_complete(profile_index, recomp::GameInput::A, values.a);
+    assign_mapping_complete(profile_index, recomp::GameInput::B, values.b);
+    assign_mapping_complete(profile_index, recomp::GameInput::Z, values.z);
+    assign_mapping_complete(profile_index, recomp::GameInput::START, values.start);
+    assign_mapping_complete(profile_index, recomp::GameInput::DPAD_UP, values.dpad_up);
+    assign_mapping_complete(profile_index, recomp::GameInput::DPAD_DOWN, values.dpad_down);
+    assign_mapping_complete(profile_index, recomp::GameInput::DPAD_LEFT, values.dpad_left);
+    assign_mapping_complete(profile_index, recomp::GameInput::DPAD_RIGHT, values.dpad_right);
+    assign_mapping_complete(profile_index, recomp::GameInput::L, values.l);
+    assign_mapping_complete(profile_index, recomp::GameInput::R, values.r);
+    assign_mapping_complete(profile_index, recomp::GameInput::C_UP, values.c_up);
+    assign_mapping_complete(profile_index, recomp::GameInput::C_DOWN, values.c_down);
+    assign_mapping_complete(profile_index, recomp::GameInput::C_LEFT, values.c_left);
+    assign_mapping_complete(profile_index, recomp::GameInput::C_RIGHT, values.c_right);
 
-    assign_mapping_complete(controller_num, device, recomp::GameInput::X_AXIS_NEG, values.analog_left);
-    assign_mapping_complete(controller_num, device, recomp::GameInput::X_AXIS_POS, values.analog_right);
-    assign_mapping_complete(controller_num, device, recomp::GameInput::Y_AXIS_NEG, values.analog_down);
-    assign_mapping_complete(controller_num, device, recomp::GameInput::Y_AXIS_POS, values.analog_up);
+    assign_mapping_complete(profile_index, recomp::GameInput::X_AXIS_NEG, values.analog_left);
+    assign_mapping_complete(profile_index, recomp::GameInput::X_AXIS_POS, values.analog_right);
+    assign_mapping_complete(profile_index, recomp::GameInput::Y_AXIS_NEG, values.analog_down);
+    assign_mapping_complete(profile_index, recomp::GameInput::Y_AXIS_POS, values.analog_up);
 
-    assign_mapping_complete(controller_num, device, recomp::GameInput::TOGGLE_MENU, values.toggle_menu);
-    assign_mapping_complete(controller_num, device, recomp::GameInput::ACCEPT_MENU, values.accept_menu);
-    assign_mapping_complete(controller_num, device, recomp::GameInput::APPLY_MENU, values.apply_menu);
+    assign_mapping_complete(profile_index, recomp::GameInput::TOGGLE_MENU, values.toggle_menu);
+    assign_mapping_complete(profile_index, recomp::GameInput::ACCEPT_MENU, values.accept_menu);
+    assign_mapping_complete(profile_index, recomp::GameInput::APPLY_MENU, values.apply_menu);
 };
 
+void banjo::initialize_input_bindings() {
+    keyboard_sp_profile_index = recomp::add_input_profile(keyboard_sp_profile_key, keyboard_sp_profile_name, recomp::InputDevice::Keyboard, false);
+    controller_sp_profile_index = recomp::add_input_profile(controller_sp_profile_key, controller_sp_profile_name, recomp::InputDevice::Controller, false);
+
+    // Set Player 1 to the SP profiles by default.
+    recomp::set_input_profile_for_player(0, keyboard_sp_profile_index, recomp::InputDevice::Keyboard);
+    recomp::set_input_profile_for_player(0, controller_sp_profile_index, recomp::InputDevice::Controller);
+}
+
 void banjo::reset_input_bindings() {
-    assign_all_mappings(0, recomp::InputDevice::Keyboard, recomp::default_n64_keyboard_mappings);
-
-    for (int i = 0; i < 4; i++) {
-        assign_all_mappings(i, recomp::InputDevice::Controller, recomp::default_n64_controller_mappings);
-    }
+    assign_all_mappings(keyboard_sp_profile_index, recomp::default_n64_keyboard_mappings);
+    assign_all_mappings(controller_sp_profile_index, recomp::default_n64_controller_mappings);
 }
 
-void banjo::reset_cont_input_bindings(int controller_num) {
-    assign_all_mappings(controller_num, recomp::InputDevice::Controller, recomp::default_n64_controller_mappings);
+void banjo::reset_cont_input_bindings(int profile_index) {
+    assign_all_mappings(profile_index, recomp::default_n64_controller_mappings);
 }
 
-void banjo::reset_kb_input_bindings(int controller_num) {
-    assign_all_mappings(controller_num, recomp::InputDevice::Keyboard, recomp::default_n64_keyboard_mappings);
+void banjo::reset_kb_input_bindings(int profile_index) {
+    assign_all_mappings(profile_index, recomp::default_n64_keyboard_mappings);
 }
 
-void banjo::reset_single_input_binding(int controller_num, recomp::InputDevice device, recomp::GameInput input) {
+void banjo::reset_single_input_binding(int profile_index, recomp::InputDevice device, recomp::GameInput input) {
     assign_mapping_complete(
-        controller_num,
-        device,
+        profile_index,
         input,
         recomp::get_default_mapping_for_input(
             device == recomp::InputDevice::Keyboard ?
@@ -385,39 +396,50 @@ bool load_graphics_config(const std::filesystem::path& path) {
     return true;
 }
 
-void add_input_bindings(nlohmann::json& out, int controller_num, recomp::GameInput input, recomp::InputDevice device) {
+void add_input_bindings(nlohmann::json& out, int profile_index, recomp::GameInput input) {
     const std::string& input_name = recomp::get_input_enum_name(input);
     nlohmann::json& out_array = out[input_name];
     out_array = nlohmann::json::array();
     for (size_t binding_index = 0; binding_index < recomp::bindings_per_input; binding_index++) {
-        out_array[binding_index] = recomp::get_input_binding(controller_num, input, binding_index, device);
+        out_array[binding_index] = recomp::get_input_binding(profile_index, input, binding_index);
     }
 };
 
-constexpr int controls_version = 2;
+constexpr int controls_version = 3;
 
 bool save_controls_config(const std::filesystem::path& path) {
+    int profile_count = recomp::get_input_profile_count();
+    int controller_count = recomp::get_controller_count();
     nlohmann::json config_json{};
     config_json["version"] = controls_version;
-    config_json["players"] = std::vector<nlohmann::json>(4);
-    for (size_t i = 0; i < config_json["players"].size(); i++) {
-        nlohmann::json &player = config_json["players"][i];
-        player["keyboard"] = {};
-        player["controller"] = {};
+    config_json["profiles"] = std::vector<nlohmann::json>(profile_count);
+    config_json["controllers"] = std::vector<nlohmann::json>(controller_count);
 
-        for (size_t j = 0; j < recomp::get_num_inputs(); j++) {
-            recomp::GameInput cur_input = static_cast<recomp::GameInput>(j);
-            add_input_bindings(player["keyboard"], i, cur_input, recomp::InputDevice::Keyboard);
-            add_input_bindings(player["controller"], i, cur_input, recomp::InputDevice::Controller);
+    nlohmann::json &profiles = config_json["profiles"];
+    for (int i = 0; i < profile_count; i++) {
+        nlohmann::json &profile = profiles[i];
+        profile["key"] = recomp::get_input_profile_key(i);
+        profile["name"] = recomp::get_input_profile_name(i);
+        profile["device"] = recomp::get_input_profile_device(i);
+        profile["custom"] = recomp::is_input_profile_custom(i);
+        profile["mappings"] = nlohmann::json();
+        
+        for (int j = 0; j < (int)(recomp::GameInput::COUNT); j++) {
+            add_input_bindings(profile["mappings"], i, (recomp::GameInput)(j));
         }
+    }
 
-        player["controller"]["guid"] = recomp::get_input_controller_guid(i);
+    nlohmann::json &controllers = config_json["controllers"];
+    for (int i = 0; i < controller_count; i++) {
+        nlohmann::json &controller = controllers[i];
+        controller["guid"] = recomp::get_controller_guid(i);
+        controller["profile"] = recomp::get_input_profile_key(recomp::get_controller_profile_index(i));
     }
 
     return save_json_with_backups(path, config_json);
 }
 
-bool load_input_device_from_json(const nlohmann::json& config_json, int controller_num, recomp::InputDevice device, const std::string& key) {
+bool load_input_device_from_json(const nlohmann::json& config_json, int profile_index, recomp::InputDevice device, const std::string& key) {
     // Check if the json object for the given key exists.
     auto find_it = config_json.find(key);
     if (find_it == config_json.end()) {
@@ -434,8 +456,7 @@ bool load_input_device_from_json(const nlohmann::json& config_json, int controll
         auto find_input_it = mappings_json.find(input_name);
         if (find_input_it == mappings_json.end() || !find_input_it->is_array()) {
             assign_mapping(
-                controller_num,
-                device,
+                profile_index,
                 cur_input,
                 recomp::get_default_mapping_for_input(
                     device == recomp::InputDevice::Keyboard ?
@@ -452,21 +473,11 @@ bool load_input_device_from_json(const nlohmann::json& config_json, int controll
         for (size_t binding_index = 0; binding_index < std::min(recomp::bindings_per_input, input_json.size()); binding_index++) {
             recomp::InputField cur_field{};
             recomp::from_json(input_json[binding_index], cur_field);
-            recomp::set_input_binding(controller_num, cur_input, binding_index, device, cur_field);
+            recomp::set_input_binding(profile_index, cur_input, binding_index, cur_field);
         }
     }
 
     return true;
-}
-
-void load_bindings_config(const nlohmann::json &config_json, int controller_num) {
-    if (!load_input_device_from_json(config_json, controller_num, recomp::InputDevice::Keyboard, "keyboard")) {
-        assign_all_mappings(controller_num, recomp::InputDevice::Keyboard, recomp::default_n64_keyboard_mappings);
-    }
-
-    if (!load_input_device_from_json(config_json, controller_num, recomp::InputDevice::Controller, "controller")) {
-        assign_all_mappings(controller_num, recomp::InputDevice::Controller, recomp::default_n64_controller_mappings);
-    }
 }
 
 bool load_controls_config(const std::filesystem::path& path) {
@@ -477,29 +488,48 @@ bool load_controls_config(const std::filesystem::path& path) {
 
     auto version_it = config_json.find("version");
     if (version_it != config_json.end()) {
-        auto players_it = config_json.find("players");
-        for (size_t i = 0; i < 4; i++) {
-            const bool player_exists = players_it != config_json.end() && players_it->is_array() && (players_it->size() > i);
-            const nlohmann::json &player = player_exists ? (*players_it)[i] : nlohmann::json();
-            load_bindings_config(player, (int)(i));
+        auto profiles = config_json.find("profiles");
+        if (profiles == config_json.end() || !profiles->is_array()) {
+            return false;
+        }
 
-            auto controller_it = player.find("controller");
-            if (controller_it != player.end()) {
-                const nlohmann::json &controller = *controller_it;
-                auto guid_it = controller.find("guid");
-                if (guid_it != controller.end()) {
-                    recomp::set_input_controller_guid((int)(i), *guid_it);
+        for (const nlohmann::json &profile : *profiles) {
+            std::string key = profile.value("key", std::string());
+            std::string name = profile.value("name", std::string());
+            recomp::InputDevice device = profile.value("device", recomp::InputDevice::COUNT);
+            bool custom = profile.value("custom", false);
+            if (!key.empty() && !name.empty() && device != recomp::InputDevice::COUNT) {
+                int profile_index = recomp::add_input_profile(key, name, device, custom);
+                if (!load_input_device_from_json(profile, profile_index, device, "mappings")) {
+                    assign_all_mappings(profile_index, device == recomp::InputDevice::Keyboard ? recomp::default_n64_keyboard_mappings : recomp::default_n64_controller_mappings);
+                }
+            }
+        }
+
+        auto controllers = config_json.find("controllers");
+        if (controllers == config_json.end() || !controllers->is_array()) {
+            return false;
+        }
+
+        for (const nlohmann::json &controller : *controllers) {
+            auto guid = controller.find("guid");
+            auto profile = controller.find("profile");
+            if (guid != controller.end() && guid->is_object() && profile != controller.end() && profile->is_string()) {
+                int profile_index = recomp::get_input_profile_by_key(*profile);
+                if (profile_index >= 0) {
+                    recomp::add_controller(*guid, profile_index);
                 }
             }
         }
     }
     else {
         // Version 1 of the format only had bindings for Player 1 on the root element.
-        load_bindings_config(config_json, 0);
+        if (!load_input_device_from_json(config_json, keyboard_sp_profile_index, recomp::InputDevice::Keyboard, "keyboard")) {
+            assign_all_mappings(keyboard_sp_profile_index, recomp::default_n64_keyboard_mappings);
+        }
 
-        for (int i = 1; i < 4; i++) {
-            // Assign defaults for every other controller.
-            assign_all_mappings(i, recomp::InputDevice::Controller, recomp::default_n64_controller_mappings);
+        if (!load_input_device_from_json(config_json, controller_sp_profile_index, recomp::InputDevice::Controller, "controller")) {
+            assign_all_mappings(controller_sp_profile_index, recomp::default_n64_controller_mappings);
         }
     }
 
@@ -552,6 +582,8 @@ void banjo::load_config() {
         reset_graphics_options();
         save_graphics_config(graphics_path);
     }
+
+    banjo::initialize_input_bindings();
 
     if (!load_controls_config(controls_path)) {
         banjo::reset_input_bindings();

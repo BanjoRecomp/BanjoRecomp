@@ -98,6 +98,11 @@ namespace recomp {
         COUNT
     };
 
+    NLOHMANN_JSON_SERIALIZE_ENUM(recomp::InputDevice, {
+        { recomp::InputDevice::Controller, "Controller" },
+        { recomp::InputDevice::Keyboard, "Keyboard" },
+    });
+
     void start_scanning_input(InputDevice device);
     void stop_scanning_input();
     void finish_scanning_input(InputField scanned_field);
@@ -171,31 +176,38 @@ namespace recomp {
     const std::string& get_input_name(GameInput input);
     const std::string& get_input_enum_name(GameInput input);
     GameInput get_input_from_enum_name(const std::string_view name);
-    InputField& get_input_binding(int controller_num, GameInput input, size_t binding_index, InputDevice device);
-    void set_input_binding(int controller_num, GameInput input, size_t binding_index, InputDevice device, InputField value);
+    InputField& get_input_binding(int profile_index, GameInput input, size_t binding_index);
+    void set_input_binding(int profile_index, GameInput input, size_t binding_index, InputField value);
+    int add_input_profile(const std::string &key, const std::string &name, InputDevice device, bool custom);
+    int get_input_profile_by_key(const std::string &key);
+    const std::string &get_input_profile_key(int profile_index);
+    const std::string &get_input_profile_name(int profile_index);
+    InputDevice get_input_profile_device(int profile_index);
+    bool is_input_profile_custom(int profile_index);
+    int get_input_profile_count();
+    const std::vector<int> get_indices_for_custom_profiles(InputDevice device);
+    void set_input_profile_for_player(int player_index, int profile_index, InputDevice device);
+    int get_input_profile_for_player(int player_index, InputDevice device);
 
     struct ControllerGUID {
+        uint64_t hash;
         std::string serial;
         int vendor{};
         int product{};
         int version{};
         int crc16{};
-        int player_index{};
     };
 
-    void set_input_controller_guid(int controller_num, const ControllerGUID &guid);
-    ControllerGUID get_input_controller_guid(int controller_num);
+    int add_controller(ControllerGUID guid, int profile_index);
+    const ControllerGUID &get_controller_guid(int controller_index);
+    int get_controller_profile_index(int controller_index);
+    int get_controller_by_guid(ControllerGUID guid);
+    int get_controller_count();
+    ControllerGUID get_guid_from_sdl_controller(SDL_GameController* game_controller);
+    std::string get_string_from_controller_guid(ControllerGUID guid);
 
-    struct ControllerOption {
-        std::string name;
-        ControllerGUID guid;
-    };
-
-    void refresh_controller_options();
-    const std::vector<ControllerOption> &get_controller_options();
-
-    bool get_n64_input(int controller_num, uint16_t* buttons_out, float* x_out, float* y_out);
-    void set_rumble(int controller_num, bool);
+    bool get_n64_input(int player_index, uint16_t* buttons_out, float* x_out, float* y_out);
+    void set_rumble(int player_index, bool);
     void update_rumble();
     void handle_events();
 
