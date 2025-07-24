@@ -486,8 +486,6 @@ bool load_controls_config(const std::filesystem::path& path) {
         return false;
     }
 
-    return false;
-
     auto version_it = config_json.find("version");
     if (version_it != config_json.end()) {
         auto profiles = config_json.find("profiles");
