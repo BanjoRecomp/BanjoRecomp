@@ -6,6 +6,7 @@
 #include "elements/ui_binding_button.h"
 #include "elements/ui_pill_button.h"
 #include "elements/ui_toggle.h"
+#include "ui_player_card.h"
 
 // TODO: remove after moving to recompinput
 namespace recompinput {
@@ -61,41 +62,52 @@ public:
 
 using PlayerBindings = std::map<recompinput::GameInput, BindingList>;
 
-// Sets if keyboard should be enabled, first arg player index, second is a bool to enable/disable
-using set_player_keyboard_enabled_callback = std::function<void(int, bool)>;
-
 class ConfigPageControls : public ConfigPage {
 protected:
+    // for tracking forced updates to entire page (major changes like player reassignment or singleplayer mode)
+    int last_update_index = 0;
+    int update_index = 0;
+
     int selected_player = 0;
     int num_players;
+
     bool multiplayer_enabled;
+    bool multiplayer_view_mappings;
+
+    bool single_player_show_keyboard_mappings = false;
 
     std::vector<GameInputContext> game_input_contexts;
     std::vector<PlayerBindings> game_input_bindings;
-    std::vector<bool> player_keyboard_enabled;
 
-    std::vector<PillButton*> player_elements;
+    std::vector<PlayerCard*> player_cards;
     std::vector<GameInputRow*> game_input_rows;
     Toggle *keyboard_toggle;
     Element *description_container = nullptr;
     on_player_bind_callback on_player_bind;
 
+    virtual void process_event(const Event &e) override;
     std::string_view get_type_name() override { return "ConfigPageControls"; }
 private:
     void on_option_hover(uint8_t index);
     void on_bind_click(recompinput::GameInput game_input, int input_index);
+
+    void render_all();
+    void render_header();
+    void render_body();
+    void render_body_players();
+    void render_body_mappings();
+    void render_footer();
 public:
     ConfigPageControls(
         Element *parent,
         int num_players,
         std::vector<GameInputContext> game_input_contexts,
         std::vector<PlayerBindings> game_input_bindings,
-        std::vector<bool> player_keyboard_enabled,
-        on_player_bind_callback on_player_bind,
-        set_player_keyboard_enabled_callback set_player_keyboard_enabled
+        on_player_bind_callback on_player_bind
     );
     virtual ~ConfigPageControls();
-
+    
+    void force_update();
     void render_control_mappings();
     void update_control_mappings();
     void set_selected_player(int player);

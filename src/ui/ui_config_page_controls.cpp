@@ -5,6 +5,7 @@
 #include "elements/ui_toggle.h"
 #include "elements/ui_container.h"
 #include "elements/ui_binding_button.h"
+#include "elements/ui_select.h"
 
 namespace recompui {
 
@@ -125,70 +126,179 @@ ConfigPageControls::ConfigPageControls(
     int num_players,
     std::vector<GameInputContext> game_input_contexts,
     std::vector<PlayerBindings> game_input_bindings,
-    std::vector<bool> player_keyboard_enabled,
-    on_player_bind_callback on_player_bind,
-    set_player_keyboard_enabled_callback set_player_keyboard_enabled
+    on_player_bind_callback on_player_bind
 ) : ConfigPage(parent) {
     this->on_player_bind = on_player_bind;
     this->game_input_contexts = game_input_contexts;
     this->num_players = num_players;
     this->game_input_bindings = game_input_bindings;
-    this->player_keyboard_enabled = player_keyboard_enabled;
     this->multiplayer_enabled = num_players > 1;
+
+    multiplayer_view_mappings = !multiplayer_enabled;
+
+    set_selected_player(selected_player);
 
     recompui::ContextId context = get_current_context();
 
+    render_all();
+}
+
+void ConfigPageControls::process_event(const Event &e) {
+    switch (e.type) {
+    case EventType::Update:
+        if (last_update_index != update_index) {
+            last_update_index = update_index;
+            render_all();
+        }
+        queue_update();
+        break;
+    default:
+        break;
+    }
+}
+
+void ConfigPageControls::force_update() {
+    update_index++;
+}
+
+void ConfigPageControls::render_all() {
+    render_header();
+    render_body();
+    render_footer();
+}
+
+void ConfigPageControls::render_header() {
+    if (!multiplayer_enabled) {
+        hide_header();
+        return;
+    }
+
+    recompui::ContextId context = get_current_context();
     add_header();
+
+    // header left
     {
         auto header_left = header->get_left();
-        for (uint8_t i = 0; i < num_players; i++) {
-            std::string player_text = "P" + std::to_string(i + 1);
-            auto player_button = context.create_element<PillButton>(header_left, player_text, "icons/Cont.svg", ButtonStyle::Basic, PillButtonSize::XLarge);
-            player_elements.push_back(player_button);
-            player_button->add_pressed_callback([this, i]() {
-                set_selected_player(i);
-                update_control_mappings();
+        header_left->clear_children();
+        if (multiplayer_view_mappings) {
+            auto profile_name = context.create_element<Label>(header_left, "Editing: Name of da profile", LabelStyle::Normal);
+        } else {
+            // Nothing rendered here as of now.. maybe single player toggle
+        }
+    }
+
+    // header right
+    {
+        auto header_right = header->get_right();
+        header_right->clear_children();
+
+        if (multiplayer_view_mappings) {
+            Button* go_back_button = context.create_element<Button>(header_right, "Go back", ButtonStyle::Tertiary);
+            go_back_button->add_pressed_callback([this]() {
+                this->multiplayer_view_mappings = false;
+                this->render_all();
+            });
+        } else {
+            Button* assign_players_button = context.create_element<Button>(header_right, "Assign players", ButtonStyle::Primary);
+            assign_players_button->add_pressed_callback([]() {
+                recompui::assign_players_modal->open();
+                recompinput::start_player_assignment();
             });
         }
     }
-    {
-        auto header_right = header->get_right();
-        Button* assign_players_button = context.create_element<Button>(header_right, "Assign players", ButtonStyle::Primary);
-        assign_players_button->add_pressed_callback([]() {
-            recompui::assign_players_modal->open();
-            recompinput::start_player_assignment();
-        });
+}
+
+void ConfigPageControls::render_body() {
+    bool show_mappings = (multiplayer_enabled && multiplayer_view_mappings) || !multiplayer_enabled;
+
+    recompui::ContextId context = get_current_context();
+
+    if (show_mappings) {
+        body->get_right()->set_display(Display::Flex);
+        render_body_mappings();
+    } else {
+        body->get_right()->set_display(Display::None);
+        render_body_players();
     }
+}
+
+void ConfigPageControls::render_body_mappings() {
+    recompui::ContextId context = get_current_context();
+
+    // left side
+    {
+        render_control_mappings();
+    }
+
+    // right side
+    {
+        description_container = context.create_element<Element>(body->get_right(), 0, "p", true);
+        description_container->set_text(
+            "Sometimes, the windows combine with the seams in a way\n"
+            "That twitches on a peak at the place where the spirit was slain\n"
+            "Hey, one foot leads to another\n"
+            "Night's for sleep, blue curtains, covers, sequins in the eyes\n"
+            "That's a fine time to dine\n"
+            "Divine who's circling, feeding the cards to the midwives"
+        );
+    }
+}
+
+void ConfigPageControls::render_body_players() {
+    recompui::ContextId context = get_current_context();
+
+    auto body_left = body->get_left();
+    body_left->clear_children();
+
+    auto player_grid = context.create_element<Element>(body_left, 0, "div", false);
+    player_grid->set_display(Display::Flex);
+    player_grid->set_flex_direction(FlexDirection::Row);
+    player_grid->set_flex_wrap(FlexWrap::Wrap);
+    player_grid->set_justify_content(JustifyContent::SpaceBetween);
+    player_grid->set_align_items(AlignItems::Center);
+    player_grid->set_width(100.0f, Unit::Percent);
+    player_grid->set_height_auto();
+    player_grid->set_gap(64.0f);
+
+    for (int i = 0; i < num_players; i++) {
+        auto player_card = context.create_element<PlayerCard>(
+            player_grid,
+            i,
+            false
+        );
+        player_cards.push_back(player_card);
+    }
+}
+
+void ConfigPageControls::render_footer() {
+    if (multiplayer_enabled && !multiplayer_view_mappings) {
+        hide_footer();
+        return;
+    }
+
+    recompui::ContextId context = get_current_context();
 
     add_footer();
     {
         auto footer_left = footer->get_left();
-        keyboard_toggle = context.create_element<Toggle>(footer_left);
-        keyboard_toggle->set_checked(player_keyboard_enabled[selected_player]);
-        keyboard_toggle->add_checked_callback([this, set_player_keyboard_enabled](bool checked) {
-            set_player_keyboard_enabled(this->selected_player, checked);
-            update_control_mappings();
-        });
-        auto kb_label = context.create_element<Label>(footer_left, "Enable keyboard", LabelStyle::Normal);
-        kb_label->set_margin_left(12.0f);
+        footer_left->clear_children();
+        if (!multiplayer_enabled) {
+            keyboard_toggle = context.create_element<Toggle>(footer_left);
+            keyboard_toggle->set_checked(single_player_show_keyboard_mappings);
+            keyboard_toggle->add_checked_callback([this](bool checked) {
+                this->single_player_show_keyboard_mappings = checked;
+                this->update_control_mappings();
+            });
+            Label *kb_label = context.create_element<Label>(footer_left, "Enable keyboard", LabelStyle::Normal);
+            kb_label->set_margin_left(12.0f);
+        }
     }
     {
         auto footer_right = footer->get_right();
+        footer_right->clear_children();
         context.create_element<Button>(footer_right, "Reset to defaults", ButtonStyle::Warning);
+        // TODO: Add reset to defaults callback
     }
-
-    description_container = context.create_element<Element>(body->get_right(), 0, "p", true);
-    description_container->set_text(
-        "Sometimes, the windows combine with the seams in a way\n"
-        "That twitches on a peak at the place where the spirit was slain\n"
-        "Hey, one foot leads to another\n"
-        "Night's for sleep, blue curtains, covers, sequins in the eyes\n"
-        "That's a fine time to dine\n"
-        "Divine who's circling, feeding the cards to the midwives"
-    );
-
-    set_selected_player(selected_player);
-    render_control_mappings();
 }
 
 void ConfigPageControls::render_control_mappings() {
@@ -240,29 +350,7 @@ void ConfigPageControls::on_bind_click(recompinput::GameInput game_input, int in
 }
 
 void ConfigPageControls::set_selected_player(int player) {
-    static const std::array<theme::color, 8> player_colors = {
-        theme::color::Player1,
-        theme::color::Player2,
-        theme::color::Player3,
-        theme::color::Player4,
-        theme::color::Player5,
-        theme::color::Player6,
-        theme::color::Player7,
-        theme::color::Player8
-    };
-
     selected_player = player;
-    for (uint8_t i = 0; i < num_players; i++) {
-        auto player_button = player_elements[i];
-        theme::color player_color = player_colors[i % player_colors.size()];
-        if (i == selected_player) {
-            player_button->apply_theme_style(player_color, false, true);
-        } else {
-            player_button->apply_theme_style(player_color, true, true);
-        }
-    }
-
-    keyboard_toggle->set_checked(player_keyboard_enabled[selected_player]);
 }
 
 void ConfigPageControls::on_option_hover(uint8_t index) {

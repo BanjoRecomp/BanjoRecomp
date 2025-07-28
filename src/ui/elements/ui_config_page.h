@@ -39,7 +39,9 @@ namespace recompui {
     public:
         ConfigPage(Element *parent);
         ConfigHeaderFooter *add_header();
+        void hide_header();
         ConfigHeaderFooter *add_footer();
+        void hide_footer();
         ConfigHeaderFooter *get_header() { return header; };
         ConfigBody *get_body() { return body; };
         ConfigHeaderFooter *get_footer() { return footer; };

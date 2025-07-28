@@ -113,6 +113,10 @@ namespace recompui {
         return header;
     }
 
+    void ConfigPage::hide_header() {
+        header->set_visibility(Visibility::Hidden);
+    }
+    
     ConfigHeaderFooter* ConfigPage::add_footer() {
         footer->set_visibility(Visibility::Visible);
         set_border_bottom_left_radius(0);
@@ -120,6 +124,10 @@ namespace recompui {
         return footer;
     }
 
-
+    void ConfigPage::hide_footer() {
+        footer->set_visibility(Visibility::Hidden);
+        set_border_bottom_left_radius(theme::border::radius_lg);
+        set_border_bottom_right_radius(theme::border::radius_lg);
+    }
 
 } // namespace recompui

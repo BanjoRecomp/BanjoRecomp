@@ -10,6 +10,7 @@
 #include "promptfont.h"
 #include "GamepadMotion.hpp"
 #include "../ui/ui_assign_players_modal.h"
+#include "../ui/ui_config_page_controls_element.h"
 
 constexpr float axis_threshold = 0.5f;
 
@@ -146,6 +147,10 @@ void process_player_assignment(SDL_Event* event) {
     if (queue_close_player_assignment_modal) {
         recompui::assign_players_modal->close();
         queue_close_player_assignment_modal = false;
+        if (recompui::controls_page != nullptr) {
+            recompui::controls_page->force_update();
+        }
+        return;
     }
 
     if (!player_assignment_state.is_assigning) {

@@ -6,7 +6,7 @@
 
 namespace recompui {
 
-extern ConfigPageControls *config_page;
+extern ConfigPageControls *controls_page;
 
 class ElementConfigPageControls : public Rml::Element {
 public:

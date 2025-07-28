@@ -7,7 +7,7 @@ namespace recompinput {
 
 namespace recompui {
 
-ConfigPageControls *config_page;
+ConfigPageControls *controls_page = nullptr;
 
 static bool is_multiplayer_enabled() {
     return true;
@@ -64,27 +64,6 @@ static void temp_on_bind_player(int player_index, recompinput::GameInput game_in
     temp_binding_info.is_scanning = true;
 }
 
-static uint8_t get_num_players() {
-    return temp_local_player_bindings.size();
-}
-
-static std::vector<bool> temp_local_player_has_keyboard_enabled = {
-    false,
-    false,
-    false,
-    false,
-    false,
-    false,
-    false,
-    false,
-}; 
-
-static void temp_set_keyboard_player_enabled(uint8_t player, bool enabled) {
-    temp_local_player_has_keyboard_enabled[player] = enabled;
-}
-
-
-
 ElementConfigPageControls::ElementConfigPageControls(const Rml::String& tag) : Rml::Element(tag) {
     SetProperty(Rml::PropertyId::Display, Rml::Style::Display::Block);
     SetProperty("width", "100%");
@@ -96,14 +75,12 @@ ElementConfigPageControls::ElementConfigPageControls(const Rml::String& tag) : R
     // TODO: remove temp stores
     temp_set_all_defaults();
 
-    config_page = context.create_element<ConfigPageControls>(
+    controls_page = context.create_element<ConfigPageControls>(
         &this_compat,
-        get_num_players(),
+        recompinput::get_num_players(),
         temp_game_input_contexts,
         temp_local_player_bindings,
-        temp_local_player_has_keyboard_enabled,
-        temp_on_bind_player,
-        temp_set_keyboard_player_enabled
+        temp_on_bind_player
     );
 }
 
