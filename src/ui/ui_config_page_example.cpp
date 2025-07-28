@@ -34,8 +34,12 @@ ElementConfigPageExample::ElementConfigPageExample(const Rml::String& tag) : Rml
     auto header = config_page->add_header();
     {
         auto header_left = header->get_left();
-        context.create_element<Button>(header_left, "Hello", ButtonStyle::Primary);
-        context.create_element<Button>(header_left, "Second button", ButtonStyle::Secondary);
+        context.create_element<Button>(header_left, "Primary", ButtonStyle::Primary);
+        context.create_element<Button>(header_left, "Secondary", ButtonStyle::Secondary);
+        context.create_element<Button>(header_left, "Large", ButtonStyle::Primary, ButtonSize::Large);
+        context.create_element<Button>(header_left, "Medium", ButtonStyle::Primary, ButtonSize::Medium);
+        context.create_element<Button>(header_left, "Small", ButtonStyle::Primary, ButtonSize::Small);
+
     }
     {
         auto header_right = header->get_right();

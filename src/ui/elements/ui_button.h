@@ -14,9 +14,17 @@ namespace recompui {
         Basic, // No border, only shows background on hover or focus.
     };
 
+    enum class ButtonSize {
+        Small = 32,
+        Medium = 48,
+        Large = 72,
+        Default = Large
+    };
+
     class Button : public Element {
     protected:
         ButtonStyle style = ButtonStyle::Primary;
+        ButtonSize size = ButtonSize::Default;
         Style hover_style;
         Style focus_style;
         Style disabled_style;
@@ -27,7 +35,7 @@ namespace recompui {
         virtual void process_event(const Event &e) override;
         std::string_view get_type_name() override { return "Button"; }
     public:
-        Button(Element *parent, const std::string &text, ButtonStyle style);
+        Button(Element *parent, const std::string &text, ButtonStyle style, ButtonSize size = ButtonSize::Default);
         void add_pressed_callback(std::function<void()> callback);
         Style* get_hover_style() { return &hover_style; }
         Style* get_focus_style() { return &focus_style; }

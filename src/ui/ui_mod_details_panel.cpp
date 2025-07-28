@@ -68,6 +68,7 @@ ModDetailsPanel::ModDetailsPanel(Element *parent) : Element(parent) {
             enable_toggle->set_nav_manual(NavDirection::Up, mod_tab_id);
 
             enable_label = context.create_element<Label>(enable_container, "A currently enabled mod requires this mod", LabelStyle::Annotation);
+            enable_label->set_color(theme::color::Primary);
         }
 
         configure_button = context.create_element<Button>(buttons_container, "Configure", recompui::ButtonStyle::Secondary);

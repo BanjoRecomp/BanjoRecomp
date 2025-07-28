@@ -1,24 +1,67 @@
 #include "ui_button.h"
+#include "ui_label.h"
 
 #include <cassert>
 
 namespace recompui {
 
-    Button::Button(Element *parent, const std::string &text, ButtonStyle style) : Element(parent, Events(EventType::Click, EventType::Hover, EventType::Enable, EventType::Focus), "button", true) {
+    Button::Button(Element *parent, const std::string &text, ButtonStyle style, ButtonSize size) : Element(parent, Events(EventType::Click, EventType::Hover, EventType::Enable, EventType::Focus), "button", false) {
         this->style = style;
+        this->size = size;
+        // Borders add width to the button, so this subtracts from the base size to bring it back to the expected size.
+        float float_size_internal = static_cast<float>(size) - (theme::border::width * 2.0f);
+
+        float base_padding = 24.0f;
+        switch (size) {
+            case ButtonSize::Small:
+                base_padding = 12.0f;
+                break;
+            case ButtonSize::Medium:
+                base_padding = 12.0f;
+                break;
+            case ButtonSize::Large:
+            default:
+                base_padding = 24.0f;
+                break;
+        }
+
+        const float button_padding_internal = base_padding - (theme::border::width * 2.0f);
 
         enable_focus();
 
-        set_text(text);
-        set_display(Display::Block);
-        set_padding(23.0f);
+        set_display(Display::Flex);
+        set_position(Position::Relative);
+        set_flex_direction(FlexDirection::Row);
+        set_align_items(AlignItems::Center);
+        set_justify_content(JustifyContent::Center);
+
+        set_padding_right(button_padding_internal);
+        set_padding_left(button_padding_internal);
+
+        set_width_auto();
+        set_height(float_size_internal);
+        set_min_height(float_size_internal);
+        set_max_height(float_size_internal);
+
         set_border_width(theme::border::width);
         set_border_radius(theme::border::radius_md);
-        set_font_size(28.0f);
-        set_letter_spacing(3.08f);
-        set_line_height(28.0f);
-        set_font_style(FontStyle::Normal);
-        set_font_weight(700);
+
+        ContextId context = get_current_context();
+
+        switch (size) {
+            case ButtonSize::Small: {
+                auto label = context.create_element<Label>(this, text, LabelStyle::Annotation);
+                break;
+            }
+            case ButtonSize::Medium:
+                context.create_element<Label>(this, text, LabelStyle::Small);
+                break;
+            case ButtonSize::Large:
+            default:
+                context.create_element<Label>(this, text, LabelStyle::Normal);
+                break;
+        }
+
         set_cursor(Cursor::Pointer);
         set_color(theme::color::Text);
         set_tab_index(TabIndex::Auto);
