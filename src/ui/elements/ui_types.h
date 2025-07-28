@@ -222,6 +222,12 @@ namespace recompui {
         ColumnReverse
     };
 
+    enum class FlexWrap {
+        NoWrap,
+        Wrap,
+        WrapReverse
+    };
+
     enum class AlignItems {
         FlexStart,
         FlexEnd,

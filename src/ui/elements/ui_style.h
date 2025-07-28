@@ -91,6 +91,7 @@ namespace recompui {
         void set_flex(float grow, float shrink);
         void set_flex(float grow, float shrink, float basis, Unit basis_unit = Unit::Percent);
         void set_flex_direction(FlexDirection flex_direction);
+        void set_flex_wrap(FlexWrap flex_wrap);
         void set_align_items(AlignItems align_items);
         void set_overflow(Overflow overflow);
         void set_overflow_x(Overflow overflow);

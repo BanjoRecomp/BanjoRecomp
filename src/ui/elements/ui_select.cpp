@@ -163,7 +163,7 @@ namespace recompui {
         ContextId context = get_current_context();
         Svg *arrow = context.create_element<Svg>(
             &selectarrow_element,
-            "assets/icons/Arrow.svg"
+            "icons/Arrow.svg"
         );
 
         arrow->set_width(24.0f);

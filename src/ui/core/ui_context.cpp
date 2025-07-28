@@ -5,6 +5,7 @@
 
 #include "slot_map.h"
 #include "RmlUi/Core/StreamMemory.h"
+#include "RmlUi/../../Source/Core/DocumentHeader.h"
 
 #include "ultramodern/error_handling.hpp"
 #include "recomp_ui.h"
@@ -238,9 +239,16 @@ recompui::ContextId recompui::create_context() {
     root->shim = false;
 
     ret.open();
+
+    // TODO: Utilize existing headers (for full continuity between documents) or get absolute path of assets.
+    Rml::DocumentHeader header = Rml::DocumentHeader();
+    header.source = "assets/";
+    doc->ProcessHeader(&header);
+
     root->set_width(100.0f, Unit::Percent);
     root->set_height(100.0f, Unit::Percent);
     root->set_display(Display::Flex);
+
     ret.close();
 
     doc->Hide();

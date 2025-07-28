@@ -546,6 +546,23 @@ namespace recompui {
         }
     }
 
+    void Style::set_flex_wrap(FlexWrap flex_wrap) {
+        switch (flex_wrap) {
+        case FlexWrap::NoWrap:
+            set_property(Rml::PropertyId::FlexWrap, Rml::Style::FlexWrap::Nowrap);
+            break;
+        case FlexWrap::Wrap:
+            set_property(Rml::PropertyId::FlexWrap, Rml::Style::FlexWrap::Wrap);
+            break;
+        case FlexWrap::WrapReverse:
+            set_property(Rml::PropertyId::FlexWrap, Rml::Style::FlexWrap::WrapReverse);
+            break;
+        default:
+            assert(false && "Unknown flex wrap.");
+            break;
+        }
+    }
+
     void Style::set_align_items(AlignItems align_items) {
         set_property(Rml::PropertyId::AlignItems, to_rml(align_items));
     }
