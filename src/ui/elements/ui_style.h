@@ -119,6 +119,7 @@ namespace recompui {
         void set_tab_index_auto();
         void set_tab_index_none();
         void set_focusable(bool focusable);
+        void set_pointer_events(PointerEvents pointer_events);
         virtual bool is_element() { return false; }
         ResourceId get_resource_id() { return resource_id; }
     };

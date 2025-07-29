@@ -60,6 +60,11 @@ namespace recompui {
         Count
     };
 
+    enum class PointerEvents {
+        None,
+        Auto
+    };
+
     template <typename Enum, typename = std::enable_if_t<std::is_enum_v<Enum>>>
     constexpr uint32_t Events(Enum first) {
         return 1u << static_cast<uint32_t>(first);

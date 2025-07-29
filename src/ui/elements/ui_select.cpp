@@ -195,6 +195,8 @@ namespace recompui {
         arrow->set_width(select_element_caret_size);
         arrow->set_height(select_element_caret_size);
         arrow->set_color(theme::color::TextDim);
+        // makes clicking on the arrow pass click interactions through to whats beneath it
+        arrow->set_pointer_events(PointerEvents::None);
 
         add_style(&hover_style, hover_state);
         add_style(&focus_style, focus_state);

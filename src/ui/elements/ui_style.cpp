@@ -717,4 +717,15 @@ namespace recompui {
         set_or_add_transformation(Rml::Transforms::Rotate2D(degrees));
     }
 
+    void Style::set_pointer_events(PointerEvents pointer_events) {
+        switch (pointer_events) {
+        case PointerEvents::None:
+            set_property(Rml::PropertyId::PointerEvents, Rml::Style::PointerEvents::None);
+            break;
+        case PointerEvents::Auto:
+            set_property(Rml::PropertyId::PointerEvents, Rml::Style::PointerEvents::Auto);
+            break;
+        }
+    }
+
 } // namespace recompui
