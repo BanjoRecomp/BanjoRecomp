@@ -1,6 +1,8 @@
 #pragma once
 
 #include "ui_element.h"
+#include "ui_svg.h"
+
 
 namespace recompui {
     enum class SelectOptionStyle {
@@ -41,8 +43,11 @@ namespace recompui {
         int selected_option_index = -1;
         std::string label;
         std::string default_text;
+        Element *wrapper = nullptr;
+        Svg *arrow = nullptr;
         std::vector<SelectOption> options;
         std::vector<Option*> option_elements;
+        bool is_open = false;
 
         Style hover_style;
         Style focus_style;

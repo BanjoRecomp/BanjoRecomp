@@ -1,5 +1,4 @@
 #include "ui_select.h"
-#include "ui_svg.h"
 
 #include <cassert>
 
@@ -80,37 +79,56 @@ namespace recompui {
     constexpr std::string_view select_element_selectarrow = "selectarrow";
     constexpr std::string_view select_element_selectvalue = "selectvalue";
 
+    constexpr float select_element_height = 48.0f;
+    constexpr float select_element_min_width = 128.0f + 64.0f; // 128px for the select box, 64px for the arrow
+    constexpr float select_element_padding = 16.0f;
+    constexpr float select_element_caret_size = 24.0f;
+
     Select::Select(
         Element *parent, std::vector<SelectOption> options, const std::string &label, const std::string &default_text
     ) :
-        Element(parent, Events(EventType::Text, EventType::Click, EventType::Hover, EventType::Enable, EventType::Focus), "select", false),
+        Element(
+            parent,
+            Events(EventType::Text, EventType::Click, EventType::Hover, EventType::Enable, EventType::Focus),
+            "select",
+            false),
         label(label),
         default_text(default_text)
     {
         this->options = options;
 
+        ContextId context = get_current_context();
+        wrapper = context.create_element<Element>(parent, 0, "div", false);
+        set_parent(wrapper);
+        wrapper->set_height_auto();
+        wrapper->set_width(100.0f, Unit::Percent);
+        wrapper->set_position(Position::Relative);
+
         set_display(Display::Flex);
         set_flex_direction(FlexDirection::Row);
         set_align_items(AlignItems::Center);
-        set_justify_content(JustifyContent::SpaceBetween);
+        set_justify_content(JustifyContent::FlexStart);
+        set_gap(16.0f);
         set_text_align(TextAlign::Left);
         set_position(Position::Relative);
-        set_padding(16.0f);
-        set_height(76.0f);
+        set_padding_right(select_element_padding);
+        set_padding_left(select_element_padding);
+        set_height(select_element_height);
         set_width_auto();
         set_overflow(Overflow::Hidden);
 
-        set_min_width(128.0f + 64.0f);
+        set_min_width(select_element_min_width);
 
         set_border_width(theme::border::width);
         set_border_radius(theme::border::radius_md);
         set_border_color(theme::color::Border, 204);
 
-        set_font_size(28.0f);
-        set_letter_spacing(3.08f);
-        set_line_height(28.0f);
+        set_font_size(20.0f);
+        set_letter_spacing(0.0f);
+        set_line_height(20.0f);
+        set_font_weight(400);
         set_font_style(FontStyle::Normal);
-        set_font_weight(700);
+
         set_focusable(true);
         set_color(theme::color::Text);
         set_background_color(theme::color::Transparent);
@@ -151,27 +169,33 @@ namespace recompui {
 
         Element selectvalue_element = get_element_with_tag_name(select_element_selectvalue);
         selectvalue_element.set_display(Display::Block);
-        selectvalue_element.set_height_auto();
+        selectvalue_element.set_position(Position::Absolute);
+        selectvalue_element.set_top(50.0f, recompui::Unit::Percent);
+        selectvalue_element.set_left(select_element_padding);
         selectvalue_element.set_width_auto();
-        selectvalue_element.set_flex(1, 1);
-        selectvalue_element.set_flex_basis(100, Unit::Percent);
+        selectvalue_element.set_height_auto();
+        selectvalue_element.set_translate_2D(0.0f, -50.0f, recompui::Unit::Percent);
 
         Element selectarrow_element = get_element_with_tag_name(select_element_selectarrow);
-        selectarrow_element.set_display(Display::Block);
-        selectarrow_element.set_height(24.0f);
-        selectarrow_element.set_width(24.0f);
-        ContextId context = get_current_context();
-        Svg *arrow = context.create_element<Svg>(
-            &selectarrow_element,
-            "icons/Arrow.svg"
+        selectarrow_element.set_display(Display::None);
+        
+        add_option_elements();
+
+        arrow = context.create_element<Svg>(
+            wrapper,
+            "icons/Caret.svg"
         );
 
-        arrow->set_width(24.0f);
-        arrow->set_height(24.0f);
+        arrow->set_display(Display::Block);
+
+        arrow->set_position(Position::Absolute);
+        arrow->set_top(50.0f, recompui::Unit::Percent);
+        arrow->set_right(select_element_padding);
+        arrow->set_translate_2D(0, -50.0f, recompui::Unit::Percent);
+
+        arrow->set_width(select_element_caret_size);
+        arrow->set_height(select_element_caret_size);
         arrow->set_color(theme::color::TextDim);
-
-
-        add_option_elements();
 
         add_style(&hover_style, hover_state);
         add_style(&focus_style, focus_state);
@@ -200,9 +224,11 @@ namespace recompui {
                 }
             }
             break;
-        case EventType::Focus:
-            set_style_enabled(focus_state, std::get<EventFocus>(e.variant).active);
+        case EventType::Focus: {
+            bool focus_active = std::get<EventFocus>(e.variant).active;
+            set_style_enabled(focus_state, focus_active);
             break;
+        }
         case EventType::Text:
             {
                 const std::string& opt_value = std::get<EventText>(e.variant).text;
@@ -225,8 +251,20 @@ namespace recompui {
                 }
             }
             break;
-        case EventType::Update:
+        case EventType::Update: {
+            Element selectvalue_element = get_element_with_tag_name(select_element_selectvalue);
+            bool is_now_open = selectvalue_element.is_pseudo_class_set("checked");
+            if (is_now_open != is_open) {
+                is_open = is_now_open;
+                if (is_open) {
+                    arrow->set_rotation(180.0f);
+                } else {
+                    arrow->set_rotation(0.0f);
+                }
+            }
+            queue_update();
             break;
+        }
         default:
             assert(false && "Unknown event type.");
             break;
