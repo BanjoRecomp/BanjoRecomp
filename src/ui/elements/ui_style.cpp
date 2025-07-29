@@ -713,4 +713,8 @@ namespace recompui {
         set_or_add_transformation(Rml::Transforms::Scale2D(scale_x, scale_y));
     }
 
+    void Style::set_rotation(float degrees) {
+        set_or_add_transformation(Rml::Transforms::Rotate2D(degrees));
+    }
+
 } // namespace recompui

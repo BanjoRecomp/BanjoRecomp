@@ -111,6 +111,7 @@ namespace recompui {
         void set_font_family(std::string_view family);
         void set_translate_2D(float x, float y, Unit unit = Unit::Dp);
         void set_scale_2D(float scale_x, float scale_y);
+        void set_rotation(float degrees);
         virtual void set_nav_auto(NavDirection dir);
         virtual void set_nav_none(NavDirection dir);
         virtual void set_nav(NavDirection dir, Element* element);
