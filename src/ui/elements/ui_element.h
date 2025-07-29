@@ -105,6 +105,7 @@ public:
     bool is_pseudo_class_set(Rml::String pseudo_class);
 
     Element *select_add_option(std::string_view text, std::string_view value);
+    void select_set_selection(std::string_view option_value);
 };
 
 void queue_ui_callback(recompui::ResourceId resource, const Event& e, const UICallback& callback);

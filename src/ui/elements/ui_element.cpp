@@ -547,6 +547,18 @@ Element *Element::select_add_option(std::string_view text, std::string_view valu
     return option_element;
 }
 
+void Element::select_set_selection(std::string_view option_value) {
+    if (base->GetTagName() != "select") {
+        return;
+    }
+
+    Rml::ElementFormControlSelect* select = (Rml::ElementFormControlSelect *)(base);
+    if (!select) {
+        return;
+    }
+    select->SetValue(std::string(option_value));
+}
+
 Element Element::get_element_with_tag_name(std::string_view tag_name) {
     for (int i = 0; i < base->GetNumChildren(true); i++) {
         Rml::Element* child = base->GetChild(i);

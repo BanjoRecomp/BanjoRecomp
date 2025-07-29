@@ -181,7 +181,11 @@ void ConfigPageControls::render_header() {
         auto header_left = header->get_left();
         header_left->clear_children();
         if (multiplayer_view_mappings) {
-            auto profile_name = context.create_element<Label>(header_left, "Editing: Name of da profile", LabelStyle::Normal);
+            auto profile_name = context.create_element<Label>(
+                header_left,
+                "Editing: " + recomp::get_input_profile_name(selected_profile_index),
+                LabelStyle::Normal
+            );
         } else {
             // Nothing rendered here as of now.. maybe single player toggle
         }
@@ -196,7 +200,7 @@ void ConfigPageControls::render_header() {
             Button* go_back_button = context.create_element<Button>(header_right, "Go back", ButtonStyle::Tertiary);
             go_back_button->add_pressed_callback([this]() {
                 this->multiplayer_view_mappings = false;
-                this->render_all();
+                this->force_update();
             });
         } else {
             Button* assign_players_button = context.create_element<Button>(header_right, "Assign players", ButtonStyle::Primary);
@@ -266,7 +270,31 @@ void ConfigPageControls::render_body_players() {
             i,
             false
         );
+        player_card->set_on_select_profile_callback([this](int player_index, int profile_index) {
+            this->on_select_player_profile(player_index, profile_index);
+        });
+        player_card->set_on_edit_profile_callback([this](int player_index) {
+            this->on_edit_player_profile(player_index);
+        });
         player_cards.push_back(player_card);
+    }
+}
+
+void ConfigPageControls::on_select_player_profile(int player_index, int profile_index) {
+    auto& assigned_player = recompinput::get_assigned_player(player_index);
+    recomp::InputDevice device = recompinput::get_assigned_player_input_device(player_index);
+    if (device != recomp::InputDevice::COUNT) {
+        recomp::set_input_profile_for_player(player_index, profile_index, device);
+    }
+}
+
+void ConfigPageControls::on_edit_player_profile(int player_index) {
+    selected_player = player_index;
+    recomp::InputDevice device = recompinput::get_assigned_player_input_device(player_index);
+    if (device != recomp::InputDevice::COUNT) {
+        selected_profile_index = recomp::get_input_profile_for_player(player_index, device);
+        multiplayer_view_mappings = true;
+        force_update();
     }
 }
 

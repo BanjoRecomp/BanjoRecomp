@@ -204,7 +204,13 @@ namespace recomp {
     int get_controller_by_guid(ControllerGUID guid);
     int get_controller_count();
     ControllerGUID get_guid_from_sdl_controller(SDL_GameController* game_controller);
+    int get_controller_profile_index_from_sdl_controller(SDL_GameController* game_controller);
     std::string get_string_from_controller_guid(ControllerGUID guid);
+
+    void initialize_input_bindings();
+    int get_sp_controller_profile_index();
+    int get_sp_keyboard_profile_index();
+    int get_mp_keyboard_profile_index(int player_index);
 
     bool get_n64_input(int player_index, uint16_t* buttons_out, float* x_out, float* y_out);
     void set_rumble(int player_index, bool);
@@ -288,6 +294,7 @@ namespace recompinput {
     AssignedPlayer& get_assigned_player(int player_index, bool temp_player = false);
 
     bool get_player_is_assigned(int player_index);
+    recomp::InputDevice get_assigned_player_input_device(int player_index);
     void start_player_assignment(void);
     void stop_player_assignment(void);
     void stop_player_assignment_and_close_modal(void);

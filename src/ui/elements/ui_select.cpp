@@ -85,15 +85,14 @@ namespace recompui {
     constexpr float select_element_caret_size = 24.0f;
 
     Select::Select(
-        Element *parent, std::vector<SelectOption> options, const std::string &label, const std::string &default_text
+        Element *parent, std::vector<SelectOption> options, std::string selected_option_value
     ) :
         Element(
             parent,
             Events(EventType::Text, EventType::Click, EventType::Hover, EventType::Enable, EventType::Focus),
             "select",
             false),
-        label(label),
-        default_text(default_text)
+        selected_option_value(selected_option_value)
     {
         this->options = options;
 
@@ -285,6 +284,11 @@ namespace recompui {
             auto &option = options[i];
             Option *option_element = context.create_element<Option>(this, option);
             option_elements.push_back(option_element);
+
+            if (!selected_option_value.empty() && option.value == selected_option_value) {
+                set_selection(selected_option_value);
+                selected_option_index = i;
+            }
         }
     }
 };

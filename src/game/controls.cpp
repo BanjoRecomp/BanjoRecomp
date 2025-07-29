@@ -31,6 +31,17 @@ struct Controller {
 static std::vector<Controller> controllers;
 static std::unordered_map<uint64_t, int> controller_hash_index_map{};
 
+static int keyboard_sp_profile_index = -1;
+static int controller_sp_profile_index = -1;
+
+static const std::string keyboard_sp_profile_key = "keyboard_sp";
+static const std::string controller_sp_profile_key = "controller_sp";
+static const std::string keyboard_sp_profile_name = "Keyboard (SP)";
+static const std::string controller_sp_profile_name = "Controller (SP)";
+
+static const std::string keyboard_mp_profile_key = "keyboard_mp_player_"; // + player index
+static const std::string keyboard_mp_profile_name = "Keyboard "; // + "(player number)"
+
 // Make the button value array, which maps a button index to its bit field.
 #define DEFINE_INPUT(name, value, readable) uint16_t(value##u),
 static const std::array n64_button_values = {
@@ -264,6 +275,62 @@ recomp::ControllerGUID recomp::get_guid_from_sdl_controller(SDL_GameController *
     guid.hash = XXH3_64bits_digest(&state);
 
     return guid;
+}
+
+int recomp::get_controller_profile_index_from_sdl_controller(SDL_GameController *game_controller) {
+    if (game_controller == nullptr) {
+        return -1;
+    }
+
+    ControllerGUID guid = recomp::get_guid_from_sdl_controller(game_controller);
+    if (guid.hash == 0) {
+        return -1;
+    }
+
+    int controller_index = recomp::get_controller_by_guid(guid);
+    if (controller_index < 0) {
+        return -1;
+    }
+
+    return recomp::get_controller_profile_index(controller_index);
+}
+
+std::string get_mp_keyboard_profile_key(int player_index) {
+    return keyboard_mp_profile_key + std::to_string(player_index);
+}
+
+std::string get_mp_keyboard_profile_name(int player_index) {
+    return keyboard_mp_profile_name + "(Player " + std::to_string(player_index + 1) + ")";
+}
+
+void recomp::initialize_input_bindings() {
+    keyboard_sp_profile_index = recomp::add_input_profile(keyboard_sp_profile_key, keyboard_sp_profile_name, recomp::InputDevice::Keyboard, false);
+    controller_sp_profile_index = recomp::add_input_profile(controller_sp_profile_key, controller_sp_profile_name, recomp::InputDevice::Controller, false);
+
+    // Set Player 1 to the SP profiles by default.
+    recomp::set_input_profile_for_player(0, keyboard_sp_profile_index, recomp::InputDevice::Keyboard);
+    recomp::set_input_profile_for_player(0, controller_sp_profile_index, recomp::InputDevice::Controller);
+
+    for (int i = 0; i < recompinput::get_num_players(); i++) {
+        recomp::add_input_profile(
+            get_mp_keyboard_profile_key(i),
+            get_mp_keyboard_profile_name(i),
+            recomp::InputDevice::Keyboard,
+            false
+        );
+    }
+}
+
+int recomp::get_sp_controller_profile_index() {
+    return controller_sp_profile_index;
+}
+
+int recomp::get_sp_keyboard_profile_index() {
+    return keyboard_sp_profile_index;
+}
+
+int recomp::get_mp_keyboard_profile_index(int player_index) {
+    return recomp::get_input_profile_by_key(get_mp_keyboard_profile_key(player_index));
 }
 
 std::string recomp::get_string_from_controller_guid(ControllerGUID guid) {

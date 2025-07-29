@@ -34,13 +34,6 @@ constexpr int ds_default              = 1;
 constexpr int rr_manual_default       = 60;
 constexpr bool developer_mode_default = false;
 
-static std::string keyboard_sp_profile_key = "keyboard_sp";
-static std::string controller_sp_profile_key = "controller_sp";
-static std::string keyboard_sp_profile_name = "Keyboard (SP)";
-static std::string controller_sp_profile_name = "Controller (SP)";
-static int keyboard_sp_profile_index = -1;
-static int controller_sp_profile_index = -1;
-
 static bool is_steam_deck = false;
 
 ultramodern::renderer::WindowMode wm_default() {
@@ -328,18 +321,9 @@ void assign_all_mappings(int profile_index, const recomp::DefaultN64Mappings& va
     assign_mapping_complete(profile_index, recomp::GameInput::APPLY_MENU, values.apply_menu);
 };
 
-void banjo::initialize_input_bindings() {
-    keyboard_sp_profile_index = recomp::add_input_profile(keyboard_sp_profile_key, keyboard_sp_profile_name, recomp::InputDevice::Keyboard, false);
-    controller_sp_profile_index = recomp::add_input_profile(controller_sp_profile_key, controller_sp_profile_name, recomp::InputDevice::Controller, false);
-
-    // Set Player 1 to the SP profiles by default.
-    recomp::set_input_profile_for_player(0, keyboard_sp_profile_index, recomp::InputDevice::Keyboard);
-    recomp::set_input_profile_for_player(0, controller_sp_profile_index, recomp::InputDevice::Controller);
-}
-
 void banjo::reset_input_bindings() {
-    assign_all_mappings(keyboard_sp_profile_index, recomp::default_n64_keyboard_mappings);
-    assign_all_mappings(controller_sp_profile_index, recomp::default_n64_controller_mappings);
+    assign_all_mappings(recomp::get_sp_keyboard_profile_index(), recomp::default_n64_keyboard_mappings);
+    assign_all_mappings(recomp::get_sp_controller_profile_index(), recomp::default_n64_controller_mappings);
 }
 
 void banjo::reset_cont_input_bindings(int profile_index) {
@@ -524,12 +508,12 @@ bool load_controls_config(const std::filesystem::path& path) {
     }
     else {
         // Version 1 of the format only had bindings for Player 1 on the root element.
-        if (!load_input_device_from_json(config_json, keyboard_sp_profile_index, recomp::InputDevice::Keyboard, "keyboard")) {
-            assign_all_mappings(keyboard_sp_profile_index, recomp::default_n64_keyboard_mappings);
+        if (!load_input_device_from_json(config_json, recomp::get_sp_keyboard_profile_index(), recomp::InputDevice::Keyboard, "keyboard")) {
+            assign_all_mappings(recomp::get_sp_keyboard_profile_index(), recomp::default_n64_keyboard_mappings);
         }
 
-        if (!load_input_device_from_json(config_json, controller_sp_profile_index, recomp::InputDevice::Controller, "controller")) {
-            assign_all_mappings(controller_sp_profile_index, recomp::default_n64_controller_mappings);
+        if (!load_input_device_from_json(config_json, recomp::get_sp_controller_profile_index(), recomp::InputDevice::Controller, "controller")) {
+            assign_all_mappings(recomp::get_sp_controller_profile_index(), recomp::default_n64_controller_mappings);
         }
     }
 
@@ -583,7 +567,7 @@ void banjo::load_config() {
         save_graphics_config(graphics_path);
     }
 
-    banjo::initialize_input_bindings();
+    recomp::initialize_input_bindings();
 
     if (!load_controls_config(controls_path)) {
         banjo::reset_input_bindings();

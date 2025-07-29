@@ -41,8 +41,7 @@ namespace recompui {
     class Select : public Element {
     protected:
         int selected_option_index = -1;
-        std::string label;
-        std::string default_text;
+        std::string selected_option_value;
         Element *wrapper = nullptr;
         Svg *arrow = nullptr;
         std::vector<SelectOption> options;
@@ -59,12 +58,19 @@ namespace recompui {
         virtual void process_event(const Event &e) override;
         std::string_view get_type_name() override { return "Select"; }
     public:
-        Select(Element *parent, std::vector<SelectOption> options = {}, const std::string &label = "", const std::string &default_text = "");
+        Select(
+            Element *parent,
+            std::vector<SelectOption> options = {},
+            std::string selected_option_value = ""
+        );
         void add_change_callback(std::function<void(SelectOption& option, int option_index)> callback);
         Style* get_hover_style() { return &hover_style; }
         Style* get_focus_style() { return &focus_style; }
         Style* get_disabled_style() { return &disabled_style; }
         Style* get_hover_disabled_style() { return &hover_disabled_style; }
+        void set_selection(std::string_view option_value) {
+            select_set_selection(option_value);
+        }
     private:
         void add_option_elements();
     };

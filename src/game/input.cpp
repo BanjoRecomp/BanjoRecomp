@@ -88,6 +88,21 @@ recompinput::AssignedPlayer& recompinput::get_assigned_player(int player_index, 
     }
 }
 
+recomp::InputDevice recompinput::get_assigned_player_input_device(int player_index) {
+    if (player_index < 0 || player_index >= recompinput::get_num_players()) {
+        return recomp::InputDevice::COUNT;
+    }
+
+    const auto& assigned_player = InputState.assigned_controllers[player_index];
+    if (assigned_player.controller != nullptr) {
+        return recomp::InputDevice::Controller;
+    } else if (assigned_player.keyboard_enabled) {
+        return recomp::InputDevice::Keyboard;
+    } else {
+        return recomp::InputDevice::COUNT;
+    }
+}
+
 bool recompinput::get_player_is_assigned(int player_index) {
     if (player_index < 0 || player_index >= recompinput::get_num_players()) {
         return false;
@@ -122,6 +137,14 @@ void recompinput::commit_player_assignment() {
 
     for (int i = 0; i < recompinput::get_num_players(); i++) {
         InputState.assigned_controllers[i] = player_assignment_state.temp_assigned_players[i];
+        if (InputState.assigned_controllers[i].controller != nullptr) {
+            int cont_profile_index = recomp::get_controller_profile_index_from_sdl_controller(InputState.assigned_controllers[i].controller);
+            if (cont_profile_index >= 0) {
+                recomp::set_input_profile_for_player(i, cont_profile_index, InputDevice::Controller);
+            }
+        } else {
+            recomp::set_input_profile_for_player(i, recomp::get_mp_keyboard_profile_index(i), InputDevice::Keyboard);
+        }
     }
 }
 

@@ -60,25 +60,57 @@ PlayerCard::PlayerCard(
 
         profile_label->set_margin_top(8.0f);
 
+        bool has_controller = recompinput::does_player_have_controller(player_index);
+        recomp::InputDevice device = has_controller ? recomp::InputDevice::Controller : recomp::InputDevice::Keyboard;
+        const std::vector<int> profile_indices = recomp::get_indices_for_custom_profiles(device);
+        int cur_profile = recomp::get_input_profile_for_player(player_index, device);
+
         std::vector<SelectOption> options;
-        options.emplace_back("Controller", "cont");
-        options.emplace_back("customprofile", "unassigned");
+
+        int device_profile_index = has_controller
+            ? recomp::get_controller_profile_index_from_sdl_controller(assigned_player.controller)
+            : recomp::get_mp_keyboard_profile_index(player_index);
+
+        if (device_profile_index >= 0) {
+            options.emplace_back(
+                recomp::get_input_profile_name(device_profile_index),
+                std::to_string(device_profile_index)
+            );
+        }
+
+        if (has_controller) {
+            options.emplace_back(
+                recomp::get_input_profile_name(recomp::get_sp_controller_profile_index()),
+                std::to_string(recomp::get_sp_controller_profile_index())
+            );
+        } else {
+            options.emplace_back(
+                recomp::get_input_profile_name(recomp::get_sp_keyboard_profile_index()),
+                std::to_string(recomp::get_sp_keyboard_profile_index())
+            );
+        }
+
+        for (size_t i = 0; i < profile_indices.size(); ++i) {
+            int profile_index = profile_indices[i];
+            std::string profile_name = recomp::get_input_profile_name(profile_index);
+            options.emplace_back(profile_name, std::to_string(profile_index));
+        }
 
         auto select = context.create_element<Select>(
             this,
             options,
-            "Player",
-            "Select Player"
+            std::to_string(cur_profile)
         );
-        select->add_change_callback([this, player_index](SelectOption& option, int option_index) {
-            printf("Selected option: %s at index %d for player %d\n", option.text.c_str(), option_index, player_index);
+
+        select->add_change_callback([this](SelectOption& option, int option_index) {
+            this->on_select_player_profile(std::stoi(option.value));
         });
         select->set_width(100.0f, Unit::Percent);
         select->set_enabled(assigned_player.is_assigned);
         
         auto edit_profile_button = context.create_element<Button>(this, "Edit Profile", ButtonStyle::Secondary, ButtonSize::Medium);
-        edit_profile_button->add_pressed_callback([this, player_index]() {
-            printf("Edit Profile button pressed for player %d\n", player_index);
+        edit_profile_button->add_pressed_callback([this]() {
+            this->on_edit_profile();
         });
         edit_profile_button->set_width(100.0f, Unit::Percent);
         edit_profile_button->set_enabled(assigned_player.is_assigned);
@@ -86,6 +118,18 @@ PlayerCard::PlayerCard(
 }
 
 PlayerCard::~PlayerCard() {
+}
+
+void PlayerCard::on_select_player_profile(int profile_index) {
+    if (this->on_select_profile_callback) {
+        this->on_select_profile_callback(this->player_index, profile_index);
+    }
+}
+
+void PlayerCard::on_edit_profile() {
+    if (this->on_edit_profile_callback) {
+        this->on_edit_profile_callback(this->player_index);
+    }
 }
 
 void PlayerCard::update_player_card_icon() {

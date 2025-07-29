@@ -69,6 +69,7 @@ protected:
     int update_index = 0;
 
     int selected_player = 0;
+    int selected_profile_index = -1;
     int num_players;
 
     bool multiplayer_enabled;
@@ -90,6 +91,9 @@ protected:
 private:
     void on_option_hover(uint8_t index);
     void on_bind_click(recompinput::GameInput game_input, int input_index);
+
+    void on_select_player_profile(int player_index, int profile_index);
+    void on_edit_player_profile(int player_index);
 
     void render_all();
     void render_header();

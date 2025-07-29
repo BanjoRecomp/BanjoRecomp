@@ -14,7 +14,6 @@ namespace banjo {
     void load_config();
     void save_config();
     
-    void initialize_input_bindings();
     void reset_input_bindings();
     void reset_cont_input_bindings(int profile_index);
     void reset_kb_input_bindings(int profile_index);
