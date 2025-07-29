@@ -24,6 +24,7 @@ Element::Element(Element* parent, uint32_t events_enabled, Rml::String base_clas
     if (parent != nullptr) {
         base = parent->base->AppendChild(std::move(base_owning));
         parent->add_child(this);
+        this->parent = parent;
     }
     else {
         base = base_owning.get();
@@ -57,6 +58,19 @@ void Element::add_child(Element *child) {
         ContextId context = get_current_context();
         context.add_loose_element(child);
     }
+}
+
+void Element::set_parent(Element *new_parent) {
+    if (parent != nullptr) {
+        parent->remove_child(this, false);
+        base_owning = parent->base->RemoveChild(base);
+
+        parent = new_parent;
+    
+        base = parent->base->AppendChild(std::move(base_owning), true);
+        parent->add_child(this);
+    }
+
 }
 
 void Element::set_property(Rml::PropertyId property_id, const Rml::Property &property) {
@@ -306,7 +320,7 @@ void Element::clear_children() {
     children.clear();
 }
 
-bool Element::remove_child(ResourceId child) {
+bool Element::remove_child(ResourceId child, bool remove_from_context) {
     bool found = false;
 
     ContextId context = get_current_context();
@@ -315,7 +329,9 @@ bool Element::remove_child(ResourceId child) {
         Element* cur_child = *it;
         if (cur_child->get_resource_id() == child) {
             children.erase(it);
-            context.destroy_resource(cur_child);
+            if (remove_from_context) {
+                context.destroy_resource(cur_child);
+            }
             found = true;
             break;
         }
@@ -539,6 +555,10 @@ Element Element::get_element_with_tag_name(std::string_view tag_name) {
         }
     }
     throw std::runtime_error("Select element has no child with the specified tag name");
+}
+
+bool Element::is_pseudo_class_set(Rml::String pseudo_class) {
+    return base->IsPseudoClassSet(pseudo_class);
 }
 
 } // namespace recompui

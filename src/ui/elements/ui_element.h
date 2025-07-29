@@ -32,6 +32,7 @@ private:
     std::unordered_set<std::string_view> style_active_set;
     std::unordered_multimap<std::string_view, uint32_t> style_name_index_map;
     std::vector<UICallback> callbacks;
+    Element *parent = nullptr;
     std::vector<Element *> children;
     std::string id;
     bool shim = false;
@@ -67,8 +68,9 @@ public:
     Element(Element* parent, uint32_t events_enabled = 0, Rml::String base_class = "div", bool can_set_text = false);
     virtual ~Element();
     void clear_children();
-    bool remove_child(ResourceId child);
-    bool remove_child(Element *child) { return remove_child(child->get_resource_id()); }
+    bool remove_child(ResourceId child, bool remove_from_context = true);
+    bool remove_child(Element *child, bool remove_from_context = true) { return remove_child(child->get_resource_id(), remove_from_context); }
+    void set_parent(Element *new_parent);
     void add_style(Style *style, std::string_view style_name);
     void add_style(Style *style, const std::initializer_list<std::string_view> &style_names);
     Element get_element_with_tag_name(std::string_view tag_name);
@@ -100,6 +102,7 @@ public:
     void set_input_value_float(float val) { set_input_value(val); }
     void set_input_value_double(double val) { set_input_value(val); }
     const std::string& get_id() { return id; }
+    bool is_pseudo_class_set(Rml::String pseudo_class);
 
     Element *select_add_option(std::string_view text, std::string_view value);
 };
