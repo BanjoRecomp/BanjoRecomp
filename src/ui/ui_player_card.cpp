@@ -76,7 +76,7 @@ PlayerCard::PlayerCard(
         select->set_width(100.0f, Unit::Percent);
         select->set_enabled(assigned_player.is_assigned);
         
-        auto edit_profile_button = context.create_element<Button>(this, "Edit Profile", ButtonStyle::Secondary);
+        auto edit_profile_button = context.create_element<Button>(this, "Edit Profile", ButtonStyle::Secondary, ButtonSize::Medium);
         edit_profile_button->add_pressed_callback([this, player_index]() {
             printf("Edit Profile button pressed for player %d\n", player_index);
         });
