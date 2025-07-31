@@ -95,6 +95,8 @@ GameInputRow::~GameInputRow() {
 
 void GameInputRow::update_bindings(BindingList &new_bindings) {
     for (size_t i = 0; i < new_bindings.size(); i++) {
+        binding_buttons[i]->set_is_binding(false);
+
         // skip update if no changes
         if (
             new_bindings[i].input_id == bindings[i].input_id &&
@@ -103,7 +105,6 @@ void GameInputRow::update_bindings(BindingList &new_bindings) {
         }
 
         binding_buttons[i]->set_binding(new_bindings[i].to_string());
-        binding_buttons[i]->set_is_binding(false);
         bindings[i] = new_bindings[i];
     }
 }
@@ -127,10 +128,8 @@ void GameInputRow::process_event(const Event &e) {
 ConfigPageControls::ConfigPageControls(
     Element *parent,
     int num_players,
-    std::vector<GameInputContext> game_input_contexts,
-    on_player_bind_callback on_player_bind
+    std::vector<GameInputContext> game_input_contexts
 ) : ConfigPage(parent) {
-    this->on_player_bind = on_player_bind;
     this->game_input_contexts = game_input_contexts;
     this->num_players = num_players;
     this->multiplayer_enabled = num_players > 1;
@@ -147,6 +146,10 @@ ConfigPageControls::ConfigPageControls(
 void ConfigPageControls::process_event(const Event &e) {
     switch (e.type) {
     case EventType::Update:
+        if (awaiting_binding && !recompinput::is_binding()) {
+            awaiting_binding = false;
+            update_control_mappings();
+        }
         if (last_update_index != update_index) {
             last_update_index = update_index;
             render_all();
@@ -397,7 +400,17 @@ ConfigPageControls::~ConfigPageControls() {
 }
 
 void ConfigPageControls::on_bind_click(recompinput::GameInput game_input, int input_index) {
-    on_player_bind(this->selected_player, game_input, input_index);
+    recompinput::InputDevice device;
+    if (multiplayer_enabled) {
+        device = recompinput::get_assigned_player_input_device(this->selected_player);
+    } else {
+        device = single_player_show_keyboard_mappings
+            ? recomp::InputDevice::Keyboard
+            : recomp::InputDevice::Controller;
+    }
+
+    recompinput::start_scanning_for_binding(this->selected_player, game_input, input_index, device);
+    awaiting_binding = true;
 }
 
 void ConfigPageControls::set_selected_player(int player) {

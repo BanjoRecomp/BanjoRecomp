@@ -20,22 +20,6 @@ static std::vector<struct GameInputContext> temp_game_input_contexts = {
 };
 #undef DEFINE_INPUT
 
-struct BindingInfo {
-    int player_index;
-    recompinput::GameInput game_input;
-    int binding_index;
-    bool is_scanning = false;
-};
-
-static BindingInfo temp_binding_info = { 0, recompinput::GameInput::COUNT, 0 };
-
-static void temp_on_bind_player(int player_index, recompinput::GameInput game_input, int binding_index) {
-    temp_binding_info.player_index = player_index;
-    temp_binding_info.game_input = game_input;
-    temp_binding_info.binding_index = binding_index;
-    temp_binding_info.is_scanning = true;
-}
-
 ElementConfigPageControls::ElementConfigPageControls(const Rml::String& tag) : Rml::Element(tag) {
     SetProperty(Rml::PropertyId::Display, Rml::Style::Display::Block);
     SetProperty("width", "100%");
@@ -47,8 +31,7 @@ ElementConfigPageControls::ElementConfigPageControls(const Rml::String& tag) : R
     controls_page = context.create_element<ConfigPageControls>(
         &this_compat,
         recompinput::get_num_players(),
-        temp_game_input_contexts,
-        temp_on_bind_player
+        temp_game_input_contexts
     );
 }
 

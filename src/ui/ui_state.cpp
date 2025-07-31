@@ -584,6 +584,8 @@ void draw_hook(RT64::RenderCommandList* command_list, RT64::RenderFramebuffer* s
     static clock::time_point next_repeat_time = {};
     static int latest_controller_key_pressed = SDLK_UNKNOWN;
 
+    bool all_input_is_disabled = recomp::all_input_disabled();
+
     while (recompui::try_deque_event(cur_event)) {
         bool context_capturing_input = recompui::is_context_capturing_input();
         bool context_capturing_mouse = recompui::is_context_capturing_mouse();
@@ -596,7 +598,7 @@ void draw_hook(RT64::RenderCommandList* command_list, RT64::RenderFramebuffer* s
             }
         }
 
-        if (!recomp::all_input_disabled()) {
+        if (!all_input_is_disabled) {
             bool is_mouse_input = false;
             // Implement some additional behavior for specific events on top of what RmlUi normally does with them.
             switch (cur_event.type) {
@@ -746,11 +748,6 @@ void draw_hook(RT64::RenderCommandList* command_list, RT64::RenderFramebuffer* s
         recompui::set_cont_active(cont_interacted);
     }
     recomp::config_menu_set_cont_or_kb(ui_state->cont_is_active);
-
-    recomp::InputField scanned_field = recomp::get_scanned_input();
-    if (scanned_field != recomp::InputField{}) {
-        recomp::finish_scanning_input(scanned_field);
-    }
 
     ui_state->update_primary_input(mouse_moved, non_mouse_interacted);
     ui_state->update_focus(mouse_moved, non_mouse_interacted);

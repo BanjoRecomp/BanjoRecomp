@@ -77,6 +77,8 @@ protected:
 
     bool single_player_show_keyboard_mappings = false;
 
+    bool awaiting_binding = false;
+
     std::vector<GameInputContext> game_input_contexts;
     PlayerBindings game_input_bindings;
 
@@ -105,8 +107,7 @@ public:
     ConfigPageControls(
         Element *parent,
         int num_players,
-        std::vector<GameInputContext> game_input_contexts,
-        on_player_bind_callback on_player_bind
+        std::vector<GameInputContext> game_input_contexts
     );
     virtual ~ConfigPageControls();
     

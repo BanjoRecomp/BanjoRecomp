@@ -103,13 +103,7 @@ namespace recomp {
         { recomp::InputDevice::Keyboard, "Keyboard" },
     });
 
-    void start_scanning_input(InputDevice device);
-    void stop_scanning_input();
-    void finish_scanning_input(InputField scanned_field);
-    void cancel_scanning_input();
     void config_menu_set_cont_or_kb(bool cont_interacted);
-    InputField get_scanned_input();
-    int get_scanned_input_index();
     
     struct DefaultN64Mappings {
         std::vector<InputField> a;
@@ -257,16 +251,19 @@ namespace recomp {
 
 namespace recompinput {
     struct BindingState {
-        bool is_scanning = false;
-        bool found_binding = false;
+        bool active = false;
+        // Designates when binding has been cancelled or completed and the event queue should be purged/ignored.
+        bool skip_events = false;
         int player_index = -1;
         recomp::GameInput game_input = recomp::GameInput::COUNT;
         int binding_index = -1;
         recomp::InputField new_binding = {};
+        recomp::InputDevice device = recomp::InputDevice::COUNT;
     };
 
-    void start_scanning_for_binding(int player_index, recomp::GameInput game_input, int binding_index);
+    void start_scanning_for_binding(int player_index, recomp::GameInput game_input, int binding_index, recomp::InputDevice device);
     void stop_scanning_for_binding();
+    bool is_binding();
 
     BindingState& get_binding_state();
 

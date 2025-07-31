@@ -105,35 +105,6 @@ static bool cont_active = true;
 
 static recomp::InputDevice cur_device = recomp::InputDevice::Controller;
 
-int recomp::get_scanned_input_index() {
-    return scanned_input_index;
-}
-
-void recomp::finish_scanning_input(recomp::InputField scanned_field) {
-    // TODO: Needs the profile index.
-    recomp::set_input_binding(0, static_cast<recomp::GameInput>(scanned_input_index), scanned_binding_index, scanned_field);
-    scanned_input_index = -1;
-    scanned_binding_index = -1;
-    controls_model_handle.DirtyVariable("inputs");
-    controls_model_handle.DirtyVariable("active_binding_input");
-    controls_model_handle.DirtyVariable("active_binding_slot");
-    nav_help_model_handle.DirtyVariable("nav_help__accept");
-    nav_help_model_handle.DirtyVariable("nav_help__exit");
-    graphics_model_handle.DirtyVariable("gfx_help__apply");
-}
-
-void recomp::cancel_scanning_input() {
-    recomp::stop_scanning_input();
-    scanned_input_index = -1;
-    scanned_binding_index = -1;
-    controls_model_handle.DirtyVariable("inputs");
-    controls_model_handle.DirtyVariable("active_binding_input");
-    controls_model_handle.DirtyVariable("active_binding_slot");
-    nav_help_model_handle.DirtyVariable("nav_help__accept");
-    nav_help_model_handle.DirtyVariable("nav_help__exit");
-    graphics_model_handle.DirtyVariable("gfx_help__apply");
-}
-
 void recomp::config_menu_set_cont_or_kb(bool cont_interacted) {
     if (cont_active != cont_interacted) {
         cont_active = cont_interacted;
@@ -638,7 +609,6 @@ public:
             [](Rml::DataModelHandle model_handle, Rml::Event& event, const Rml::VariantList& inputs) {
                 scanned_input_index = inputs.at(0).Get<size_t>();
                 scanned_binding_index = inputs.at(1).Get<size_t>();
-                recomp::start_scanning_input(cur_device);
                 model_handle.DirtyVariable("active_binding_input");
                 model_handle.DirtyVariable("active_binding_slot");
             });

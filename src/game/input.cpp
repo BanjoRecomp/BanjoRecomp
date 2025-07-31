@@ -50,26 +50,45 @@ static struct {
     std::list<std::filesystem::path> files_dropped;
 } DropState;
 
-std::atomic<recomp::InputDevice> scanning_device = recomp::InputDevice::COUNT;
-std::atomic<recomp::InputField> scanned_input;
-
 static recompinput::BindingState binding_state;
 static recompinput::PlayerAssignmentState player_assignment_state{};
 
-void recompinput::start_scanning_for_binding(int player_index, recomp::GameInput game_input, int binding_index) {
-    binding_state.is_scanning = true;
-    binding_state.found_binding = false;
+void recompinput::start_scanning_for_binding(int player_index, recomp::GameInput game_input, int binding_index, recomp::InputDevice device) {
+    binding_state.active = true;
+    binding_state.skip_events = false;
     binding_state.player_index = player_index;
     binding_state.game_input = game_input;
     binding_state.binding_index = binding_index;
+    binding_state.device = device;
 }
 
 void recompinput::stop_scanning_for_binding() {
-    binding_state.is_scanning = false;
-    binding_state.found_binding = false;
-    binding_state.player_index = -1;
-    binding_state.game_input = recomp::GameInput::COUNT;
-    binding_state.binding_index = -1;
+    binding_state = recompinput::BindingState{};
+    binding_state.skip_events = true;
+}
+
+bool recompinput::is_binding() {
+    return binding_state.active;
+}
+
+bool is_controller_being_bound(SDL_JoystickID joystick_id) {
+    if (binding_state.device != recomp::InputDevice::Controller) {
+        return false;
+    }
+
+    if (recompinput::get_num_players() == 1) {
+        return true;
+    }
+
+    const auto& player = InputState.assigned_controllers[binding_state.player_index];
+    if (player.controller != nullptr) {
+        SDL_JoystickID assigned_id = SDL_JoystickInstanceID(SDL_GameControllerGetJoystick(player.controller));
+        if (assigned_id == joystick_id) {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 recompinput::BindingState& recompinput::get_binding_state() {
@@ -176,7 +195,7 @@ void process_player_assignment(SDL_Event* event) {
         return;
     }
 
-    if (!player_assignment_state.is_assigning) {
+    if (!recompinput::is_player_assignment_active()) {
         return;
     }
 
@@ -238,27 +257,17 @@ void process_player_assignment(SDL_Event* event) {
 }
 
 void set_scanned_input(recomp::InputField value) {
-    scanning_device.store(recomp::InputDevice::COUNT);
-    scanned_input.store(value);
-}
-
-recomp::InputField recomp::get_scanned_input() {
-    recomp::InputField ret = scanned_input.load();
-    scanned_input.store({});
-    return ret;
-}
-
-void recomp::start_scanning_input(recomp::InputDevice device) {
-    scanned_input.store({});
-    scanning_device.store(device);
-}
-
-void recomp::stop_scanning_input() {
-    scanning_device.store(recomp::InputDevice::COUNT);
+    recomp::set_input_binding(
+        recomp::get_input_profile_for_player(binding_state.player_index, binding_state.device),
+        binding_state.game_input,
+        binding_state.binding_index,
+        value
+    );
+    recompinput::stop_scanning_for_binding();
 }
 
 void queue_if_enabled(SDL_Event* event) {
-    if (!recomp::all_input_disabled()) {
+    if (!recomp::all_input_disabled() && !binding_state.skip_events) {
         recompui::queue_event(*event);
     }
 }
@@ -297,11 +306,11 @@ bool sdl_event_filter(void* userdata, SDL_Event* event) {
             ) {
             recompui::toggle_fullscreen();
         }
-        if (scanning_device != recomp::InputDevice::COUNT) {
+        if (recompinput::is_binding()) {
             if (keyevent->keysym.scancode == SDL_Scancode::SDL_SCANCODE_ESCAPE) {
-                recomp::cancel_scanning_input();
+                recompinput::stop_scanning_for_binding();
             }
-            else if (scanning_device == recomp::InputDevice::Keyboard) {
+            else if (binding_state.device == recomp::InputDevice::Keyboard) {
                 set_scanned_input({ recomp::InputType::Keyboard, keyevent->keysym.scancode });
             }
         }
@@ -367,21 +376,21 @@ bool sdl_event_filter(void* userdata, SDL_Event* event) {
     queue_if_enabled(event);
     break;
     case SDL_EventType::SDL_CONTROLLERBUTTONDOWN:
-        if (scanning_device != recomp::InputDevice::COUNT) {
+        if (recompinput::is_binding() && is_controller_being_bound(event->cbutton.which)) {
             // TODO: Needs the controller profile index.
             auto menuToggleBinding0 = recomp::get_input_binding(0, recomp::GameInput::TOGGLE_MENU, 0);
             auto menuToggleBinding1 = recomp::get_input_binding(0, recomp::GameInput::TOGGLE_MENU, 1);
             // note - magic number: 0 is InputType::None
             if ((menuToggleBinding0.input_type != recomp::InputType::None && event->cbutton.button == menuToggleBinding0.input_id) ||
                 (menuToggleBinding1.input_type != recomp::InputType::None && event->cbutton.button == menuToggleBinding1.input_id)) {
-                recomp::cancel_scanning_input();
+                recompinput::stop_scanning_for_binding();
             }
-            else if (scanning_device == recomp::InputDevice::Controller) {
+            else if (binding_state.device == recomp::InputDevice::Controller) {
                 SDL_ControllerButtonEvent* button_event = &event->cbutton;
-                auto scanned_input_index = recomp::get_scanned_input_index();
-                if ((scanned_input_index == static_cast<int>(recomp::GameInput::TOGGLE_MENU) ||
-                    scanned_input_index == static_cast<int>(recomp::GameInput::ACCEPT_MENU) ||
-                    scanned_input_index == static_cast<int>(recomp::GameInput::APPLY_MENU)) && (
+                recomp::GameInput scanning_game_input = binding_state.game_input;
+                if ((scanning_game_input == recomp::GameInput::TOGGLE_MENU ||
+                    scanning_game_input == recomp::GameInput::ACCEPT_MENU ||
+                    scanning_game_input == recomp::GameInput::APPLY_MENU) && (
                     button_event->button == SDL_GameControllerButton::SDL_CONTROLLER_BUTTON_DPAD_UP ||
                     button_event->button == SDL_GameControllerButton::SDL_CONTROLLER_BUTTON_DPAD_DOWN ||
                     button_event->button == SDL_GameControllerButton::SDL_CONTROLLER_BUTTON_DPAD_LEFT ||
@@ -397,11 +406,11 @@ bool sdl_event_filter(void* userdata, SDL_Event* event) {
         }
         break;
     case SDL_EventType::SDL_CONTROLLERAXISMOTION:
-        if (scanning_device == recomp::InputDevice::Controller) {
-            auto scanned_input_index = recomp::get_scanned_input_index();
-            if (scanned_input_index == static_cast<int>(recomp::GameInput::TOGGLE_MENU) ||
-                scanned_input_index == static_cast<int>(recomp::GameInput::ACCEPT_MENU) ||
-                scanned_input_index == static_cast<int>(recomp::GameInput::APPLY_MENU)) {
+        if (is_controller_being_bound(event->caxis.which)) {
+            recomp::GameInput scanning_game_input = binding_state.game_input;
+            if (scanning_game_input == recomp::GameInput::TOGGLE_MENU ||
+                scanning_game_input == recomp::GameInput::ACCEPT_MENU ||
+                scanning_game_input == recomp::GameInput::APPLY_MENU) {
                 break;
             }
 
@@ -517,6 +526,8 @@ void recomp::handle_events() {
         SDL_ShowCursor(cursor_visible ? SDL_ENABLE : SDL_DISABLE);
         SDL_SetRelativeMouseMode(cursor_locked ? SDL_TRUE : SDL_FALSE);
     }
+
+    binding_state.skip_events = false;
 
     if (!started && ultramodern::is_game_started()) {
         started = true;
@@ -952,7 +963,9 @@ bool recomp::game_input_disabled() {
 
 bool recomp::all_input_disabled() {
     // Disable all input if an input is being polled.
-    return scanning_device != recomp::InputDevice::COUNT || recompinput::is_player_assignment_active();
+    return
+        recompinput::is_player_assignment_active() ||
+        recompinput::is_binding();
 }
 
 bool recomp::get_single_controller_mode() {
