@@ -52,12 +52,12 @@ public:
     GameInputRow(
         Element *parent,
         GameInputContext *input_ctx,
-        BindingList bindings,
         std::function<void()> on_hover_callback,
         on_bind_click_callback on_bind_click
     );
     virtual ~GameInputRow();
     void update_bindings(BindingList &new_bindings);
+    recompinput::GameInput get_input_id() const { return input_id; }
 };
 
 using PlayerBindings = std::map<recompinput::GameInput, BindingList>;
@@ -78,7 +78,7 @@ protected:
     bool single_player_show_keyboard_mappings = false;
 
     std::vector<GameInputContext> game_input_contexts;
-    std::vector<PlayerBindings> game_input_bindings;
+    PlayerBindings game_input_bindings;
 
     std::vector<PlayerCard*> player_cards;
     std::vector<GameInputRow*> game_input_rows;
@@ -106,7 +106,6 @@ public:
         Element *parent,
         int num_players,
         std::vector<GameInputContext> game_input_contexts,
-        std::vector<PlayerBindings> game_input_bindings,
         on_player_bind_callback on_player_bind
     );
     virtual ~ConfigPageControls();

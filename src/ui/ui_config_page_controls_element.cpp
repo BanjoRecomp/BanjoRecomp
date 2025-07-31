@@ -20,34 +20,6 @@ static std::vector<struct GameInputContext> temp_game_input_contexts = {
 };
 #undef DEFINE_INPUT
 
-struct PortConfig {
-    bool kb_enabled = false;
-};
-
-
-static std::vector<recompui::PlayerBindings> temp_local_player_bindings = {
-    recompui::PlayerBindings{},
-    recompui::PlayerBindings{},
-    recompui::PlayerBindings{},
-    recompui::PlayerBindings{},
-    recompui::PlayerBindings{},
-    recompui::PlayerBindings{},
-    recompui::PlayerBindings{},
-    recompui::PlayerBindings{},
-};
-
-static void temp_set_default_bindings(int index) {
-#define DEFINE_INPUT(name, value, readable) temp_local_player_bindings[index][recompinput::GameInput::##name] = { recompinput::InputField{recomp::InputType::None, 0}, recompinput::InputField{recomp::InputType::None, 0}, recompinput::InputField{recomp::InputType::None, 0}, recompinput::InputField{recomp::InputType::None, 0}, };
-    DEFINE_ALL_INPUTS()
-#undef DEFINE_INPUT
-}
-
-static void temp_set_all_defaults() {
-    for (size_t i = 0; i < temp_local_player_bindings.size(); i++) {
-        temp_set_default_bindings((int)i);
-    }
-}
-
 struct BindingInfo {
     int player_index;
     recompinput::GameInput game_input;
@@ -72,14 +44,10 @@ ElementConfigPageControls::ElementConfigPageControls(const Rml::String& tag) : R
     recompui::Element this_compat(this);
     recompui::ContextId context = get_current_context();
 
-    // TODO: remove temp stores
-    temp_set_all_defaults();
-
     controls_page = context.create_element<ConfigPageControls>(
         &this_compat,
         recompinput::get_num_players(),
         temp_game_input_contexts,
-        temp_local_player_bindings,
         temp_on_bind_player
     );
 }

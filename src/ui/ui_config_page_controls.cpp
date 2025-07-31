@@ -14,13 +14,11 @@ const std::string_view active_state_style_name = "cont_opt_active";
 GameInputRow::GameInputRow(
     Element *parent,
     GameInputContext *input_ctx,
-    BindingList bindings,
     std::function<void()> on_hover_callback,
     on_bind_click_callback on_bind_click
 ) : Element(parent, Events(EventType::Hover), "div", false) {
     this->input_id = input_ctx->input_id;
     this->on_hover_callback = on_hover_callback;
-    this->bindings = bindings;
 
     set_display(Display::Flex);
     set_position(Position::Relative);
@@ -65,9 +63,8 @@ GameInputRow::GameInputRow(
         bindings_container->set_padding_left(4.0f);
         bindings_container->set_gap(4.0f);
 
-        for (size_t i = 0; i < bindings.size(); i++) {
+        for (size_t i = 0; i < recomp::bindings_per_input; i++) {
             BindingButton *binding_button = context.create_element<BindingButton>(bindings_container, "");
-            binding_button->set_binding(bindings[i].to_string());
             binding_button->add_pressed_callback([this, i, on_bind_click]() {
                on_bind_click(this->input_id, i);
             });
@@ -86,6 +83,11 @@ GameInputRow::GameInputRow(
             // TODO: Add reset callback
         });
     }
+
+    bindings.resize(recomp::bindings_per_input);
+    for (size_t i = 0; i < recomp::bindings_per_input; i++) {
+        bindings[i] = recompinput::InputField();
+    }
 }
 
 GameInputRow::~GameInputRow() {
@@ -101,6 +103,7 @@ void GameInputRow::update_bindings(BindingList &new_bindings) {
         }
 
         binding_buttons[i]->set_binding(new_bindings[i].to_string());
+        binding_buttons[i]->set_is_binding(false);
         bindings[i] = new_bindings[i];
     }
 }
@@ -125,13 +128,11 @@ ConfigPageControls::ConfigPageControls(
     Element *parent,
     int num_players,
     std::vector<GameInputContext> game_input_contexts,
-    std::vector<PlayerBindings> game_input_bindings,
     on_player_bind_callback on_player_bind
 ) : ConfigPage(parent) {
     this->on_player_bind = on_player_bind;
     this->game_input_contexts = game_input_contexts;
     this->num_players = num_players;
-    this->game_input_bindings = game_input_bindings;
     this->multiplayer_enabled = num_players > 1;
 
     multiplayer_view_mappings = !multiplayer_enabled;
@@ -236,6 +237,7 @@ void ConfigPageControls::render_body_mappings() {
 
     // right side
     {
+        body->get_right()->clear_children();
         description_container = context.create_element<Element>(body->get_right(), 0, "p", true);
         description_container->set_text(
             "Sometimes, the windows combine with the seams in a way\n"
@@ -344,13 +346,13 @@ void ConfigPageControls::render_control_mappings() {
         body_left_scroll->set_width(100.0f, Unit::Percent);
         body_left_scroll->set_max_height(100.0f, Unit::Percent);
         body_left_scroll->set_overflow_y(Overflow::Scroll);
-    
+
+        game_input_rows.clear();
         for (int i = 0; i < game_input_contexts.size(); i++) {
             auto &ctx = game_input_contexts[i];
-            context.create_element<GameInputRow>(
+            GameInputRow *row = context.create_element<GameInputRow>(
                 body_left_scroll,
                 &ctx,
-                game_input_bindings[selected_player].at(ctx.input_id),
                 [this, i]() {
                     this->on_option_hover(i);
                 },
@@ -358,14 +360,35 @@ void ConfigPageControls::render_control_mappings() {
                     this->on_bind_click(game_input, input_index);
                 }
             );
+            game_input_rows.push_back(row);
         }
     }
+    update_control_mappings();
 }
 
 void ConfigPageControls::update_control_mappings() {
+    if (!multiplayer_enabled) {
+        selected_player = 0;
+        selected_profile_index = single_player_show_keyboard_mappings
+            ? recomp::get_sp_keyboard_profile_index()
+            : recomp::get_sp_controller_profile_index();
+    } else if (!multiplayer_view_mappings) {
+        return;
+    }
+
+    game_input_bindings.clear();
+    for (int i = 0; i < game_input_contexts.size(); i++) {
+        GameInputContext &ctx = game_input_contexts[i];
+        game_input_bindings[ctx.input_id] = {};
+
+        for (int j = 0; j < recomp::bindings_per_input; j++) {
+            game_input_bindings[ctx.input_id].push_back(recomp::get_input_binding(selected_profile_index, ctx.input_id, j));
+        }
+    }
+
     for (size_t i = 0; i < game_input_rows.size(); i++) {
         game_input_rows[i]->update_bindings(
-            game_input_bindings[selected_player].at(game_input_contexts[i].input_id)
+            game_input_bindings.at(game_input_rows[i]->get_input_id())
         );
     }
 }
