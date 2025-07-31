@@ -303,6 +303,39 @@ std::string get_mp_keyboard_profile_name(int player_index) {
     return keyboard_mp_profile_name + "(Player " + std::to_string(player_index + 1) + ")";
 }
 
+void clear_mapping(int profile_index, recomp::GameInput input) {
+    for (size_t binding_index = 0; binding_index < recomp::bindings_per_input; binding_index++) {
+        recomp::set_input_binding(profile_index, input, binding_index, recomp::InputField{});
+    }
+};
+
+// Used primarily for multiplayer keyboard input profiles
+void clear_all_mappings(int profile_index) {
+    clear_mapping(profile_index, recomp::GameInput::A);
+    clear_mapping(profile_index, recomp::GameInput::B);
+    clear_mapping(profile_index, recomp::GameInput::Z);
+    clear_mapping(profile_index, recomp::GameInput::START);
+    clear_mapping(profile_index, recomp::GameInput::DPAD_UP);
+    clear_mapping(profile_index, recomp::GameInput::DPAD_DOWN);
+    clear_mapping(profile_index, recomp::GameInput::DPAD_LEFT);
+    clear_mapping(profile_index, recomp::GameInput::DPAD_RIGHT);
+    clear_mapping(profile_index, recomp::GameInput::L);
+    clear_mapping(profile_index, recomp::GameInput::R);
+    clear_mapping(profile_index, recomp::GameInput::C_UP);
+    clear_mapping(profile_index, recomp::GameInput::C_DOWN);
+    clear_mapping(profile_index, recomp::GameInput::C_LEFT);
+    clear_mapping(profile_index, recomp::GameInput::C_RIGHT);
+
+    clear_mapping(profile_index, recomp::GameInput::X_AXIS_NEG);
+    clear_mapping(profile_index, recomp::GameInput::X_AXIS_POS);
+    clear_mapping(profile_index, recomp::GameInput::Y_AXIS_NEG);
+    clear_mapping(profile_index, recomp::GameInput::Y_AXIS_POS);
+
+    clear_mapping(profile_index, recomp::GameInput::TOGGLE_MENU);
+    clear_mapping(profile_index, recomp::GameInput::ACCEPT_MENU);
+    clear_mapping(profile_index, recomp::GameInput::APPLY_MENU);
+};
+
 void recomp::initialize_input_bindings() {
     keyboard_sp_profile_index = recomp::add_input_profile(keyboard_sp_profile_key, keyboard_sp_profile_name, recomp::InputDevice::Keyboard, false);
     controller_sp_profile_index = recomp::add_input_profile(controller_sp_profile_key, controller_sp_profile_name, recomp::InputDevice::Controller, false);
@@ -312,12 +345,13 @@ void recomp::initialize_input_bindings() {
     recomp::set_input_profile_for_player(0, controller_sp_profile_index, recomp::InputDevice::Controller);
 
     for (int i = 0; i < recompinput::get_num_players(); i++) {
-        recomp::add_input_profile(
+        int profile_index = recomp::add_input_profile(
             get_mp_keyboard_profile_key(i),
             get_mp_keyboard_profile_name(i),
             recomp::InputDevice::Keyboard,
             false
         );
+        clear_all_mappings(profile_index);
     }
 }
 
