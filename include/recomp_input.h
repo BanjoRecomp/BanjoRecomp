@@ -172,6 +172,9 @@ namespace recomp {
     GameInput get_input_from_enum_name(const std::string_view name);
     InputField& get_input_binding(int profile_index, GameInput input, size_t binding_index);
     void set_input_binding(int profile_index, GameInput input, size_t binding_index, InputField value);
+    void clear_input_binding(int profile_index, GameInput input);
+    void reset_input_binding(int profile_index, InputDevice device, GameInput input);
+    void reset_profile_bindings(int profile_index, recomp::InputDevice device);
     int add_input_profile(const std::string &key, const std::string &name, InputDevice device, bool custom);
     int get_input_profile_by_key(const std::string &key);
     const std::string &get_input_profile_key(int profile_index);

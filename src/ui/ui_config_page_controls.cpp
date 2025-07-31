@@ -15,7 +15,8 @@ GameInputRow::GameInputRow(
     Element *parent,
     GameInputContext *input_ctx,
     std::function<void()> on_hover_callback,
-    on_bind_click_callback on_bind_click
+    on_bind_click_callback on_bind_click,
+    on_clear_or_reset_callback on_clear_or_reset
 ) : Element(parent, Events(EventType::Hover), "div", false) {
     this->input_id = input_ctx->input_id;
     this->on_hover_callback = on_hover_callback;
@@ -74,13 +75,13 @@ GameInputRow::GameInputRow(
 
     if (input_ctx->clearable) {
         auto clear_button = context.create_element<IconButton>(this, "icons/Trash.svg", ButtonStyle::Danger, IconButtonSize::Large);
-        clear_button->add_pressed_callback([this]() {
-            // TODO: Add clear callback
+        clear_button->add_pressed_callback([this, on_clear_or_reset]() {
+            on_clear_or_reset(this->input_id, false);
         });
     } else {
         auto reset_button = context.create_element<IconButton>(this, "icons/Reset.svg", ButtonStyle::Warning, IconButtonSize::Large);
-        reset_button->add_pressed_callback([this]() {
-            // TODO: Add reset callback
+        reset_button->add_pressed_callback([this, on_clear_or_reset]() {
+            on_clear_or_reset(this->input_id, true);
         });
     }
 
@@ -329,8 +330,11 @@ void ConfigPageControls::render_footer() {
     {
         auto footer_right = footer->get_right();
         footer_right->clear_children();
-        context.create_element<Button>(footer_right, "Reset to defaults", ButtonStyle::Warning);
-        // TODO: Add reset to defaults callback
+        auto reset_to_defaults_button = context.create_element<Button>(footer_right, "Reset to defaults", ButtonStyle::Warning);
+        reset_to_defaults_button->add_pressed_callback([this]() {
+            recomp::reset_profile_bindings(this->selected_profile_index, this->get_player_input_device());
+            this->update_control_mappings();
+        });
     }
 }
 
@@ -361,6 +365,9 @@ void ConfigPageControls::render_control_mappings() {
                 },
                 [this](recompinput::GameInput game_input, int input_index) {
                     this->on_bind_click(game_input, input_index);
+                },
+                [this](recompinput::GameInput game_input, bool reset) {
+                    this->on_clear_or_reset_game_input(game_input, reset);
                 }
             );
             game_input_rows.push_back(row);
@@ -399,18 +406,31 @@ void ConfigPageControls::update_control_mappings() {
 ConfigPageControls::~ConfigPageControls() {
 }
 
-void ConfigPageControls::on_bind_click(recompinput::GameInput game_input, int input_index) {
-    recompinput::InputDevice device;
+recompinput::InputDevice ConfigPageControls::get_player_input_device() {
     if (multiplayer_enabled) {
-        device = recompinput::get_assigned_player_input_device(this->selected_player);
-    } else {
-        device = single_player_show_keyboard_mappings
-            ? recomp::InputDevice::Keyboard
-            : recomp::InputDevice::Controller;
+        return recompinput::get_assigned_player_input_device(this->selected_player);
     }
+
+    return single_player_show_keyboard_mappings
+        ? recomp::InputDevice::Keyboard
+        : recomp::InputDevice::Controller;
+}
+
+void ConfigPageControls::on_bind_click(recompinput::GameInput game_input, int input_index) {
+    recompinput::InputDevice device = get_player_input_device();
 
     recompinput::start_scanning_for_binding(this->selected_player, game_input, input_index, device);
     awaiting_binding = true;
+}
+
+void ConfigPageControls::on_clear_or_reset_game_input(recompinput::GameInput game_input, bool reset) {
+    if (!reset) {
+        recomp::clear_input_binding(selected_profile_index, game_input);
+    } else {
+        recompinput::InputDevice device = get_player_input_device();
+        recomp::reset_input_binding(selected_profile_index, device, game_input);
+    }
+    update_control_mappings();
 }
 
 void ConfigPageControls::set_selected_player(int player) {

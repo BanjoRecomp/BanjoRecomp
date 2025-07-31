@@ -103,6 +103,62 @@ void recomp::set_input_binding(int profile_index, recomp::GameInput input, size_
     }
 }
 
+void recomp::clear_input_binding(int profile_index, GameInput input) {
+    for (size_t binding_index = 0; binding_index < recomp::bindings_per_input; binding_index++) {
+        recomp::set_input_binding(profile_index, input, binding_index, recomp::InputField{});
+    }
+}
+
+void recomp::reset_input_binding(int profile_index, InputDevice device, GameInput input) {
+    std::vector<recomp::InputField> new_mappings = recomp::get_default_mapping_for_input(
+        device == recomp::InputDevice::Keyboard ?
+            recomp::default_n64_keyboard_mappings :
+            recomp::default_n64_controller_mappings,
+        input
+    );
+    for (size_t binding_index = 0; binding_index < recomp::bindings_per_input; binding_index++) {
+        if (binding_index >= new_mappings.size()) {
+            recomp::set_input_binding(profile_index, input, binding_index, recomp::InputField{});
+        } else {
+            recomp::set_input_binding(profile_index, input, binding_index, new_mappings[binding_index]);
+        }
+    }
+}
+
+void recomp::reset_profile_bindings(int profile_index, recomp::InputDevice device) {
+    const recomp::DefaultN64Mappings &defaults = (device == recomp::InputDevice::Keyboard)
+        ? recomp::default_n64_keyboard_mappings
+        : recomp::default_n64_controller_mappings;
+    
+    // multiplayer keyboard profiles just get cleared completely because of overlapping key bindings.
+    bool is_multiplayer_kb = false;
+    if (device == recomp::InputDevice::Keyboard) {
+        for (size_t i = 0; i < recompinput::get_num_players(); i++) {
+            if (recomp::get_mp_keyboard_profile_index(i) == profile_index) {
+                is_multiplayer_kb = true;
+                break;
+            }
+        }
+    }
+
+    for (size_t i = 0; i < recomp::get_num_inputs(); i++) {
+        recomp::GameInput input = static_cast<recomp::GameInput>(i);
+        if (is_multiplayer_kb) {
+            recomp::clear_input_binding(profile_index, input);
+            continue;
+        }
+
+        auto &new_mappings = recomp::get_default_mapping_for_input(defaults, input);
+        for (size_t binding_index = 0; binding_index < recomp::bindings_per_input; binding_index++) {
+            if (binding_index >= new_mappings.size()) {
+                recomp::set_input_binding(profile_index, input, binding_index, recomp::InputField{});
+            } else {
+                recomp::set_input_binding(profile_index, input, binding_index, new_mappings[binding_index]);
+            }
+        }
+    }
+}
+
 int recomp::add_input_profile(const std::string &key, const std::string &name, InputDevice device, bool custom) {
     auto it = input_profile_key_index_map.find(key);
     if (it != input_profile_key_index_map.end()) {

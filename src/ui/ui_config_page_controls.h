@@ -32,6 +32,8 @@ using on_bind_click_callback = std::function<void(recompinput::GameInput, int)>;
 // Player index, GameInput to be bound to, and the index of the binding that is being assigned
 using on_player_bind_callback = std::function<void(int, recompinput::GameInput, int)>;
 
+using on_clear_or_reset_callback = std::function<void(recompinput::GameInput, bool)>;
+
 // One single row of a game input mapping
 class GameInputRow : public Element {
 protected:
@@ -53,7 +55,8 @@ public:
         Element *parent,
         GameInputContext *input_ctx,
         std::function<void()> on_hover_callback,
-        on_bind_click_callback on_bind_click
+        on_bind_click_callback on_bind_click,
+        on_clear_or_reset_callback on_clear_or_reset
     );
     virtual ~GameInputRow();
     void update_bindings(BindingList &new_bindings);
@@ -93,6 +96,10 @@ protected:
 private:
     void on_option_hover(uint8_t index);
     void on_bind_click(recompinput::GameInput game_input, int input_index);
+    void on_clear_or_reset_game_input(
+        recompinput::GameInput game_input,
+        bool reset = false
+    );
 
     void on_select_player_profile(int player_index, int profile_index);
     void on_edit_player_profile(int player_index);
@@ -103,6 +110,8 @@ private:
     void render_body_players();
     void render_body_mappings();
     void render_footer();
+
+    recompinput::InputDevice get_player_input_device();
 public:
     ConfigPageControls(
         Element *parent,
