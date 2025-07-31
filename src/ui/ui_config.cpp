@@ -15,12 +15,8 @@
 ultramodern::renderer::GraphicsConfig new_options;
 Rml::DataModelHandle nav_help_model_handle;
 Rml::DataModelHandle general_model_handle;
-Rml::DataModelHandle controls_model_handle;
 Rml::DataModelHandle graphics_model_handle;
 Rml::DataModelHandle sound_options_model_handle;
-
-// True if controller config menu is open, false if keyboard config menu is open, undefined otherwise
-bool configuring_controller = false;
 
 int recompui::config_tab_to_index(recompui::ConfigTab tab) {
     switch (tab) {
@@ -91,9 +87,6 @@ void bind_atomic(Rml::DataModelConstructor& constructor, Rml::DataModelHandle ha
     );
 }
 
-static int scanned_binding_index = -1;
-static int scanned_input_index = -1;
-static int focused_input_index = -1;
 static int focused_config_option_index = -1;
 
 static bool msaa2x_supported = false;
@@ -457,15 +450,6 @@ public:
             [](const std::string& param, Rml::Event& event) {
                 banjo::open_quit_game_prompt();
             });
-
-        recompui::register_event(listener, "toggle_input_device",
-            [](const std::string& param, Rml::Event& event) {
-                cur_device = cur_device == recomp::InputDevice::Controller
-                    ? recomp::InputDevice::Keyboard
-                    : recomp::InputDevice::Controller;
-                controls_model_handle.DirtyVariable("input_device_is_keyboard");
-                controls_model_handle.DirtyVariable("inputs");
-            });
     }
 
     void bind_config_list_events(Rml::DataModelConstructor &constructor) {
@@ -588,174 +572,6 @@ public:
         graphics_model_handle = constructor.GetModelHandle();
     }
 
-    void make_controls_bindings(Rml::Context* context) {
-        Rml::DataModelConstructor constructor = context->CreateDataModel("controls_model");
-        if (!constructor) {
-            throw std::runtime_error("Failed to make RmlUi data model for the controls config menu");
-        }
-
-        constructor.BindFunc("input_count", [](Rml::Variant& out) { out = static_cast<uint64_t>(recomp::get_num_inputs()); } );
-        constructor.BindFunc("input_device_is_keyboard", [](Rml::Variant& out) { out = cur_device == recomp::InputDevice::Keyboard; } );
-
-        constructor.RegisterTransformFunc("get_input_name", [](const Rml::VariantList& inputs) {
-            return Rml::Variant{recomp::get_input_name(static_cast<recomp::GameInput>(inputs.at(0).Get<size_t>()))};
-        });
-
-        constructor.RegisterTransformFunc("get_input_enum_name", [](const Rml::VariantList& inputs) {
-            return Rml::Variant{recomp::get_input_enum_name(static_cast<recomp::GameInput>(inputs.at(0).Get<size_t>()))};
-        });
-
-        constructor.BindEventCallback("set_input_binding",
-            [](Rml::DataModelHandle model_handle, Rml::Event& event, const Rml::VariantList& inputs) {
-                scanned_input_index = inputs.at(0).Get<size_t>();
-                scanned_binding_index = inputs.at(1).Get<size_t>();
-                model_handle.DirtyVariable("active_binding_input");
-                model_handle.DirtyVariable("active_binding_slot");
-            });
-
-        constructor.BindEventCallback("reset_input_bindings_to_defaults",
-            [](Rml::DataModelHandle model_handle, Rml::Event& event, const Rml::VariantList& inputs) {
-                if (cur_device == recomp::InputDevice::Controller) {
-                    // TODO: Needs the profile index.
-                    banjo::reset_cont_input_bindings(0);
-                } else {
-                    // TODO: Needs the profile index.
-                    banjo::reset_kb_input_bindings(0);
-                }
-                model_handle.DirtyAllVariables();
-                nav_help_model_handle.DirtyVariable("nav_help__accept");
-                nav_help_model_handle.DirtyVariable("nav_help__exit");
-                graphics_model_handle.DirtyVariable("gfx_help__apply");
-            });
-
-        constructor.BindEventCallback("clear_input_bindings",
-            [](Rml::DataModelHandle model_handle, Rml::Event& event, const Rml::VariantList& inputs) {
-                recomp::GameInput input = static_cast<recomp::GameInput>(inputs.at(0).Get<size_t>());
-                for (size_t binding_index = 0; binding_index < recomp::bindings_per_input; binding_index++) {
-                    // TODO: Needs the profile index.
-                    recomp::set_input_binding(0, input, binding_index, recomp::InputField{});
-                }
-                model_handle.DirtyVariable("inputs");
-                graphics_model_handle.DirtyVariable("gfx_help__apply");
-            });
-
-        constructor.BindEventCallback("reset_single_input_binding_to_default",
-            [](Rml::DataModelHandle model_handle, Rml::Event& event, const Rml::VariantList& inputs) {
-                // TODO: Needs the profile index.
-                recomp::GameInput input = static_cast<recomp::GameInput>(inputs.at(0).Get<size_t>());
-                banjo::reset_single_input_binding(0, cur_device, input);
-                model_handle.DirtyVariable("inputs");
-                nav_help_model_handle.DirtyVariable("nav_help__accept");
-                nav_help_model_handle.DirtyVariable("nav_help__exit");
-            });
-
-        constructor.BindEventCallback("set_input_row_focus",
-            [](Rml::DataModelHandle model_handle, Rml::Event& event, const Rml::VariantList& inputs) {
-                int input_index = inputs.at(0).Get<size_t>();
-                // watch for mouseout being overzealous during event bubbling, only clear if the event's attached element matches the current
-                if (input_index == -1 && event.GetType() == "mouseout" && event.GetCurrentElement() != event.GetTargetElement()) {
-                    return;
-                }
-                focused_input_index = input_index;
-                model_handle.DirtyVariable("cur_input_row");
-            });
-
-        // Rml variable definition for an individual InputField.
-        struct InputFieldVariableDefinition : public Rml::VariableDefinition {
-            InputFieldVariableDefinition() : Rml::VariableDefinition(Rml::DataVariableType::Scalar) {}
-
-            virtual bool Get(void* ptr, Rml::Variant& variant) override { variant = reinterpret_cast<recomp::InputField*>(ptr)->to_string(); return true; }
-            virtual bool Set(void* ptr, const Rml::Variant& variant) override { return false; }
-        };
-        // Static instance of the InputField variable definition to have a pointer to return to RmlUi.
-        static InputFieldVariableDefinition input_field_definition_instance{};
-
-        // Rml variable definition for an array of InputField values (e.g. all the bindings for a single input).
-        struct BindingContainerVariableDefinition : public Rml::VariableDefinition {
-            BindingContainerVariableDefinition() : Rml::VariableDefinition(Rml::DataVariableType::Array) {}
-
-            virtual bool Get(void* ptr, Rml::Variant& variant) override { return false; }
-            virtual bool Set(void* ptr, const Rml::Variant& variant) override { return false; }
-
-            virtual int Size(void* ptr) override { return recomp::bindings_per_input; }
-            virtual Rml::DataVariable Child(void* ptr, const Rml::DataAddressEntry& address) override {
-                recomp::GameInput input = static_cast<recomp::GameInput>((uintptr_t)ptr);
-                // TODO: Needs the profile index.
-                return Rml::DataVariable{&input_field_definition_instance, &recomp::get_input_binding(0, input, address.index)};
-            }
-        };
-        // Static instance of the InputField array variable definition to have a fixed pointer to return to RmlUi.
-        static BindingContainerVariableDefinition binding_container_var_instance{};
-
-        // Rml variable definition for an array of an array of InputField values (e.g. all the bindings for all inputs).
-        struct BindingArrayContainerVariableDefinition : public Rml::VariableDefinition {
-            BindingArrayContainerVariableDefinition() : Rml::VariableDefinition(Rml::DataVariableType::Array) {}
-
-            virtual bool Get(void* ptr, Rml::Variant& variant) override { return false; }
-            virtual bool Set(void* ptr, const Rml::Variant& variant) override { return false; }
-
-            virtual int Size(void* ptr) override { return recomp::get_num_inputs(); }
-            virtual Rml::DataVariable Child(void* ptr, const Rml::DataAddressEntry& address) override {
-                // Encode the input index as the pointer to avoid needing to do any allocations.
-                return Rml::DataVariable(&binding_container_var_instance, (void*)(uintptr_t)address.index);
-            }
-        };
-
-        // Static instance of the BindingArrayContainerVariableDefinition variable definition to have a fixed pointer to return to RmlUi.
-        static BindingArrayContainerVariableDefinition binding_array_var_instance{};
-
-        struct InputContainerVariableDefinition : public Rml::VariableDefinition {
-            InputContainerVariableDefinition() : Rml::VariableDefinition(Rml::DataVariableType::Struct) {}
-
-            virtual bool Get(void* ptr, Rml::Variant& variant) override { return true; }
-            virtual bool Set(void* ptr, const Rml::Variant& variant) override { return false; }
-
-            virtual int Size(void* ptr) override { return recomp::get_num_inputs(); }
-            virtual Rml::DataVariable Child(void* ptr, const Rml::DataAddressEntry& address) override {
-                if (address.name == "array") {
-                    return Rml::DataVariable(&binding_array_var_instance, nullptr);
-                }
-                else {
-                    recomp::GameInput input = recomp::get_input_from_enum_name(address.name);
-                    if (input != recomp::GameInput::COUNT) {
-                        return Rml::DataVariable(&binding_container_var_instance, (void*)(uintptr_t)input);
-                    }
-                }
-                return Rml::DataVariable{};
-            }
-        };
-
-        // Dummy type to associate with the variable definition.
-        struct InputContainer {};
-        constructor.RegisterCustomDataVariableDefinition<InputContainer>(Rml::MakeUnique<InputContainerVariableDefinition>());
-
-        // Dummy instance of the dummy type to bind to the variable.
-        static InputContainer dummy_container;
-        constructor.Bind("inputs", &dummy_container);
-
-        constructor.BindFunc("cur_input_row", [](Rml::Variant& out) {
-            if (focused_input_index == -1) {
-                out = "NONE";
-            }
-            else {
-                out = recomp::get_input_enum_name(static_cast<recomp::GameInput>(focused_input_index));
-            }
-        });
-
-        constructor.BindFunc("active_binding_input", [](Rml::Variant& out) {
-            if (scanned_input_index == -1) {
-                out = "NONE";
-            }
-            else {
-                out = recomp::get_input_enum_name(static_cast<recomp::GameInput>(scanned_input_index));
-            }
-        });
-
-        constructor.Bind<int>("active_binding_slot", &scanned_binding_index);
-
-        controls_model_handle = constructor.GetModelHandle();
-    }
-
     void make_nav_help_bindings(Rml::Context* context) {
         Rml::DataModelConstructor constructor = context->CreateDataModel("nav_help_model");
         if (!constructor) {
@@ -849,7 +665,6 @@ public:
         //recomp::config_menu_set_cont_or_kb(recompui::get_cont_active());
         make_nav_help_bindings(context);
         make_general_bindings(context);
-        make_controls_bindings(context);
         make_graphics_bindings(context);
         make_sound_options_bindings(context);
         make_debug_bindings(context);

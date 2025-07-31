@@ -24,7 +24,6 @@
 		}
 	</style>
 	<link type="text/template" href="config_menu/general.rml" />
-	<link type="text/template" href="config_menu/controls.rml" />
 	<link type="text/template" href="config_menu/graphics.rml" />
 	<link type="text/template" href="config_menu/sound.rml" />
 	<link type="text/template" href="config_menu/mods.rml" />
@@ -47,8 +46,8 @@
 							<div>Controls</div>
 							<div class="tab__indicator"></div>
 						</tab>
-						<panel class="config" data-model="controls_model">
-							<template src="config-menu__controls" />
+						<panel class="config">
+							<recomp-config-page-controls />
 						</panel>
 						<tab class="tab" id="tab_graphics">
 							<div>Graphics</div>
@@ -77,13 +76,6 @@
 						</tab>
 						<panel class="config" data-model="debug_model">
 							<template src="config-menu__debug" />
-						</panel>
-						<tab class="tab" id="tab_controls2">
-							<div>Controls new</div>
-							<div class="tab__indicator"></div>
-						</tab>
-						<panel class="config">
-							<recomp-config-page-controls />
 						</panel>
 						<tab class="tab" id="tab_example">
 							<div>Example</div>
