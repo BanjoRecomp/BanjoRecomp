@@ -180,21 +180,6 @@ extern "C" void recomp_set_right_analog_suppressed(uint8_t* rdram, recomp_contex
     recomp::set_right_analog_suppressed(suppressed);
 }
 
-// Function with typo in decomp
-extern "C" void osWriteBackDCacheAll(uint8_t* rdram, recomp_context* ctx) {}
-
-extern "C" void boot_osPiRawStartDma(uint8_t* rdram, recomp_context* ctx) {
-	uint32_t direction = ctx->r4;
-	uint32_t device_address = ctx->r5;
-	gpr rdram_address = ctx->r6;
-	uint32_t size = ctx->r7;
-
-	assert(direction == 0); // Only reads
-
-	// Complete the DMA synchronously (the game immediately waits until it's done anyways)
-	recomp::do_rom_read(rdram, rdram_address, device_address + recomp::rom_base, size);
-}
-
 constexpr uint32_t k1_to_phys(uint32_t addr) {
     return addr & 0x1FFFFFFF;
 }
@@ -215,31 +200,8 @@ extern "C" void osPiReadIo_recomp(RDRAM_ARG recomp_context * ctx) {
     ctx->r2 = 0;
 }
 
-extern "C" void boot_osPiGetStatus(uint8_t* rdram, recomp_context* ctx) {
-	// PI not busy
-	ctx->r2 = 0;
-}
-
 extern "C" void osPfsInit_recomp(uint8_t * rdram, recomp_context* ctx) {
     ctx->r2 = 11; // PFS_ERR_DEVICE
-}
-
-extern "C" void __ll_lshift_recomp(uint8_t * rdram, recomp_context * ctx) {
-    uint64_t a = (ctx->r4 << 32) | ((ctx->r5 << 0) & 0xFFFFFFFFu);
-    uint64_t b = (ctx->r6 << 32) | ((ctx->r7 << 0) & 0xFFFFFFFFu);
-    uint64_t ret = a << b;
-
-    ctx->r2 = (int32_t)(ret >> 32);
-    ctx->r3 = (int32_t)(ret >> 0);
-}
-
-extern "C" void __ull_rshift_recomp(uint8_t * rdram, recomp_context * ctx) {
-    uint64_t a = (ctx->r4 << 32) | ((ctx->r5 << 0) & 0xFFFFFFFFu);
-    uint64_t b = (ctx->r6 << 32) | ((ctx->r7 << 0) & 0xFFFFFFFFu);
-    uint64_t ret = a >> b;
-
-    ctx->r2 = (int32_t)(ret >> 32);
-    ctx->r3 = (int32_t)(ret >> 0);
 }
 
 // u32 rom_addr, void *ram_addr, u32 size

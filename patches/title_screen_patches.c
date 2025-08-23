@@ -21,6 +21,7 @@ extern Struct_core2_9B180_0 D_8036DE00[];
 void func_80322318(Struct_core2_9B180_0*);
 int map_get(void);
 
+// @recomp Patched to always allow skipping the intro sequence.
 RECOMP_PATCH void func_80322490(void) {
     Struct_core2_9B180_0 *i_ptr;
 

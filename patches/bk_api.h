@@ -5,12 +5,12 @@
 #include "enums.h"
 #include "prop.h"
 
-typedef u32 ActorExtensionId;
+typedef u32 MarkerExtensionId;
 
-ActorExtensionId bkrecomp_extend_actor(enum actor_e type, u32 size);
-ActorExtensionId bkrecomp_extend_actor_all(u32 size);
+MarkerExtensionId bkrecomp_extend_marker(enum marker_e type, u32 size);
+MarkerExtensionId bkrecomp_extend_marker_all(u32 size);
 
-void* bkrecomp_get_extended_actor_data(Actor* actor, ActorExtensionId extension);
-u32 bkrecomp_get_actor_spawn_index(Actor* actor);
+void* bkrecomp_get_extended_marker_data(ActorMarker* marker, MarkerExtensionId extension);
+u32 bkrecomp_get_marker_spawn_index(ActorMarker* marker);
 
 #endif

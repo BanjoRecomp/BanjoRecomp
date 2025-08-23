@@ -74,7 +74,7 @@ void ml_vec3f_copy(f32 dst[3], f32 src[3]);
 extern Vp sViewportStack[];
 extern s32 sViewportStackIndex;
 
-// @recomp Patched to set up an inverse view matrix for better transform interpolation.
+// @recomp Patched to specify the view matrix for better transform interpolation.
 RECOMP_PATCH void viewport_setRenderPerspectiveMatrix(Gfx **gfx, Mtx **mtx, f32 near, f32 far) {
     u16 perspNorm;
 
@@ -102,11 +102,11 @@ RECOMP_PATCH void viewport_setRenderPerspectiveMatrix(Gfx **gfx, Mtx **mtx, f32 
     guTranslate(*mtx, 0.0f, 0.0f, 0.0f);
     gSPMatrix((*gfx)++, OS_PHYSICAL_TO_K0((*mtx)++), G_MTX_NOPUSH | G_MTX_LOAD | G_MTX_MODELVIEW);
 
-    // @recomp Create an inverse matrix for the viewport translation and provide it as the inverse view matrix to counteract the camera translation.
-    MtxF* invView = (MtxF*)*mtx;
+    // @recomp Create an isolated view matrix for the viewport translation and provide it as the view matrix to counteract the camera translation.
+    MtxF* view = (MtxF*)*mtx;
     (*mtx)++;
-    guTranslateF(invView->m, -sViewportPosition[0], -sViewportPosition[1], -sViewportPosition[2]);
-    gEXSetInvViewMatrixFloat((*gfx)++, invView->m);   
+    guTranslateF(view->m, sViewportPosition[0], sViewportPosition[1], sViewportPosition[2]);
+    gEXSetViewMatrixFloat((*gfx)++, view->m);   
 }
 
 float identity_matrix[4][4] = {
@@ -116,7 +116,7 @@ float identity_matrix[4][4] = {
     { 0.0f, 0.0f, 0.0f, 1.0f }
 };
 
-// @recomp Patched to set up an identity inverse view matrix to prevent bleeding the perspective projection's inverse view matrix.
+// @recomp Patched to set up an identity view matrix to prevent bleeding the perspective projection's view matrix.
 RECOMP_PATCH void viewport_setRenderViewportAndOrthoMatrix(Gfx **gfx, Mtx **mtx) {
     gSPViewport((*gfx)++, &sViewportStack[sViewportStackIndex]);
 
@@ -126,8 +126,8 @@ RECOMP_PATCH void viewport_setRenderViewportAndOrthoMatrix(Gfx **gfx, Mtx **mtx)
     guTranslate(*mtx, 0.0f, 0.0f, 0.0f);
     gSPMatrix((*gfx)++, OS_K0_TO_PHYSICAL((*mtx)++), G_MTX_NOPUSH | G_MTX_LOAD | G_MTX_MODELVIEW);
 
-    // @recomp Set an identity inverse view matrix.
-    gEXSetInvViewMatrixFloat((*gfx)++, identity_matrix);
+    // @recomp Set an identity view matrix.
+    gEXSetViewMatrixFloat((*gfx)++, identity_matrix);
 }
 
 typedef void (*GeoListFunc)(Gfx **, Mtx **, void *);
@@ -162,9 +162,9 @@ void func_802ED52C(BKModelUnk20List *arg0, f32 arg1[3], f32 arg2);
 void func_802E6BD0(BKModelUnk28List *arg0, BKVertexList *arg1, AnimMtxList *mtx_list);
 void assetCache_free(void *arg0);
 
-Actor* cur_drawn_actor = NULL;
-u32 cur_drawn_actor_spawn_index = 0;
-u32 cur_drawn_actor_transform_id = 0;
+ActorMarker* cur_drawn_marker = NULL;
+u32 cur_drawn_marker_spawn_index = 0;
+u32 cur_drawn_marker_transform_id = 0;
 
 // @recomp Patched to set the current transform ID to banjo's when drawing the player.
 RECOMP_PATCH void player_draw(Gfx **gfx, Mtx **mtx, Vtx **vtx) {
@@ -172,12 +172,12 @@ RECOMP_PATCH void player_draw(Gfx **gfx, Mtx **mtx, Vtx **vtx) {
         eggShatter_draw(gfx, mtx, vtx);
 
         // @recomp Set the current transform ID to banjo's.
-        cur_drawn_actor_transform_id = BANJO_TRANSFORM_ID_START;
+        cur_drawn_marker_transform_id = BANJO_TRANSFORM_ID_START;
 
         baModel_draw(gfx, mtx, vtx);
 
         // @recomp Clear the current transform ID.
-        cur_drawn_actor_transform_id = 0;
+        cur_drawn_marker_transform_id = 0;
     }
 }
 
@@ -187,13 +187,17 @@ RECOMP_PATCH void __marker_draw(ActorMarker *this, Gfx **gfx, Mtx **mtx, Vtx **v
     u32 draw_dist;
     f32 draw_dist_f;
     f32 percentage;
-    if(!this->unk3E_0){
-        // @recomp Set the current drawn actor to null, as this marker has no actor.
-        cur_drawn_actor = NULL;
-        cur_drawn_actor_spawn_index = 0;
-        cur_drawn_actor_transform_id = 0;
 
+    // @recomp Set the current drawn marker.
+    cur_drawn_marker = this;
+    cur_drawn_marker_spawn_index = bkrecomp_get_marker_spawn_index(this);
+    cur_drawn_marker_transform_id = MARKER_TRANSFORM_ID_START + cur_drawn_marker_spawn_index * MARKER_TRANSFORM_ID_COUNT;
+    if(!this->unk3E_0){
         this->drawFunc(this, gfx, mtx, vtx);
+        // @recomp Set the current drawn marker to null after drawing.
+        cur_drawn_marker = NULL;
+        cur_drawn_marker_spawn_index = 0;
+        cur_drawn_marker_transform_id = 0;
         return;
     }
     actor =  marker_getActor(this);
@@ -214,29 +218,21 @@ RECOMP_PATCH void __marker_draw(ActorMarker *this, Gfx **gfx, Mtx **mtx, Vtx **v
             percentage = 1.0f;
         }
         func_8033A280(percentage);
-        
-        // @recomp Set the current drawn actor.
-        cur_drawn_actor = actor;
-        cur_drawn_actor_spawn_index = bkrecomp_get_actor_spawn_index(actor);
-        cur_drawn_actor_transform_id = ACTOR_TRANSFORM_ID_START + cur_drawn_actor_spawn_index * ACTOR_TRANSFORM_ID_COUNT;
-        // printf("Drawing actor %02X\n", actor->actor_info->actorId);
-
         this->drawFunc(this, gfx, mtx, vtx);
-        
-        // @recomp Clear the current drawn actor after drawing.
-        cur_drawn_actor = NULL;
-        cur_drawn_actor_spawn_index = 0;
-        cur_drawn_actor_transform_id = 0;
+        // @recomp Set the current drawn marker to null after drawing.
+        cur_drawn_marker = NULL;
+        cur_drawn_marker_spawn_index = 0;
+        cur_drawn_marker_transform_id = 0;
     }//L8032D300
     func_8033A244(30000.0f);
     func_8033A280(1.0f);
 }
 
 #define gEXMatrixGroupSimpleNormal(cmd, id, push, proj, edit) \
-    gEXMatrixGroup(cmd, id, G_EX_INTERPOLATE_SIMPLE, push, proj, G_EX_COMPONENT_INTERPOLATE, G_EX_COMPONENT_INTERPOLATE, G_EX_COMPONENT_INTERPOLATE, G_EX_COMPONENT_INTERPOLATE, G_EX_COMPONENT_INTERPOLATE, G_EX_COMPONENT_SKIP, G_EX_COMPONENT_INTERPOLATE, G_EX_ORDER_LINEAR, edit)
+    gEXMatrixGroup(cmd, id, G_EX_INTERPOLATE_SIMPLE, push, proj, G_EX_COMPONENT_INTERPOLATE, G_EX_COMPONENT_INTERPOLATE, G_EX_COMPONENT_INTERPOLATE, G_EX_COMPONENT_INTERPOLATE, G_EX_COMPONENT_INTERPOLATE, G_EX_COMPONENT_SKIP, G_EX_COMPONENT_INTERPOLATE, G_EX_ORDER_LINEAR, edit, G_EX_ASPECT_AUTO)
     
 #define gEXMatrixGroupSimpleVerts(cmd, id, push, proj, edit) \
-    gEXMatrixGroup(cmd, id, G_EX_INTERPOLATE_SIMPLE, push, proj, G_EX_COMPONENT_INTERPOLATE, G_EX_COMPONENT_INTERPOLATE, G_EX_COMPONENT_INTERPOLATE, G_EX_COMPONENT_INTERPOLATE, G_EX_COMPONENT_INTERPOLATE, G_EX_COMPONENT_INTERPOLATE, G_EX_COMPONENT_INTERPOLATE, G_EX_ORDER_LINEAR, edit)
+    gEXMatrixGroup(cmd, id, G_EX_INTERPOLATE_SIMPLE, push, proj, G_EX_COMPONENT_INTERPOLATE, G_EX_COMPONENT_INTERPOLATE, G_EX_COMPONENT_INTERPOLATE, G_EX_COMPONENT_INTERPOLATE, G_EX_COMPONENT_INTERPOLATE, G_EX_COMPONENT_INTERPOLATE, G_EX_COMPONENT_INTERPOLATE, G_EX_ORDER_LINEAR, edit, G_EX_ASPECT_AUTO)
 
 // @recomp Patched to set matrix groups when processing geo bones.
 RECOMP_PATCH void func_803387F8(Gfx **gfx, Mtx **mtx, void *arg2){
@@ -248,10 +244,10 @@ RECOMP_PATCH void func_803387F8(Gfx **gfx, Mtx **mtx, void *arg2){
             mlMtxApply(*mtx);
             gSPMatrix((*gfx)++, (*mtx)++, G_MTX_PUSH | G_MTX_LOAD | G_MTX_MODELVIEW);
 
-            if (cur_drawn_actor_transform_id != 0) {
+            if (cur_drawn_marker_transform_id != 0) {
                 // @recomp Tag the matrix.
                 // gEXMatrixGroupSimpleNormal((*gfx)++, cur_drawn_actor_transform_id + cmd->unk9, G_EX_PUSH, G_MTX_MODELVIEW, G_EX_EDIT_ALLOW);
-                gEXMatrixGroupSimpleVerts((*gfx)++, cur_drawn_actor_transform_id + cmd->unk9, G_EX_PUSH, G_MTX_MODELVIEW, G_EX_EDIT_ALLOW);
+                gEXMatrixGroupSimpleVerts((*gfx)++, cur_drawn_marker_transform_id + cmd->unk9, G_EX_PUSH, G_MTX_MODELVIEW, G_EX_EDIT_ALLOW);
                 // gEXMatrixGroupDecomposedNormal((*gfx)++, cur_drawn_actor_transform_id + cmd->unk9 + 1, G_EX_PUSH, G_MTX_MODELVIEW, G_EX_EDIT_ALLOW);
             }
         }
@@ -264,7 +260,7 @@ RECOMP_PATCH void func_803387F8(Gfx **gfx, Mtx **mtx, void *arg2){
         if(D_80370990){
             gSPPopMatrix((*gfx)++, G_MTX_MODELVIEW);
 
-            if (cur_drawn_actor_transform_id != 0) {
+            if (cur_drawn_marker_transform_id != 0) {
                 // @recomp Pop the matrix group.
                 gEXPopMatrixGroup((*gfx)++, G_MTX_MODELVIEW);
             }
@@ -625,8 +621,8 @@ RECOMP_PATCH BKModelBin *modelRender_draw(Gfx **gfx, Mtx **mtx, f32 position[3],
     gSPMatrix((*gfx)++, (*mtx)++, G_MTX_PUSH | G_MTX_LOAD | G_MTX_MODELVIEW);
     
     // @recomp Create a matrix group if a transform id is set.
-    if (cur_drawn_actor_transform_id != 0) {
-        gEXMatrixGroupDecomposedVerts((*gfx)++, cur_drawn_actor_transform_id, G_EX_PUSH, G_MTX_MODELVIEW, G_EX_EDIT_ALLOW);
+    if (cur_drawn_marker_transform_id != 0) {
+        gEXMatrixGroupDecomposedVerts((*gfx)++, cur_drawn_marker_transform_id, G_EX_PUSH, G_MTX_MODELVIEW, G_EX_EDIT_ALLOW);
     }
     
     modelRenderScale = scale;
@@ -643,7 +639,7 @@ RECOMP_PATCH BKModelBin *modelRender_draw(Gfx **gfx, Mtx **mtx, f32 position[3],
     gSPPopMatrix((*gfx)++, G_MTX_MODELVIEW);
 
     // @recomp Pop the matrix group if a transform id is set.
-    if (cur_drawn_actor_transform_id != 0) {
+    if (cur_drawn_marker_transform_id != 0) {
         gEXPopMatrixGroup((*gfx)++, G_MTX_MODELVIEW);
     }
 

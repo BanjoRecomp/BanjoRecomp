@@ -13,14 +13,12 @@ manual_funcs = [
 ]
 
 [patches]
-stubs = [
-]
 
 renamed = [
     "wmemcpy"
 ]
 
-ignored = [
+stubs = [
     # Boot segment libultra duplicates
     "boot___ll_div",
     "boot___ll_lshift",
