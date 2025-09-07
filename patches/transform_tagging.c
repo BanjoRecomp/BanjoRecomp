@@ -6,129 +6,7 @@
 #include "core1/mlmtx.h"
 #include "functions.h"
 
-extern struct{
-    s32 unk0;
-    s32 game_mode; //game_mode
-    f32 unk8; 
-    s32 unkC; //freeze_scene_flag (used for pause menu)
-    f32 unk10;
-    u8 transition;
-    u8 map;
-    u8 exit;
-    u8 unk17; //reset_on_map_load
-    u8 unk18;
-    u8 unk19;
-    u8 unk1A;
-    u8 unk1B;
-    u8 unk1C;
-} D_8037E8E0;
-
-void func_802E39D0(Gfx **gdl, Mtx **mptr, Vtx **vptr, s32 framebuffer_idx, s32 arg4);
-
-#define PRINT_FUNC() \
-    recomp_printf("%s\n", __func__)
-
-#define PRINT_FUNC_INDENT() \
-    recomp_printf("  %s\n", __func__)
-
-extern f32 sViewportFOVy;
-extern f32 sViewportAspect;
-extern f32 sViewportNear;
-extern f32 sViewportFar;
-extern f32 sViewportPosition[3];
-extern f32 sViewportRotation[3];
-    
-void func_80256E24(f32 dst[3], f32 theta, f32 phi, f32 x, f32 y, f32 z);
-void ml_vec3f_copy(f32 dst[3], f32 src[3]);
-
-// RECOMP_PATCH void viewport_moveAlongZAxis(f32 offset) {
-//     PRINT_FUNC_INDENT();
-//     f32 delta_position[3];
-
-//     func_80256E24(delta_position, sViewportRotation[0], sViewportRotation[1], 0.0f, 0.0f, offset);
-
-//     sViewportPosition[0] += delta_position[0];
-//     sViewportPosition[1] += delta_position[1];
-//     sViewportPosition[2] += delta_position[2];
-// }
-
-// RECOMP_PATCH void viewport_setPosition_vec3f(f32 src[3]) {
-//     PRINT_FUNC_INDENT();
-//     ml_vec3f_copy(sViewportPosition, src);
-// }
-
-// RECOMP_PATCH void viewport_setPosition_vec3w(s32 src[3]) {
-//     PRINT_FUNC_INDENT();
-//     sViewportPosition[0] = (f32)src[0];
-//     sViewportPosition[1] = (f32)src[1];
-//     sViewportPosition[2] = (f32)src[2];
-// }
-
-// RECOMP_PATCH void viewport_setPosition_f3(f32 x, f32 y, f32 z) {
-//     PRINT_FUNC_INDENT();
-//     sViewportPosition[0] = x;
-//     sViewportPosition[1] = y;
-//     sViewportPosition[2] = z;
-// }
-
-extern Vp sViewportStack[];
-extern s32 sViewportStackIndex;
-
-// @recomp Patched to specify the view matrix for better transform interpolation.
-RECOMP_PATCH void viewport_setRenderPerspectiveMatrix(Gfx **gfx, Mtx **mtx, f32 near, f32 far) {
-    u16 perspNorm;
-
-    near = MAX(sViewportNear, near);
-    far = MIN(sViewportFar, far);
-
-    if(*(u32*)OS_PHYSICAL_TO_K0(0x1D8) + 0x53D4FFF0) { 
-        near = 750.0f; 
-        far = 1250.0f;
-    }
-    
-    guPerspective(*mtx, &perspNorm, sViewportFOVy, sViewportAspect, near, far, 0.5f);
-    gSPPerspNormalize((*gfx)++, perspNorm);
-    gSPMatrix((*gfx)++, OS_PHYSICAL_TO_K0((*mtx)++), G_MTX_NOPUSH | G_MTX_LOAD | G_MTX_PROJECTION);
-
-    guRotate(*mtx, -sViewportRotation[2], 0.0f, 0.0f, -1.0f);
-    gSPMatrix((*gfx)++, OS_PHYSICAL_TO_K0((*mtx)++), G_MTX_NOPUSH | G_MTX_MUL | G_MTX_PROJECTION);
-
-    guRotate(*mtx, -sViewportRotation[0], 1.0f, 0.0f, 0.0f);
-    gSPMatrix((*gfx)++, OS_PHYSICAL_TO_K0((*mtx)++), G_MTX_NOPUSH | G_MTX_MUL | G_MTX_PROJECTION);
-
-    guRotate(*mtx, -sViewportRotation[1], 0.0f, 1.0f, 0.0f);
-    gSPMatrix((*gfx)++, OS_PHYSICAL_TO_K0((*mtx)++), G_MTX_NOPUSH | G_MTX_MUL | G_MTX_PROJECTION);
-
-    guTranslate(*mtx, 0.0f, 0.0f, 0.0f);
-    gSPMatrix((*gfx)++, OS_PHYSICAL_TO_K0((*mtx)++), G_MTX_NOPUSH | G_MTX_LOAD | G_MTX_MODELVIEW);
-
-    // @recomp Create an isolated view matrix for the viewport translation and provide it as the view matrix to counteract the camera translation.
-    MtxF* view = (MtxF*)*mtx;
-    (*mtx)++;
-    guTranslateF(view->m, sViewportPosition[0], sViewportPosition[1], sViewportPosition[2]);
-    gEXSetViewMatrixFloat((*gfx)++, view->m);   
-}
-
-float identity_matrix[4][4] = {
-    { 1.0f, 0.0f, 0.0f, 0.0f },
-    { 0.0f, 1.0f, 0.0f, 0.0f },
-    { 0.0f, 0.0f, 1.0f, 0.0f },
-    { 0.0f, 0.0f, 0.0f, 1.0f }
-};
-
-// @recomp Patched to set up an identity view matrix to prevent bleeding the perspective projection's view matrix.
-RECOMP_PATCH void viewport_setRenderViewportAndOrthoMatrix(Gfx **gfx, Mtx **mtx) {
-    gSPViewport((*gfx)++, &sViewportStack[sViewportStackIndex]);
-
-    guOrtho(*mtx, -(2*(f32)gFramebufferWidth), (2*(f32)gFramebufferWidth), -(2*(f32)gFramebufferHeight), (2*(f32)gFramebufferHeight), 1.0f, 20.0f, 1.0f);
-    gSPMatrix((*gfx)++, OS_K0_TO_PHYSICAL((*mtx)++), G_MTX_NOPUSH | G_MTX_LOAD | G_MTX_PROJECTION);
-    
-    guTranslate(*mtx, 0.0f, 0.0f, 0.0f);
-    gSPMatrix((*gfx)++, OS_K0_TO_PHYSICAL((*mtx)++), G_MTX_NOPUSH | G_MTX_LOAD | G_MTX_MODELVIEW);
-
-    // @recomp Set an identity view matrix.
-    gEXSetViewMatrixFloat((*gfx)++, identity_matrix);
-}
+u32 cur_drawn_model_transform_id = 0;
 
 typedef void (*GeoListFunc)(Gfx **, Mtx **, void *);
 
@@ -139,19 +17,11 @@ typedef struct {
     s8  unk9;
 }GeoCmd2;
 
-extern u8 D_8037BFB8;
-extern s32 D_8036E7B0;
 extern AnimMtxList *D_8038371C;
 extern MtxF D_80383BF8;
 extern s32 D_80370990;
 extern GeoListFunc D_80370994[];
 
-void eggShatter_draw(Gfx **gPtr, Mtx **mPtr, Vtx **vPtr);
-void baModel_draw(Gfx **gfx, Mtx **mtx, Vtx **vtx);
-Actor *marker_getActor(ActorMarker *);
-void func_8033A28C(bool arg0);
-void func_8033A244(f32);
-void func_8033A280(f32);
 void func_80339124(Gfx **, Mtx **, BKGeoList *);
 MtxF *animMtxList_get(AnimMtxList *this, s32 arg1);
 bool AnimTextureListCache_tryGetTextureOffset(s32 list_index, s32 texture_index, s32 *current_frame);
@@ -161,72 +31,6 @@ void func_80349AD0(void);
 void func_802ED52C(BKModelUnk20List *arg0, f32 arg1[3], f32 arg2);
 void func_802E6BD0(BKModelUnk28List *arg0, BKVertexList *arg1, AnimMtxList *mtx_list);
 void assetCache_free(void *arg0);
-
-ActorMarker* cur_drawn_marker = NULL;
-u32 cur_drawn_marker_spawn_index = 0;
-u32 cur_drawn_marker_transform_id = 0;
-
-// @recomp Patched to set the current transform ID to banjo's when drawing the player.
-RECOMP_PATCH void player_draw(Gfx **gfx, Mtx **mtx, Vtx **vtx) {
-    if (D_8037BFB8) {
-        eggShatter_draw(gfx, mtx, vtx);
-
-        // @recomp Set the current transform ID to banjo's.
-        cur_drawn_marker_transform_id = BANJO_TRANSFORM_ID_START;
-
-        baModel_draw(gfx, mtx, vtx);
-
-        // @recomp Clear the current transform ID.
-        cur_drawn_marker_transform_id = 0;
-    }
-}
-
-// @recomp Patched to set the actor being drawn before the actor's draw func is called.
-RECOMP_PATCH void __marker_draw(ActorMarker *this, Gfx **gfx, Mtx **mtx, Vtx **vtx){
-    Actor *actor;
-    u32 draw_dist;
-    f32 draw_dist_f;
-    f32 percentage;
-
-    // @recomp Set the current drawn marker.
-    cur_drawn_marker = this;
-    cur_drawn_marker_spawn_index = bkrecomp_get_marker_spawn_index(this);
-    cur_drawn_marker_transform_id = MARKER_TRANSFORM_ID_START + cur_drawn_marker_spawn_index * MARKER_TRANSFORM_ID_COUNT;
-    if(!this->unk3E_0){
-        this->drawFunc(this, gfx, mtx, vtx);
-        // @recomp Set the current drawn marker to null after drawing.
-        cur_drawn_marker = NULL;
-        cur_drawn_marker_spawn_index = 0;
-        cur_drawn_marker_transform_id = 0;
-        return;
-    }
-    actor =  marker_getActor(this);
-    func_8033A28C(actor->unk58_2);
-    if( actor->unk58_2 && !this->unk40_23 && !this->unk40_21 && !D_8036E7B0){
-        func_8033A244(3700.0f);
-    }
-    
-    if(actor->unk124_7 && !actor->despawn_flag && actor->unk58_0){
-        draw_dist = actor->actor_info->draw_distance;
-        if(draw_dist != 0){
-            percentage = (f32)draw_dist*(1/(f64)0x400);
-        }
-        else if(this->unk40_21){
-            percentage = 2.0f;
-        }
-        else{
-            percentage = 1.0f;
-        }
-        func_8033A280(percentage);
-        this->drawFunc(this, gfx, mtx, vtx);
-        // @recomp Set the current drawn marker to null after drawing.
-        cur_drawn_marker = NULL;
-        cur_drawn_marker_spawn_index = 0;
-        cur_drawn_marker_transform_id = 0;
-    }//L8032D300
-    func_8033A244(30000.0f);
-    func_8033A280(1.0f);
-}
 
 #define gEXMatrixGroupSimpleNormal(cmd, id, push, proj, edit) \
     gEXMatrixGroup(cmd, id, G_EX_INTERPOLATE_SIMPLE, push, proj, G_EX_COMPONENT_INTERPOLATE, G_EX_COMPONENT_INTERPOLATE, G_EX_COMPONENT_INTERPOLATE, G_EX_COMPONENT_INTERPOLATE, G_EX_COMPONENT_INTERPOLATE, G_EX_COMPONENT_SKIP, G_EX_COMPONENT_INTERPOLATE, G_EX_ORDER_LINEAR, edit, G_EX_ASPECT_AUTO)
@@ -244,10 +48,10 @@ RECOMP_PATCH void func_803387F8(Gfx **gfx, Mtx **mtx, void *arg2){
             mlMtxApply(*mtx);
             gSPMatrix((*gfx)++, (*mtx)++, G_MTX_PUSH | G_MTX_LOAD | G_MTX_MODELVIEW);
 
-            if (cur_drawn_marker_transform_id != 0) {
+            if (cur_drawn_model_transform_id != 0) {
                 // @recomp Tag the matrix.
                 // gEXMatrixGroupSimpleNormal((*gfx)++, cur_drawn_actor_transform_id + cmd->unk9, G_EX_PUSH, G_MTX_MODELVIEW, G_EX_EDIT_ALLOW);
-                gEXMatrixGroupSimpleVerts((*gfx)++, cur_drawn_marker_transform_id + cmd->unk9, G_EX_PUSH, G_MTX_MODELVIEW, G_EX_EDIT_ALLOW);
+                gEXMatrixGroupSimpleVerts((*gfx)++, cur_drawn_model_transform_id + cmd->unk9, G_EX_PUSH, G_MTX_MODELVIEW, G_EX_EDIT_ALLOW);
                 // gEXMatrixGroupDecomposedNormal((*gfx)++, cur_drawn_actor_transform_id + cmd->unk9 + 1, G_EX_PUSH, G_MTX_MODELVIEW, G_EX_EDIT_ALLOW);
             }
         }
@@ -260,7 +64,7 @@ RECOMP_PATCH void func_803387F8(Gfx **gfx, Mtx **mtx, void *arg2){
         if(D_80370990){
             gSPPopMatrix((*gfx)++, G_MTX_MODELVIEW);
 
-            if (cur_drawn_marker_transform_id != 0) {
+            if (cur_drawn_model_transform_id != 0) {
                 // @recomp Pop the matrix group.
                 gEXPopMatrixGroup((*gfx)++, G_MTX_MODELVIEW);
             }
@@ -621,8 +425,8 @@ RECOMP_PATCH BKModelBin *modelRender_draw(Gfx **gfx, Mtx **mtx, f32 position[3],
     gSPMatrix((*gfx)++, (*mtx)++, G_MTX_PUSH | G_MTX_LOAD | G_MTX_MODELVIEW);
     
     // @recomp Create a matrix group if a transform id is set.
-    if (cur_drawn_marker_transform_id != 0) {
-        gEXMatrixGroupDecomposedVerts((*gfx)++, cur_drawn_marker_transform_id, G_EX_PUSH, G_MTX_MODELVIEW, G_EX_EDIT_ALLOW);
+    if (cur_drawn_model_transform_id != 0) {
+        gEXMatrixGroupDecomposedVerts((*gfx)++, cur_drawn_model_transform_id, G_EX_PUSH, G_MTX_MODELVIEW, G_EX_EDIT_ALLOW);
     }
     
     modelRenderScale = scale;
@@ -639,7 +443,7 @@ RECOMP_PATCH BKModelBin *modelRender_draw(Gfx **gfx, Mtx **mtx, f32 position[3],
     gSPPopMatrix((*gfx)++, G_MTX_MODELVIEW);
 
     // @recomp Pop the matrix group if a transform id is set.
-    if (cur_drawn_marker_transform_id != 0) {
+    if (cur_drawn_model_transform_id != 0) {
         gEXPopMatrixGroup((*gfx)++, G_MTX_MODELVIEW);
     }
 
