@@ -607,7 +607,8 @@ int main(int argc, char** argv) {
 
     banjo::register_bk_overlays();
     banjo::register_bk_patches();
-    recomputil::init_extended_actor_data();
+    // Register extensions for two types: Props and ActorMarkers.
+    recomputil::init_extended_object_data(2);
     banjo::load_config();
 
     recomp::rsp::callbacks_t rsp_callbacks{

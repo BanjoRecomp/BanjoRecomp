@@ -2,8 +2,13 @@
 #include "prop.h"
 #include "actor.h"
 #include "functions.h"
-#include "mem_funcs.h"
+#include "object_extension_funcs.h"
 #include "bk_api.h"
+
+typedef enum {
+    EXTENSION_TYPE_MARKER,
+    EXTENSION_TYPE_PROP,
+} ExtensionType;
 
 // Array of handles for ActorMarker instances.
 // Normally the game only has at most 0xE0 ActorMarker instances, but this is larger to account for mods increasing
@@ -30,7 +35,7 @@ RECOMP_PATCH void func_803329AC(void){
     }
 
     // @recomp Reset all actor data.
-    recomp_clear_all_actor_data();
+    recomp_clear_all_object_data(EXTENSION_TYPE_MARKER);
 }
 
 // @recomp Patched to create extension data for the marker.
@@ -81,7 +86,7 @@ RECOMP_PATCH ActorMarker * marker_init(s32 *pos, MarkerDrawFunc draw_func, int a
 
     // @recomp Set the marker's handle.
     u32 index = marker - D_8036E7C8;
-    marker_handles[index] = recomp_create_actor_data(marker_id);
+    marker_handles[index] = recomp_create_object_data(EXTENSION_TYPE_MARKER, marker_id);
 
     return marker;
 }
@@ -95,26 +100,26 @@ RECOMP_PATCH void func_80332B2C(ActorMarker * arg0){
     D_80383428[index >> 3] =  D_80383428[index >> 3] & D_8036E804[index & 7];
 
     // @recomp Delete the handle for this marker.
-    recomp_destroy_actor_data(marker_handles[index]);
+    recomp_destroy_object_data(EXTENSION_TYPE_MARKER, marker_handles[index]);
     marker_handles[index] = 0;
 }
 
 RECOMP_EXPORT MarkerExtensionId bkrecomp_extend_marker(enum marker_e type, u32 size) {
-    return recomp_register_actor_extension(type, size);
+    return recomp_register_object_extension(EXTENSION_TYPE_MARKER, type, size);
 }
 
 RECOMP_EXPORT MarkerExtensionId bkrecomp_extend_marker_all(u32 size) {
-    return recomp_register_actor_extension_generic(size);
+    return recomp_register_object_extension_generic(EXTENSION_TYPE_MARKER, size);
 }
 
 RECOMP_EXPORT void* bkrecomp_get_extended_marker_data(ActorMarker* marker, MarkerExtensionId extension) {
     s32 index = (marker - D_8036E7C8);
     u32 handle = marker_handles[index];
-    return recomp_get_actor_data(handle, extension, marker->id);
+    return recomp_get_object_data(EXTENSION_TYPE_MARKER, marker->id, handle, extension);
 }
 
 RECOMP_EXPORT u32 bkrecomp_get_marker_spawn_index(ActorMarker* marker) {
     s32 index = (marker - D_8036E7C8);
     u32 handle = marker_handles[index];
-    return recomp_get_actor_spawn_index(handle);
+    return recomp_get_object_spawn_index(EXTENSION_TYPE_MARKER, handle);
 }
