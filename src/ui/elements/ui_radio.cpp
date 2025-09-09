@@ -12,25 +12,27 @@ namespace recompui {
         enable_focus();
         set_text(name);
         set_cursor(Cursor::Pointer);
-        set_font_size(20.0f);
-        set_letter_spacing(2.8f);
-        set_line_height(20.0f);
-        set_font_weight(400);
-        set_font_style(FontStyle::Normal);
+        set_typography(theme::Typography::LabelSM);
         set_border_color(theme::color::Text, 0);
-        set_border_bottom_width(1.0f);
+        set_border_bottom_width(theme::border::width);
         set_color(theme::color::TextInactive);
-        set_padding_bottom(8.0f);
+        set_padding_top(8.0f);
+        set_padding_bottom(8.0f - theme::border::width);
         set_text_transform(TextTransform::Uppercase);
         set_height_auto();
+        set_opacity(1.0f);
         hover_style.set_color(theme::color::WhiteA80);
         checked_style.set_color(theme::color::White);
         checked_style.set_border_color(theme::color::Text);
         pulsing_style.set_border_color(theme::color::SecondaryA80);
+        disabled_style.set_color(theme::color::TextInactive);
+        disabled_style.set_opacity(0.5f);
+        disabled_style.set_cursor(Cursor::None);
 
         add_style(&hover_style, { hover_state });
         add_style(&checked_style, { checked_state });
         add_style(&pulsing_style, { focus_state });
+        add_style(&disabled_style, { disabled_state });
     }
 
     void RadioOption::set_pressed_callback(std::function<void(uint32_t)> callback) {
@@ -43,27 +45,30 @@ namespace recompui {
 
     void RadioOption::set_selected_state(bool enable) {
         set_style_enabled(checked_state, enable);
+        set_as_primary_focus(enable);
     }
 
     void RadioOption::process_event(const Event &e) {
         switch (e.type) {
-        case EventType::MouseButton:
-            {
-                const EventMouseButton &mousebutton = std::get<EventMouseButton>(e.variant);
-                if (mousebutton.button == MouseButton::Left && mousebutton.pressed) {
-                    pressed_callback(index);
-                }
-            }
-            break;
         case EventType::Click:
             pressed_callback(index);
             break;
         case EventType::Hover:
             set_style_enabled(hover_state, std::get<EventHover>(e.variant).active);
             break;
-        case EventType::Enable:
-            set_style_enabled(disabled_state, !std::get<EventEnable>(e.variant).active);
+        case EventType::Enable: {
+            bool enable_active = std::get<EventEnable>(e.variant).active;
+            set_style_enabled(disabled_state, !enable_active);
+            if (enable_active) {
+                set_cursor(Cursor::Pointer);
+                set_focusable(true);
+            }
+            else {
+                set_cursor(Cursor::None);
+                set_focusable(false);
+            }
             break;
+        }
         case EventType::Focus:
             {
                 bool active = std::get<EventFocus>(e.variant).active;
@@ -92,9 +97,13 @@ namespace recompui {
 
     void Radio::set_index_internal(uint32_t index, bool setup, bool trigger_callbacks) {
         if (this->index != index || setup) {
-            options[this->index]->set_selected_state(false);
+            if (this->index < static_cast<uint32_t>(options.size())) {
+                options[this->index]->set_selected_state(false);
+            }
+            if (index < static_cast<uint32_t>(options.size())) {
+                options[index]->set_selected_state(true);
+            }
             this->index = index;
-            options[index]->set_selected_state(true);
 
             if (trigger_callbacks) {
                 for (const auto &function : index_changed_callbacks) {
@@ -117,20 +126,21 @@ namespace recompui {
         }, val);
     }
 
-    Radio::Radio(Element *parent) : Container(parent, FlexDirection::Row, JustifyContent::FlexStart, Events(EventType::Focus, EventType::Update)) {
+    Radio::Radio(Element *parent) : Container(parent, FlexDirection::Row, JustifyContent::FlexStart, Events(EventType::Focus, EventType::Update, EventType::Enable)) {
         set_gap(24.0f);
         set_align_items(AlignItems::FlexStart);
-        enable_focus();
+        // enable_focus();
+        set_as_navigation_container(NavigationType::Horizontal);
     }
 
     void Radio::process_event(const Event &e) {
         switch (e.type) {
         case EventType::Focus:
             if (!options.empty()) {
-                if (std::get<EventFocus>(e.variant).active) {
-                    blur();
-                    queue_child_focus();
-                }
+                // if (std::get<EventFocus>(e.variant).active) {
+                //     blur();
+                //     queue_child_focus();
+                // }
                 if (focus_callback != nullptr) {
                     focus_callback(std::get<EventFocus>(e.variant).active);
                 }
@@ -139,8 +149,21 @@ namespace recompui {
         case EventType::Update:
             if (child_focus_queued) {
                 child_focus_queued = false;
-                options[index]->focus();
+                if (index < static_cast<uint32_t>(options.size())) {
+                    options[index]->focus();
+                } else if (!options.empty()) {
+                    options.front()->focus();
+                }
             }
+            break;
+        case EventType::Enable:
+            {
+                bool active = std::get<EventEnable>(e.variant).active;
+                for (auto &option : options) {
+                    option->set_enabled(active);
+                }
+            }
+            break;
         }
     }
 

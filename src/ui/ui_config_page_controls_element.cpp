@@ -7,8 +7,6 @@ namespace recompinput {
 
 namespace recompui {
 
-ConfigPageControls *controls_page = nullptr;
-
 static bool is_multiplayer_enabled() {
     return true;
 } 
@@ -28,11 +26,11 @@ ElementConfigPageControls::ElementConfigPageControls(const Rml::String& tag) : R
     recompui::Element this_compat(this);
     recompui::ContextId context = get_current_context();
 
-    controls_page = context.create_element<ConfigPageControls>(
-        &this_compat,
-        recompinput::get_num_players(),
-        temp_game_input_contexts
-    );
+    // controls_page = context.create_element<ConfigPageControls>(
+    //     &this_compat,
+    //     recompinput::get_num_players(),
+    //     temp_game_input_contexts
+    // );
 }
 
 ElementConfigPageControls::~ElementConfigPageControls() {

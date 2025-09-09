@@ -85,21 +85,21 @@ public:
         );
         recompui::register_event(listener, "open_controls",
             [](const std::string& param, Rml::Event& event) {
-                recompui::set_config_tab(recompui::ConfigTab::Controls);
+                recompui::set_config_tab(recompui::ConfigTabId::Controls);
                 recompui::hide_all_contexts();
                 recompui::show_context(recompui::get_config_context_id(), "");
             }
         );
         recompui::register_event(listener, "open_settings",
             [](const std::string& param, Rml::Event& event) {
-                recompui::set_config_tab(recompui::ConfigTab::General);
+                recompui::set_config_tab(recompui::ConfigTabId::General);
                 recompui::hide_all_contexts();
                 recompui::show_context(recompui::get_config_context_id(), "");
             }
         );
         recompui::register_event(listener, "open_mods",
             [](const std::string &param, Rml::Event &event) {
-                recompui::set_config_tab(recompui::ConfigTab::Mods);
+                recompui::set_config_tab(recompui::ConfigTabId::Mods);
                 recompui::hide_all_contexts();
                 recompui::show_context(recompui::get_config_context_id(), "");
             }

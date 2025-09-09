@@ -45,7 +45,10 @@ namespace recomp {
     #define DEFINE_RECOMP_UI_INPUTS() \
         DEFINE_INPUT(TOGGLE_MENU, 0, "Toggle Menu") \
         DEFINE_INPUT(ACCEPT_MENU, 0, "Accept (Menu)") \
-        DEFINE_INPUT(APPLY_MENU, 0, "Apply (Menu)")
+        DEFINE_INPUT(BACK_MENU, 0, "Back (Menu)") \
+        DEFINE_INPUT(APPLY_MENU, 0, "Apply (Menu)") \
+        DEFINE_INPUT(TAB_LEFT_MENU, 0, "Tab Left (Menu)") \
+        DEFINE_INPUT(TAB_RIGHT_MENU, 0, "Tab Right (Menu)")
 
     #define DEFINE_ALL_INPUTS() \
         DEFINE_N64_BUTTON_INPUTS() \
@@ -130,7 +133,10 @@ namespace recomp {
 
         std::vector<InputField> toggle_menu;
         std::vector<InputField> accept_menu;
+        std::vector<InputField> back_menu;
         std::vector<InputField> apply_menu;
+        std::vector<InputField> tab_left_menu;
+        std::vector<InputField> tab_right_menu;
     };
 
     inline const std::vector<InputField>& get_default_mapping_for_input(const DefaultN64Mappings& defaults, const GameInput input) {
@@ -156,7 +162,10 @@ namespace recomp {
             case GameInput::Y_AXIS_NEG: return defaults.analog_down;
             case GameInput::TOGGLE_MENU: return defaults.toggle_menu;
             case GameInput::ACCEPT_MENU: return defaults.accept_menu;
+            case GameInput::BACK_MENU: return defaults.back_menu;
             case GameInput::APPLY_MENU: return defaults.apply_menu;
+            case GameInput::TAB_LEFT_MENU: return defaults.tab_left_menu;
+            case GameInput::TAB_RIGHT_MENU: return defaults.tab_right_menu;
             default: return empty_input_field;
         }
     }

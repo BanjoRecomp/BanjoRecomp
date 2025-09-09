@@ -35,12 +35,14 @@ namespace recompui {
 
         Style* create_style();
 
+        void destroy_resource(Element* resource);
         void destroy_resource(Style* resource);
         void destroy_resource(ResourceId resource);
         void clear_children();
 
         Rml::ElementDocument* get_document();
         Element* get_root_element();
+        Element* get_focused_element();
         Element* get_autofocus_element();
         void set_autofocus_element(Element* element);
 

@@ -36,6 +36,7 @@ namespace recompui {
         Update,
         Navigate,
         MouseButton,
+        MenuAction,
         Count
     };
 
@@ -63,6 +64,16 @@ namespace recompui {
     enum class PointerEvents {
         None,
         Auto
+    };
+
+    enum class MenuAction {
+        None,
+        Accept,
+        Apply,
+        Back,
+        Toggle,
+        TabLeft,
+        TabRight,
     };
 
     template <typename Enum, typename = std::enable_if_t<std::is_enum_v<Enum>>>
@@ -113,7 +124,11 @@ namespace recompui {
         bool pressed;
     };
 
-    using EventVariant = std::variant<EventClick, EventFocus, EventHover, EventEnable, EventDrag, EventText, EventNavigate, EventMouseButton, std::monostate>;
+    struct EventMenuAction {
+        MenuAction action;
+    };
+
+    using EventVariant = std::variant<EventClick, EventFocus, EventHover, EventEnable, EventDrag, EventText, EventNavigate, EventMouseButton, EventMenuAction, std::monostate>;
 
     struct Event {
         EventType type;
@@ -180,6 +195,13 @@ namespace recompui {
             Event e;
             e.type = EventType::MouseButton;
             e.variant = EventMouseButton{ x, y, button, pressed };
+            return e;
+        }
+
+        static Event menu_action_event(MenuAction action) {
+            Event e;
+            e.type = EventType::MenuAction;
+            e.variant = EventMenuAction{ action };
             return e;
         }
     };

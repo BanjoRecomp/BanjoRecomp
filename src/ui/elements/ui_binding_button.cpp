@@ -1,5 +1,6 @@
 #include "ui_binding_button.h"
 #include "ui_theme.h"
+#include "recomp_ui.h"
 #include <ultramodern/ultramodern.hpp>
 
 namespace recompui {
@@ -36,8 +37,15 @@ namespace recompui {
         ContextId context = get_current_context();
 
         bound_text_el = context.create_element<Element>(this, 0, "div", true);
-        bound_text_el->set_text(mapped_binding);
         apply_binding_style();
+        unknown_svg_el = context.create_element<Svg>(this, "icons/Question.svg");
+        unknown_svg_el->set_position(Position::Absolute);
+        unknown_svg_el->set_width(32);
+        unknown_svg_el->set_height(32);
+        unknown_svg_el->set_top(50.0f, recompui::Unit::Percent);
+        unknown_svg_el->set_left(50.0f, recompui::Unit::Percent);
+        unknown_svg_el->set_translate_2D(-50.0f, -50.0f, recompui::Unit::Percent);
+        set_binding(mapped_binding);
 
         recording_parent = context.create_element<Element>(this);
         recording_circle = context.create_element<Element>(recording_parent);
@@ -101,11 +109,15 @@ namespace recompui {
     }
 
     void BindingButton::apply_binding_style() {
+        bound_text_el->set_position(Position::Absolute);
+        bound_text_el->set_top(50.0f, recompui::Unit::Percent);
+        bound_text_el->set_left(50.0f, recompui::Unit::Percent);
+        bound_text_el->set_translate_2D(-50.0f, -50.0f, recompui::Unit::Percent);
         bound_text_el->set_font_family("promptfont");
-        bound_text_el->set_font_size(40.0f);
+        bound_text_el->set_font_size(32.0f);
         bound_text_el->set_font_style(FontStyle::Normal);
         bound_text_el->set_font_weight(400);
-        bound_text_el->set_line_height(40.0f);
+        bound_text_el->set_line_height(32.0f);
         bound_text_el->set_opacity(1);
     }
 
@@ -115,7 +127,15 @@ namespace recompui {
 
     void BindingButton::set_binding(const std::string &binding) {
         this->mapped_binding = binding;
-        bound_text_el->set_text(mapped_binding);
+        if (binding == recompui::unknown_input) {
+            bound_text_el->set_text("");
+            bound_text_el->set_display(Display::None);
+            unknown_svg_el->set_display(Display::Block);
+        } else  {
+            bound_text_el->set_text(mapped_binding);
+            bound_text_el->set_display(Display::Block);
+            unknown_svg_el->set_display(Display::None);
+        }
     }
 
     void BindingButton::set_is_binding(bool is_binding) {
@@ -123,10 +143,12 @@ namespace recompui {
 
         if (is_binding) {
             bound_text_el->set_opacity(0);
+            unknown_svg_el->set_opacity(0);
             recording_parent->set_opacity(1);
             queue_update();
         } else {
             bound_text_el->set_opacity(1);
+            unknown_svg_el->set_opacity(1);
             recording_parent->set_opacity(0);
         }
     }

@@ -13,7 +13,9 @@ namespace banjo {
     // TODO: Move loading configs to the runtime once we have a way to allow per-project customization.
     void load_config();
     void save_config();
-    
+    bool read_json_with_backups(const std::filesystem::path& path, nlohmann::json& json_out);
+    bool save_json_with_backups(const std::filesystem::path& path, const nlohmann::json& json_data);
+
     void reset_input_bindings();
     void reset_cont_input_bindings(int profile_index);
     void reset_kb_input_bindings(int profile_index);

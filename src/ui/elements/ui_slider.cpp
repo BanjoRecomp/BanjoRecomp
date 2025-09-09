@@ -53,7 +53,7 @@ namespace recompui {
         char text_buffer[32];
 
         if (type == SliderType::Double) {
-            std::snprintf(text_buffer, sizeof(text_buffer), "%.1f", value);
+            std::snprintf(text_buffer, sizeof(text_buffer), "%.*f", precision, value);
         } else if (type == SliderType::Percent) {
             std::snprintf(text_buffer, sizeof(text_buffer), "%d%%", static_cast<int>(value));
         } else {
@@ -114,7 +114,8 @@ namespace recompui {
         case EventType::Enable:
             {
                 bool enable_active = std::get<EventEnable>(e.variant).active;
-                circle_element->set_enabled(enable_active);
+                // circle_element->set_enabled(enable_active);
+                // slider_element->set_enabled(enable_active);
                 if (enable_active) {
                     set_cursor(Cursor::Pointer);
                     set_focusable(true);
@@ -216,6 +217,14 @@ namespace recompui {
 
     double Slider::get_step_value() const {
         return step_value;
+    }
+    
+    void Slider::set_precision(int p) {
+        precision = p;
+    }
+
+    int Slider::get_precision() const {
+        return precision;
     }
 
     void Slider::add_value_changed_callback(std::function<void(double)> callback) {

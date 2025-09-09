@@ -389,7 +389,10 @@ void clear_all_mappings(int profile_index) {
 
     clear_mapping(profile_index, recomp::GameInput::TOGGLE_MENU);
     clear_mapping(profile_index, recomp::GameInput::ACCEPT_MENU);
+    clear_mapping(profile_index, recomp::GameInput::BACK_MENU);
     clear_mapping(profile_index, recomp::GameInput::APPLY_MENU);
+    clear_mapping(profile_index, recomp::GameInput::TAB_LEFT_MENU);
+    clear_mapping(profile_index, recomp::GameInput::TAB_RIGHT_MENU);
 };
 
 void recomp::initialize_input_bindings() {

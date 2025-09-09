@@ -21,6 +21,7 @@ namespace recompui {
             if (focus_callback != nullptr) {
                 focus_callback(event.active);
             }
+            set_style_enabled(focus_state, event.active);
             break;
         }
         default:
@@ -33,13 +34,16 @@ namespace recompui {
             set_attribute("type", "password");
         }
         set_min_width(60.0f);
-        set_border_color(theme::color::Text);
-        set_border_bottom_width(1.0f);
-        set_padding_bottom(6.0f);
+        set_border_color(theme::color::TextA50);
+        set_border_width(theme::border::width);
+        set_padding(8.0f - theme::border::width);
+        set_border_radius(theme::border::radius_sm);
         set_focusable(true);
         set_nav_auto(NavDirection::Up);
         set_nav_auto(NavDirection::Down);
         set_tab_index_auto();
+        focus_style.set_border_color(theme::color::Primary);
+        add_style(&focus_style, focus_state);
     }
 
     void TextInput::set_text(std::string_view text) {

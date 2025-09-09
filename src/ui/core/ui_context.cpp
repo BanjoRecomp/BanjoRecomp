@@ -248,6 +248,7 @@ recompui::ContextId recompui::create_context() {
     root->set_width(100.0f, Unit::Percent);
     root->set_height(100.0f, Unit::Percent);
     root->set_display(Display::Flex);
+    root->set_as_root_document();
 
     ret.close();
 
@@ -583,6 +584,11 @@ recompui::Style* recompui::ContextId::create_style() {
     return add_resource_impl(std::make_unique<Style>());
 }
 
+void recompui::ContextId::destroy_resource(Element* resource) {
+    recompui::report_removed_element(resource->base);
+    destroy_resource(resource->resource_id);
+}
+
 void recompui::ContextId::destroy_resource(Style* resource) {
     destroy_resource(resource->resource_id);
 }
@@ -730,4 +736,37 @@ recompui::ContextId recompui::get_context_from_document(Rml::ElementDocument* do
         return ContextId::null();
     }
     return find_it->second;
+}
+
+recompui::Element* recompui::ContextId::get_focused_element() {
+    // Ensure a context is currently opened by this thread.
+    if (opened_context_id == ContextId::null()) {
+        context_error(*this, ContextErrorType::AddResourceWithoutOpen);
+    }
+
+    // Check that the context that was specified is the same one that's currently open.
+    if (*this != opened_context_id) {
+        context_error(*this, ContextErrorType::AddResourceToWrongContext);
+    }
+
+    auto doc = get_document();
+    if (doc == nullptr) {
+        return nullptr;
+    }
+    Rml::Context *rml_context = doc->GetContext();
+    if (rml_context == nullptr) {
+        return nullptr;
+    }
+    Rml::Element *focused = rml_context->GetFocusElement();
+    if (focused == nullptr) {
+        return nullptr;
+    }
+
+    for (const auto& resource : opened_context->resources) {
+        recompui::Element *element = static_cast<Element*>(resource.get());
+        if (element->id == focused->GetId()) {
+            return element;
+        }
+    }
+    return nullptr;
 }

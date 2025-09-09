@@ -27,6 +27,7 @@
 #include "ui_mod_installer.h"
 #include "ui_renderer.h"
 #include "ui_assign_players_modal.h"
+#include "ui_config_modal.h"
 
 bool can_focus(Rml::Element* element) {
     return element->GetOwnerDocument() != nullptr && element->GetProperty(Rml::PropertyId::TabIndex)->Get<Rml::Style::TabIndex>() != Rml::Style::TabIndex::None;
@@ -239,6 +240,7 @@ public:
         config_menu_controller->load_document();
         recompui::init_prompt_context();
         recompui::init_assign_players_modal();
+        recompui::init_config_modal();
     }
 
     void unload() {
@@ -428,6 +430,12 @@ public:
             context_details.context.close();
         }
     }
+
+    void report_removed_element(Rml::Element* element) {
+        if (prev_focused == element) {
+            prev_focused = nullptr;
+        }
+    }
 };
 
 std::unique_ptr<UIState> ui_state;
@@ -438,6 +446,11 @@ extern SDL_Window* window;
 
 void recompui::get_window_size(int& width, int& height) {
     SDL_GetWindowSizeInPixels(window, &width, &height);
+}
+
+void recompui::report_removed_element(Rml::Element* element) {
+    std::lock_guard lock{ ui_state_mutex };
+    ui_state->report_removed_element(element);
 }
 
 inline const std::string read_file_to_string(std::filesystem::path path) {
@@ -465,33 +478,52 @@ bool recompui::try_deque_event(SDL_Event& out) {
     return ui_event_queue.try_dequeue(out);
 }
 
-int cont_button_to_key(SDL_ControllerButtonEvent& button) {
-    // TODO: Needs the profile index.
-    // Configurable accept button in menu
-    auto menuAcceptBinding0 = recomp::get_input_binding(0, recomp::GameInput::ACCEPT_MENU, 0);
-    auto menuAcceptBinding1 = recomp::get_input_binding(0, recomp::GameInput::ACCEPT_MENU, 1);
-    // note - magic number: 0 is InputType::None
-    if ((menuAcceptBinding0.input_type != recomp::InputType::None && button.button == menuAcceptBinding0.input_id) ||
-        (menuAcceptBinding1.input_type != recomp::InputType::None && button.button == menuAcceptBinding1.input_id)) {
-        return SDLK_RETURN;
+recompui::MenuAction recompui::menu_action_mapping::menu_action_from_rml_key(const Rml::Input::KeyIdentifier& key) {
+    auto it = recompui::menu_action_mapping::rml_key_to_action.find(key);
+    if (it != recompui::menu_action_mapping::rml_key_to_action.end()) {
+        return it->second.action;
     }
+    return recompui::MenuAction::None;
+}
 
-    // Configurable apply button in menu
-    auto menuApplyBinding0 = recomp::get_input_binding(0, recomp::GameInput::APPLY_MENU, 0);
-    auto menuApplyBinding1 = recomp::get_input_binding(0, recomp::GameInput::APPLY_MENU, 1);
-    // note - magic number: 0 is InputType::None
-    if ((menuApplyBinding0.input_type != recomp::InputType::None && button.button == menuApplyBinding0.input_id) ||
-        (menuApplyBinding1.input_type != recomp::InputType::None && button.button == menuApplyBinding1.input_id)) {
-        return SDLK_f;
-    } 
+// Extends RmlSDL::ConvertKey for some extra mapping slots
+Rml::Input::KeyIdentifier convert_sdl_to_rml(int sdl_key) {
+    Rml::Input::KeyIdentifier identifier = RmlSDL::ConvertKey(sdl_key);
+    if (identifier == Rml::Input::KeyIdentifier::KI_UNKNOWN) {
+        switch (sdl_key) {
+            case SDLK_F15: return Rml::Input::KI_F15;
+            case SDLK_F16: return Rml::Input::KI_F16;
+            case SDLK_F17: return Rml::Input::KI_F17;
+            case SDLK_F18: return Rml::Input::KI_F18;
+            case SDLK_F19: return Rml::Input::KI_F19;
+            case SDLK_F20: return Rml::Input::KI_F20;
+            case SDLK_F21: return Rml::Input::KI_F21;
+            case SDLK_F22: return Rml::Input::KI_F22;
+            case SDLK_F23: return Rml::Input::KI_F23;
+            case SDLK_F24: return Rml::Input::KI_F24;
+        }
+    }
+    return identifier;
+}
 
-    // Allows closing the menu
-    auto menuToggleBinding0 = recomp::get_input_binding(0, recomp::GameInput::TOGGLE_MENU, 0);
-    auto menuToggleBinding1 = recomp::get_input_binding(0, recomp::GameInput::TOGGLE_MENU, 1);
-    // note - magic number: 0 is InputType::None
-    if ((menuToggleBinding0.input_type != recomp::InputType::None && button.button == menuToggleBinding0.input_id) ||
-        (menuToggleBinding1.input_type != recomp::InputType::None && button.button == menuToggleBinding1.input_id)) {
-        return SDLK_ESCAPE;
+bool check_menu_button_pressed(int profile_index, recomp::GameInput input, int32_t event_button) {
+    auto menuBinding0 = recomp::get_input_binding(profile_index, input, 0);
+    auto menuBinding1 = recomp::get_input_binding(profile_index, input, 1);
+    if ((menuBinding0.input_type != recomp::InputType::None && event_button == menuBinding0.input_id) ||
+        (menuBinding1.input_type != recomp::InputType::None && event_button == menuBinding1.input_id)) {
+        return true;
+    }
+    return false;
+}
+
+int cont_button_to_key(SDL_ControllerButtonEvent& button) {
+    int player1_profile = recomp::get_input_profile_for_player(0, recomp::InputDevice::Controller);
+
+    for (const auto& mapping_pair : recompui::menu_action_mapping::rml_key_to_action) {
+        const auto& mapping = mapping_pair.second;
+        if (check_menu_button_pressed(player1_profile, mapping.input, button.button)) {
+            return mapping.sdl;
+        }
     }
 
     switch (button.button) {
@@ -635,7 +667,7 @@ void draw_hook(RT64::RenderCommandList* command_list, RT64::RenderFramebuffer* s
             case SDL_EventType::SDL_CONTROLLERBUTTONDOWN: {
                 int sdl_key = cont_button_to_key(cur_event.cbutton);
                 if (context_capturing_input && sdl_key) {
-                    ui_state->context->ProcessKeyDown(RmlSDL::ConvertKey(sdl_key), 0);
+                    ui_state->context->ProcessKeyDown(convert_sdl_to_rml(sdl_key), 0);
                     latest_controller_key_pressed = sdl_key;
                     next_repeat_time = clock::now() + start_repeat_delay;
                 }
@@ -649,6 +681,14 @@ void draw_hook(RT64::RenderCommandList* command_list, RT64::RenderFramebuffer* s
                 if (cur_event.key.keysym.scancode == SDL_Scancode::SDL_SCANCODE_F8) {
                     if (banjo::get_debug_mode_enabled()) {
                         Rml::Debugger::SetVisible(!Rml::Debugger::IsVisible());
+                    }
+                }
+                if (cur_event.key.keysym.scancode == SDL_Scancode::SDL_SCANCODE_F6) {
+                    // recompui::show_context(recompui::config_modal->modal_root_context, "");
+                    if (recompui::config_modal->is_open_now()) {
+                        recompui::config_modal->close();
+                    } else {
+                        recompui::config_modal->open();
                     }
                 }
                 break;
@@ -675,7 +715,7 @@ void draw_hook(RT64::RenderCommandList* command_list, RT64::RenderFramebuffer* s
                         non_mouse_interacted = true;
                         int sdl_key = cont_axis_to_key(cur_event.caxis, axis_value);
                         if (context_capturing_input && sdl_key) {
-                            ui_state->context->ProcessKeyDown(RmlSDL::ConvertKey(sdl_key), 0);
+                            ui_state->context->ProcessKeyDown(convert_sdl_to_rml(sdl_key), 0);
                             latest_controller_key_pressed = sdl_key;
                             next_repeat_time = clock::now() + start_repeat_delay;
                         }
@@ -739,7 +779,7 @@ void draw_hook(RT64::RenderCommandList* command_list, RT64::RenderFramebuffer* s
     if (latest_controller_key_pressed != SDLK_UNKNOWN) {
         clock::time_point now = clock::now();
         if (now >= next_repeat_time) {
-            ui_state->context->ProcessKeyDown(RmlSDL::ConvertKey(latest_controller_key_pressed), 0);
+            ui_state->context->ProcessKeyDown(convert_sdl_to_rml(latest_controller_key_pressed), 0);
             next_repeat_time += repeat_rate;
         }
     }

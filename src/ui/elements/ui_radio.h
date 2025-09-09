@@ -9,6 +9,7 @@ namespace recompui {
         Style hover_style;
         Style checked_style;
         Style pulsing_style;
+        Style disabled_style;
         std::function<void(uint32_t)> pressed_callback = nullptr;
         std::function<void(bool)> focus_callback = nullptr;
         uint32_t index = 0;

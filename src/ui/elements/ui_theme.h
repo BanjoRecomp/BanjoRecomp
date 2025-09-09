@@ -98,6 +98,10 @@ namespace recompui {
             size,
         };
 
+        const char *get_theme_color_name(theme::color color);
+        void set_theme_color(theme::color color, const recompui::Color &value);
+        const recompui::Color &get_theme_color(theme::color color);
+
         namespace border {
             extern float radius_sm;
             extern float radius_md;
@@ -105,9 +109,29 @@ namespace recompui {
             extern float width;
         }
 
-        const char *get_theme_color_name(theme::color color);
-        void set_theme_color(theme::color color, const recompui::Color &value);
-        const recompui::Color &get_theme_color(theme::color color);
+        enum class Typography {
+            Header1,
+            Header2,
+            Header3,
+            LabelLG,
+            LabelMD,
+            LabelSM,
+            LabelXS,
+            Body,
+
+            size,
+        };
+
+        struct TypographyPreset {
+            float font_size;
+            float line_height;
+            float letter_spacing;
+            uint32_t font_weight = 400;
+            recompui::FontStyle font_style = recompui::FontStyle::Normal;
+        };
+
+        void set_typography_preset(Typography type, float font_size, float letter_spacing_percentage = 0.0f, uint32_t font_weight = 400, recompui::FontStyle font_style = recompui::FontStyle::Normal);
+        TypographyPreset &get_typography_preset(Typography type);
 
     } // namespace theme
 } // namespace recompui

@@ -601,8 +601,17 @@ const recomp::DefaultN64Mappings recomp::default_n64_keyboard_mappings = {
     .accept_menu = {
         {.input_type = InputType::Keyboard, .input_id = SDL_SCANCODE_RETURN}
     },
+    .back_menu = {
+        {.input_type = InputType::Keyboard, .input_id = SDL_SCANCODE_F15}
+    },
     .apply_menu = {
         {.input_type = InputType::Keyboard, .input_id = SDL_SCANCODE_F}
+    },
+    .tab_left_menu = {
+        {.input_type = InputType::Keyboard, .input_id = SDL_SCANCODE_F16}
+    },
+    .tab_right_menu = {
+        {.input_type = InputType::Keyboard, .input_id = SDL_SCANCODE_F17}
     }
 };
 
@@ -671,9 +680,18 @@ const recomp::DefaultN64Mappings recomp::default_n64_controller_mappings = {
     .accept_menu = {
         {.input_type = InputType::ControllerDigital, .input_id = SDL_CONTROLLER_BUTTON_SOUTH},
     },
-    .apply_menu = {
+    .back_menu = {
         {.input_type = InputType::ControllerDigital, .input_id = SDL_CONTROLLER_BUTTON_WEST},
+    },
+    .apply_menu = {
+        {.input_type = InputType::ControllerDigital, .input_id = SDL_CONTROLLER_BUTTON_NORTH},
         {.input_type = InputType::ControllerDigital, .input_id = SDL_CONTROLLER_BUTTON_START}
+    },
+    .tab_left_menu = {
+        {.input_type = InputType::ControllerDigital, .input_id = SDL_CONTROLLER_BUTTON_LEFTSHOULDER}
+    },
+    .tab_right_menu = {
+        {.input_type = InputType::ControllerDigital, .input_id = SDL_CONTROLLER_BUTTON_RIGHTSHOULDER}
     }
 };
 
@@ -976,6 +994,8 @@ void recomp::set_single_controller_mode(bool single_controller) {
     InputState.single_controller = single_controller;
 }
 
+const std::string recompui::unknown_input = "UNKNOWN";
+
 std::string controller_button_to_string(SDL_GameControllerButton button) {
     switch (button) {
     case SDL_GameControllerButton::SDL_CONTROLLER_BUTTON_A:
@@ -1008,20 +1028,20 @@ std::string controller_button_to_string(SDL_GameControllerButton button) {
         return PF_DPAD_LEFT;
     case SDL_GameControllerButton::SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
         return PF_DPAD_RIGHT;
-        // case SDL_GameControllerButton::SDL_CONTROLLER_BUTTON_MISC1:
-        //     return "";
-        // case SDL_GameControllerButton::SDL_CONTROLLER_BUTTON_PADDLE1:
-        //     return "";
-        // case SDL_GameControllerButton::SDL_CONTROLLER_BUTTON_PADDLE2:
-        //     return "";
-        // case SDL_GameControllerButton::SDL_CONTROLLER_BUTTON_PADDLE3:
-        //     return "";
-        // case SDL_GameControllerButton::SDL_CONTROLLER_BUTTON_PADDLE4:
-        //     return "";
+    case SDL_GameControllerButton::SDL_CONTROLLER_BUTTON_MISC1:
+        return PF_STEAM_OPTIONS;
+    case SDL_GameControllerButton::SDL_CONTROLLER_BUTTON_PADDLE1:
+        return PF_GAMEPAD_L4;
+    case SDL_GameControllerButton::SDL_CONTROLLER_BUTTON_PADDLE2:
+        return PF_GAMEPAD_R4;
+    case SDL_GameControllerButton::SDL_CONTROLLER_BUTTON_PADDLE3:
+        return PF_GAMEPAD_L5;
+    case SDL_GameControllerButton::SDL_CONTROLLER_BUTTON_PADDLE4:
+        return PF_GAMEPAD_R5;
     case SDL_GameControllerButton::SDL_CONTROLLER_BUTTON_TOUCHPAD:
         return PF_SONY_TOUCHPAD;
     default:
-        return "Button " + std::to_string(button);
+        return recompui::unknown_input;
     }
 }
 
@@ -1080,6 +1100,18 @@ std::unordered_map<SDL_Scancode, std::string> scancode_codepoints{
     {SDL_SCANCODE_F10, PF_KEYBOARD_F10},
     {SDL_SCANCODE_F11, PF_KEYBOARD_F11},
     {SDL_SCANCODE_F12, PF_KEYBOARD_F12},
+    {SDL_SCANCODE_F13, "F13"},
+    {SDL_SCANCODE_F14, "F14"},
+    {SDL_SCANCODE_F15, "F15"},
+    {SDL_SCANCODE_F16, "F16"},
+    {SDL_SCANCODE_F17, "F17"},
+    {SDL_SCANCODE_F18, "F18"},
+    {SDL_SCANCODE_F19, "F19"},
+    {SDL_SCANCODE_F20, "F20"},
+    {SDL_SCANCODE_F21, "F21"},
+    {SDL_SCANCODE_F22, "F22"},
+    {SDL_SCANCODE_F23, "F23"},
+    {SDL_SCANCODE_F24, "F24"},
     {SDL_SCANCODE_PRINTSCREEN, PF_KEYBOARD_PRINT_SCREEN},
     {SDL_SCANCODE_SCROLLLOCK, PF_KEYBOARD_SCROLL_LOCK},
     {SDL_SCANCODE_PAUSE, PF_KEYBOARD_PAUSE},
@@ -1103,7 +1135,7 @@ std::string keyboard_input_to_string(SDL_Scancode key) {
     if (scancode_codepoints.find(key) != scancode_codepoints.end()) {
         return scancode_codepoints[key];
     }
-    return std::to_string(key);
+    return recompui::unknown_input;
 }
 
 std::string controller_axis_to_string(int axis) {
@@ -1138,6 +1170,6 @@ std::string recomp::InputField::to_string() const {
     case InputType::Keyboard:
         return keyboard_input_to_string((SDL_Scancode)input_id);
     default:
-        return std::to_string((uint32_t)input_type) + "," + std::to_string(input_id);
+        return recompui::unknown_input;
     }
 }

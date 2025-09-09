@@ -1,4 +1,5 @@
 #include "ui_icon_button.h"
+#include "ui_pseudo_border.h"
 
 #include <cassert>
 
@@ -12,6 +13,7 @@ namespace recompui {
         enable_focus();
 
         set_display(Display::Flex);
+        set_position(Position::Relative);
         set_align_items(AlignItems::Center);
         set_justify_content(JustifyContent::Center);
         set_width(float_size_internal);
@@ -57,6 +59,9 @@ namespace recompui {
         }
 
         ContextId context = get_current_context();
+
+        auto focus_border = context.create_element<FocusBorder>(this, true);
+        focus_border->set_border_radius(static_cast<float>(size) + theme::border::width * 4.0f);
 
         svg = context.create_element<Svg>(this, svg_src);
         svg->set_width(icon_size);

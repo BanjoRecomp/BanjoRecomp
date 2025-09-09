@@ -17,6 +17,8 @@ namespace recompui {
     public:
         Label(Element *parent, LabelStyle label_style);
         Label(Element *parent, const std::string &text, LabelStyle label_style);
+        Label(Element *parent, theme::Typography typography);
+        Label(Element *parent, const std::string &text, theme::Typography typography);
     };
 
 } // namespace recompui

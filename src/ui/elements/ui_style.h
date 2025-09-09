@@ -31,6 +31,7 @@ namespace recompui {
         void set_top(float top, Unit unit = Unit::Dp);
         void set_right(float right, Unit unit = Unit::Dp);
         void set_bottom(float bottom, Unit unit = Unit::Dp);
+        void set_inset(float inset, Unit unit = Unit::Dp);
         void set_width(float width, Unit unit = Unit::Dp);
         void set_width_auto();
         void set_height(float height, Unit unit = Unit::Dp);
@@ -101,6 +102,7 @@ namespace recompui {
         void set_line_height(float height, Unit unit = Unit::Dp);
         void set_font_style(FontStyle style);
         void set_font_weight(uint32_t weight);
+        void set_typography(recompui::theme::Typography typography);
         void set_text_align(TextAlign text_align);
         void set_text_transform(TextTransform text_transform);
         void set_gap(float size, Unit unit = Unit::Dp);

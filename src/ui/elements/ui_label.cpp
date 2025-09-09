@@ -1,4 +1,5 @@
 #include "ui_label.h"
+#include "ui_theme.h"
 
 #include <cassert>
 
@@ -7,35 +8,29 @@ namespace recompui {
     Label::Label(Element *parent, LabelStyle label_style) : Element(parent, 0U, "div", true) {
         switch (label_style) {
         case LabelStyle::Annotation:
-            set_font_size(18.0f);
-            set_letter_spacing(2.52f);
-            set_line_height(18.0f);
-            set_font_weight(400);
+            set_typography(theme::Typography::LabelXS);
             break;
         case LabelStyle::Small:
-            set_font_size(20.0f);
-            set_letter_spacing(0.0f);
-            set_line_height(20.0f);
-            set_font_weight(400);
+            set_typography(theme::Typography::Body);
             break;
         case LabelStyle::Normal:
-            set_font_size(28.0f);
-            set_letter_spacing(3.08f);
-            set_line_height(28.0f);
-            set_font_weight(700);
+            set_typography(theme::Typography::LabelMD);
             break;
         case LabelStyle::Large:
-            set_font_size(36.0f);
-            set_letter_spacing(2.52f);
-            set_line_height(36.0f);
-            set_font_weight(700);
+            set_typography(theme::Typography::Header3);
             break;
         }
-        
-        set_font_style(FontStyle::Normal);
     }
 
     Label::Label(Element *parent, const std::string &text, LabelStyle label_style) : Label(parent, label_style) {
+        set_text(text);
+    }
+
+    Label::Label(Element *parent, theme::Typography typography) : Element(parent, 0U, "div", true) {
+        set_typography(typography);
+    }
+
+    Label::Label(Element *parent, const std::string &text, theme::Typography typography) : Label(parent, typography) {
         set_text(text);
     }
 

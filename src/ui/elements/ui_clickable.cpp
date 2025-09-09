@@ -17,8 +17,8 @@ namespace recompui {
                 for (const auto &function : clicked_callbacks) {
                     function(click.x, click.y);
                 }
-                break;
             }
+            break;
         }
         case EventType::MouseButton: {
             if (is_enabled()) {
@@ -28,8 +28,8 @@ namespace recompui {
                         function(mousebutton.x, mousebutton.y);
                     }
                 }
-                break;
             }
+            break;
         }
         case EventType::Hover:
             set_style_enabled(hover_state, std::get<EventHover>(e.variant).active && is_enabled());
@@ -54,8 +54,8 @@ namespace recompui {
                 for (const auto &function : dragged_callbacks) {
                     function(drag.x, drag.y, drag.phase);
                 }
-                break;
             }
+            break;
         }
         default:
             break;

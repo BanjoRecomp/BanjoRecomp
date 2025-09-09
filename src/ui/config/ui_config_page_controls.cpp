@@ -1,13 +1,15 @@
 #include "ui_config_page_controls.h"
-#include "ui_assign_players_modal.h"
-#include "elements/ui_button.h"
-#include "elements/ui_label.h"
-#include "elements/ui_toggle.h"
-#include "elements/ui_container.h"
-#include "elements/ui_binding_button.h"
-#include "elements/ui_select.h"
+#include "../ui_assign_players_modal.h"
+#include "../elements/ui_button.h"
+#include "../elements/ui_label.h"
+#include "../elements/ui_toggle.h"
+#include "../elements/ui_container.h"
+#include "../elements/ui_binding_button.h"
+#include "../elements/ui_select.h"
 
 namespace recompui {
+
+ConfigPageControls *controls_page = nullptr;
 
 const std::string_view active_state_style_name = "cont_opt_active";
 
@@ -129,12 +131,17 @@ void GameInputRow::process_event(const Event &e) {
 ConfigPageControls::ConfigPageControls(
     Element *parent,
     int num_players,
-    std::vector<GameInputContext> game_input_contexts
+    std::vector<GameInputContext> game_input_contexts,
+    Element *nav_up_element,
+    set_first_focusable_below_tabs_t set_first_focusable_below_tabs
 ) : ConfigPage(parent) {
+    controls_page = this;
     this->game_input_contexts = game_input_contexts;
     this->num_players = num_players;
-    this->multiplayer_enabled = num_players > 1;
+    this->nav_up_element = nav_up_element;
+    this->set_first_navigation_element_cb = set_first_focusable_below_tabs;
 
+    multiplayer_enabled = this->num_players > 1;
     multiplayer_view_mappings = !multiplayer_enabled;
 
     set_selected_player(selected_player);
@@ -167,16 +174,19 @@ void ConfigPageControls::force_update() {
 }
 
 void ConfigPageControls::render_all() {
-    render_header();
-    render_body();
+    set_first_navigation_element(nullptr);
+    Element *header_focusable = render_header();
+    render_body(header_focusable);
     render_footer();
+    confirm_first_navigation_element();
 }
 
-void ConfigPageControls::render_header() {
+Element *ConfigPageControls::render_header() {
     if (!multiplayer_enabled) {
         hide_header();
-        return;
+        return nullptr;
     }
+    Element *header_focusable = nullptr;
 
     recompui::ContextId context = get_current_context();
     add_header();
@@ -207,36 +217,62 @@ void ConfigPageControls::render_header() {
                 this->multiplayer_view_mappings = false;
                 this->force_update();
             });
+            set_first_navigation_element(go_back_button);
+            if (nav_up_element) {
+                go_back_button->set_nav(NavDirection::Up, nav_up_element);
+            }
+            header_focusable = go_back_button;
         } else {
             Button* assign_players_button = context.create_element<Button>(header_right, "Assign players", ButtonStyle::Primary);
             assign_players_button->add_pressed_callback([]() {
                 recompui::assign_players_modal->open();
                 recompinput::start_player_assignment();
             });
+            set_first_navigation_element(assign_players_button);
+            if (nav_up_element) {
+                assign_players_button->set_nav(NavDirection::Up, nav_up_element);
+            }
+            header_focusable = assign_players_button;
         }
     }
+
+    return first_nav_element;
 }
 
-void ConfigPageControls::render_body() {
+void ConfigPageControls::render_body(Element *header_focusable) {
     bool show_mappings = (multiplayer_enabled && multiplayer_view_mappings) || !multiplayer_enabled;
 
     recompui::ContextId context = get_current_context();
 
     if (show_mappings) {
         body->get_right()->set_display(Display::Flex);
-        render_body_mappings();
+        render_body_mappings(header_focusable);
     } else {
         body->get_right()->set_display(Display::None);
-        render_body_players();
+        render_body_players(header_focusable);
     }
 }
 
-void ConfigPageControls::render_body_mappings() {
+void ConfigPageControls::set_first_navigation_element(Element *element) {
+    // Only reset the first nav element or set it once
+    if (element == nullptr || first_nav_element == nullptr) {
+        first_nav_element = element;
+    }
+}
+
+void ConfigPageControls::confirm_first_navigation_element() {
+    if (set_first_navigation_element_cb) {
+        set_first_navigation_element_cb(first_nav_element);
+    }
+}
+
+void ConfigPageControls::render_body_mappings(Element *header_focusable) {
     recompui::ContextId context = get_current_context();
+    body->set_as_navigation_container(NavigationType::Horizontal);
 
     // left side
     {
-        render_control_mappings();
+        render_control_mappings(header_focusable);
     }
 
     // right side
@@ -254,13 +290,15 @@ void ConfigPageControls::render_body_mappings() {
     }
 }
 
-void ConfigPageControls::render_body_players() {
+void ConfigPageControls::render_body_players(Element *header_focusable) {
     recompui::ContextId context = get_current_context();
+    body->set_as_navigation_container(NavigationType::Horizontal);
 
     auto body_left = body->get_left();
     body_left->clear_children();
 
     auto player_grid = context.create_element<Element>(body_left, 0, "div", false);
+    player_grid->set_as_navigation_container(NavigationType::Auto);
     player_grid->set_display(Display::Flex);
     player_grid->set_flex_direction(FlexDirection::Row);
     player_grid->set_flex_wrap(FlexWrap::Wrap);
@@ -283,6 +321,17 @@ void ConfigPageControls::render_body_players() {
             this->on_edit_player_profile(player_index);
         });
         player_cards.push_back(player_card);
+        if (i == 0) {
+            player_card->set_as_primary_focus(true);
+            // if (header_focusable) {
+            //     player_card->set_nav(NavDirection::Up, header_focusable);
+            // } else {
+            //     if (nav_up_element) {
+            //         player_card->set_nav(NavDirection::Up, nav_up_element);
+            //     }
+            //     set_first_navigation_element(player_card);
+            // } 
+        }
     }
 }
 
@@ -313,6 +362,7 @@ void ConfigPageControls::render_footer() {
     recompui::ContextId context = get_current_context();
 
     add_footer();
+    footer->set_as_navigation_container(NavigationType::Horizontal);
     {
         auto footer_left = footer->get_left();
         footer_left->clear_children();
@@ -338,8 +388,9 @@ void ConfigPageControls::render_footer() {
     }
 }
 
-void ConfigPageControls::render_control_mappings() {
+void ConfigPageControls::render_control_mappings(Element *header_focusable) {
     recompui::ContextId context = get_current_context();
+
     auto body_left = body->get_left();
     body_left->clear_children();
 
@@ -353,6 +404,7 @@ void ConfigPageControls::render_control_mappings() {
         body_left_scroll->set_width(100.0f, Unit::Percent);
         body_left_scroll->set_max_height(100.0f, Unit::Percent);
         body_left_scroll->set_overflow_y(Overflow::Scroll);
+        body_left_scroll->set_as_navigation_container(NavigationType::GridCol);
 
         game_input_rows.clear();
         for (int i = 0; i < game_input_contexts.size(); i++) {
@@ -371,6 +423,19 @@ void ConfigPageControls::render_control_mappings() {
                 }
             );
             game_input_rows.push_back(row);
+            row->set_as_navigation_container(NavigationType::GridRow);
+
+            // if (i == 0) {
+            //     if (header_focusable) {
+            //         row->set_nav(NavDirection::Up, header_focusable);
+            //     } else {
+            //         // Something above the whole page
+            //         if (nav_up_element) {
+            //             row->set_nav(NavDirection::Up, nav_up_element);
+            //         }
+            //         set_first_navigation_element(row);
+            //     } 
+            // } 
         }
     }
     update_control_mappings();
@@ -404,6 +469,7 @@ void ConfigPageControls::update_control_mappings() {
 }
 
 ConfigPageControls::~ConfigPageControls() {
+    controls_page = nullptr;
 }
 
 recompinput::InputDevice ConfigPageControls::get_player_input_device() {

@@ -22,6 +22,7 @@ namespace recompui {
         double min_value = 0.0;
         double max_value = 100.0;
         double step_value = 0.0;
+        int precision = 0;
         std::vector<std::function<void(double)>> value_changed_callbacks;
         std::function<void(bool)> focus_callback = nullptr;
 
@@ -50,6 +51,8 @@ namespace recompui {
         double get_max_value() const;
         void set_step_value(double v);
         double get_step_value() const;
+        void set_precision(int p);
+        int get_precision() const;
         void add_value_changed_callback(std::function<void(double)> callback);
         void do_step(bool increment);
         void set_focus_callback(std::function<void(bool)> callback);

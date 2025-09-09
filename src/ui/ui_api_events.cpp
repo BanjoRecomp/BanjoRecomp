@@ -87,6 +87,12 @@ bool convert_event(const recompui::Event& in, RecompuiEventData& out) {
         case recompui::EventType::Update:
             // No data for an update event.
             break;
+        case recompui::EventType::MenuAction:
+            {
+                const recompui::EventMenuAction &menu_action = std::get<recompui::EventMenuAction>(in.variant);
+                out.data.menu_action.action = static_cast<RecompuiMenuAction>(menu_action.action);
+            }
+            break;
     }
 
     return !skip;

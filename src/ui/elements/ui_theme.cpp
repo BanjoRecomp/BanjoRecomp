@@ -227,3 +227,41 @@ const recompui::Color &recompui::theme::get_theme_color(recompui::theme::color c
 const char *recompui::theme::get_theme_color_name(recompui::theme::color color) {
     return theme_color_names[(std::size_t)color];
 }
+
+using TypographyPreset = recompui::theme::TypographyPreset;
+
+constexpr TypographyPreset create_typography_preset(float font_size, float letter_spacing_percentage, uint32_t font_weight = 400, recompui::FontStyle font_style = recompui::FontStyle::Normal) {
+    TypographyPreset preset;
+    preset.font_size = font_size;
+    preset.line_height = font_size;
+    preset.letter_spacing = font_size * letter_spacing_percentage;
+    preset.font_weight = font_weight;
+    preset.font_style = font_style;
+    return preset;
+}
+
+using TypographyArray = std::array<TypographyPreset, (std::size_t)(recompui::theme::Typography::size)>;
+constexpr TypographyArray get_default_typography_array() {
+    TypographyArray typography = {};
+
+    typography[(std::size_t)recompui::theme::Typography::Header1] = create_typography_preset(68.0f, 0.07f, 700);
+    typography[(std::size_t)recompui::theme::Typography::Header2] = create_typography_preset(52.0f, 0.07f, 700);
+    typography[(std::size_t)recompui::theme::Typography::Header3] = create_typography_preset(36.0f, 0.07f, 700);
+    typography[(std::size_t)recompui::theme::Typography::LabelLG] = create_typography_preset(36.0f, 0.11f, 700);
+    typography[(std::size_t)recompui::theme::Typography::LabelMD] = create_typography_preset(28.0f, 0.11f, 700);
+    typography[(std::size_t)recompui::theme::Typography::LabelSM] = create_typography_preset(20.0f, 0.14f, 700);
+    typography[(std::size_t)recompui::theme::Typography::LabelXS] = create_typography_preset(18.0f, 0.14f);
+    typography[(std::size_t)recompui::theme::Typography::Body]    = create_typography_preset(20.0f, 0);
+
+    return typography;
+}
+
+static TypographyArray typography_presets = get_default_typography_array();
+
+void recompui::theme::set_typography_preset(Typography type, float font_size, float letter_spacing_percentage, uint32_t font_weight, recompui::FontStyle font_style) {
+    typography_presets[(std::size_t)type] = create_typography_preset(font_size, letter_spacing_percentage, font_weight, font_style);
+}
+
+TypographyPreset &recompui::theme::get_typography_preset(recompui::theme::Typography type) {
+    return typography_presets[(std::size_t)type];
+}

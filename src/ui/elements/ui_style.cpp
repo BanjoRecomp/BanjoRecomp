@@ -239,6 +239,13 @@ namespace recompui {
         set_property(Rml::PropertyId::Bottom, Rml::Property(bottom, to_rml(unit)));
     }
 
+    void Style::set_inset(float inset, Unit unit) {
+        set_top(inset, unit);
+        set_left(inset, unit);
+        set_right(inset, unit);
+        set_bottom(inset, unit);
+    }
+
     void Style::set_width(float width, Unit unit) {
         set_property(Rml::PropertyId::Width, Rml::Property(width, to_rml(unit)));
     }
@@ -608,6 +615,15 @@ namespace recompui {
 
     void Style::set_font_weight(uint32_t weight) {
         set_property(Rml::PropertyId::FontWeight, Rml::Style::FontWeight(weight));
+    }
+
+    void Style::set_typography(recompui::theme::Typography typography) {
+        const auto &preset = recompui::theme::get_typography_preset(typography);
+        set_font_size(preset.font_size);
+        set_letter_spacing(preset.letter_spacing);
+        set_line_height(preset.line_height);
+        set_font_weight(preset.font_weight);
+        set_font_style(preset.font_style);
     }
 
     void Style::set_text_align(TextAlign text_align) {

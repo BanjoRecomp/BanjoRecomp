@@ -1,5 +1,6 @@
 #include "ui_button.h"
 #include "ui_label.h"
+#include "ui_pseudo_border.h"
 
 #include <cassert>
 
@@ -47,6 +48,9 @@ namespace recompui {
         set_border_radius(theme::border::radius_md);
 
         ContextId context = get_current_context();
+
+        auto focus_border = context.create_element<FocusBorder>(this, true);
+        focus_border->set_border_radius(theme::border::radius_md + theme::border::width * 4.0f);
 
         switch (size) {
             case ButtonSize::Small: {

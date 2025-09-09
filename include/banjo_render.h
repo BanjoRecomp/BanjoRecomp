@@ -6,6 +6,7 @@
 
 #include "common/rt64_user_configuration.h"
 #include "ultramodern/renderer_context.hpp"
+#include "librecomp/config.hpp"
 #include "librecomp/mods.hpp"
 
 namespace RT64 {
@@ -54,7 +55,7 @@ namespace banjo {
 
         // Texture pack enable option. Must be an enum with two options.
         // The first option is treated as disabled and the second option is treated as enabled.
-        bool is_texture_pack_enable_config_option(const recomp::mods::ConfigOption& option, bool show_errors);
+        bool is_texture_pack_enable_config_option(const recomp::config::ConfigOption& option, bool show_errors);
     }
 }
 

@@ -8,12 +8,15 @@ namespace recompui {
         Element *left;
         Element *right;
         bool is_header;
+        Display prev_display = Display::Block;
 
         std::string_view get_type_name() override { return "ConfigHeaderFooter"; }
     public:
         ConfigHeaderFooter(Element *parent, bool is_header);
         Element *get_left() { return left; }
         Element *get_right() { return right; }
+        void hide();
+        void show();
     };
 
     class ConfigBody : public Element {
@@ -37,7 +40,7 @@ namespace recompui {
 
         std::string_view get_type_name() override { return "ConfigPage"; }
     public:
-        ConfigPage(Element *parent);
+        ConfigPage(Element *parent, uint32_t events_enabled = 0);
         ConfigHeaderFooter *add_header();
         void hide_header();
         ConfigHeaderFooter *add_footer();

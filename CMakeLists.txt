@@ -169,8 +169,9 @@ set (SOURCES
     ${CMAKE_SOURCE_DIR}/src/ui/ui_launcher.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/ui_config.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/ui_assign_players_modal.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/ui_color_element.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/ui_config_modal.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/ui_config_page_example.cpp
-    ${CMAKE_SOURCE_DIR}/src/ui/ui_config_page_controls.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/ui_config_page_controls_element.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/ui_prompt.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/ui_player_card.cpp
@@ -186,6 +187,12 @@ set (SOURCES
     ${CMAKE_SOURCE_DIR}/src/ui/ui_api_images.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/ui_utils.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/util/hsv.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/config/ui_config_page_options_menu.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/config/ui_config_page_controls.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/config/ui_config_tab_controls.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/config/ui_config_tab_graphics.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/config/ui_config_tab_manifest.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/config/ui_config_option.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/core/ui_context.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/elements/ui_binding_button.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/elements/ui_button.cpp
@@ -196,7 +203,9 @@ set (SOURCES
     ${CMAKE_SOURCE_DIR}/src/ui/elements/ui_element.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/elements/ui_image.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/elements/ui_label.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/elements/ui_modal.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/elements/ui_pill_button.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/elements/ui_pseudo_border.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/elements/ui_radio.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/elements/ui_scroll_container.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/elements/ui_select.cpp
@@ -204,6 +213,7 @@ set (SOURCES
     ${CMAKE_SOURCE_DIR}/src/ui/elements/ui_span.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/elements/ui_style.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/elements/ui_svg.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/elements/ui_tab_set.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/elements/ui_text_input.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/elements/ui_theme.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/elements/ui_toggle.cpp

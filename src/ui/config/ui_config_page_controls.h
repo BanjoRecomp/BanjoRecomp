@@ -1,12 +1,13 @@
 #pragma once
 
-#include "elements/ui_config_page.h"
+#include "../elements/ui_config_page.h"
 #include "recomp_input.h"
-#include "elements/ui_icon_button.h"
-#include "elements/ui_binding_button.h"
-#include "elements/ui_pill_button.h"
-#include "elements/ui_toggle.h"
-#include "ui_player_card.h"
+#include "../elements/ui_icon_button.h"
+#include "../elements/ui_binding_button.h"
+#include "../elements/ui_pill_button.h"
+#include "../elements/ui_toggle.h"
+#include "../elements/ui_modal.h"
+#include "../ui_player_card.h"
 
 // TODO: remove after moving to recompinput
 namespace recompinput {
@@ -90,6 +91,9 @@ protected:
     Toggle *keyboard_toggle;
     Element *description_container = nullptr;
     on_player_bind_callback on_player_bind;
+    Element *nav_up_element = nullptr;
+    Element *first_nav_element = nullptr;
+    set_first_focusable_below_tabs_t set_first_navigation_element_cb = nullptr;
 
     virtual void process_event(const Event &e) override;
     std::string_view get_type_name() override { return "ConfigPageControls"; }
@@ -105,25 +109,32 @@ private:
     void on_edit_player_profile(int player_index);
 
     void render_all();
-    void render_header();
-    void render_body();
-    void render_body_players();
-    void render_body_mappings();
+    // returns pointer to primary focusable element in header or nullptr if not rendered
+    Element *render_header();
+    void render_body(Element *header_focusable);
+    void render_body_players(Element *header_focusable);
+    void render_body_mappings(Element *header_focusable);
     void render_footer();
+    void set_first_navigation_element(Element *element);
+    void confirm_first_navigation_element();
 
     recompinput::InputDevice get_player_input_device();
 public:
     ConfigPageControls(
         Element *parent,
         int num_players,
-        std::vector<GameInputContext> game_input_contexts
+        std::vector<GameInputContext> game_input_contexts,
+        Element *nav_up_element = nullptr,
+        set_first_focusable_below_tabs_t set_first_focusable_below_tabs = nullptr
     );
     virtual ~ConfigPageControls();
     
     void force_update();
-    void render_control_mappings();
+    void render_control_mappings(Element *header_focusable);
     void update_control_mappings();
     void set_selected_player(int player);
 };
+
+extern ConfigPageControls *controls_page;
 
 } // namespace recompui

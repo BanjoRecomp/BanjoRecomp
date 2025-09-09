@@ -10,6 +10,7 @@ namespace recompui {
         std::string mapped_binding; // promptfont representation of the binding.
         
         Element *bound_text_el;
+        Svg *unknown_svg_el;
         Element *recording_parent;
         Element *recording_circle;
         Element *recording_edge;

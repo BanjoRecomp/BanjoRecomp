@@ -18,19 +18,19 @@ Rml::DataModelHandle general_model_handle;
 Rml::DataModelHandle graphics_model_handle;
 Rml::DataModelHandle sound_options_model_handle;
 
-int recompui::config_tab_to_index(recompui::ConfigTab tab) {
+int recompui::config_tab_to_index(recompui::ConfigTabId tab) {
     switch (tab) {
-    case recompui::ConfigTab::General:
+    case recompui::ConfigTabId::General:
         return 0;
-    case recompui::ConfigTab::Controls:
+    case recompui::ConfigTabId::Controls:
         return 1;
-    case recompui::ConfigTab::Graphics:
+    case recompui::ConfigTabId::Graphics:
         return 2;
-    case recompui::ConfigTab::Sound:
+    case recompui::ConfigTabId::Sound:
         return 3;
-    case recompui::ConfigTab::Mods:
+    case recompui::ConfigTabId::Mods:
         return 4;
-    case recompui::ConfigTab::Debug:
+    case recompui::ConfigTabId::Debug:
         return 5;
     default:
         assert(false && "Unknown config tab.");
@@ -380,7 +380,7 @@ class ConfigTabsetListener : public Rml::EventListener {
     void ProcessEvent(Rml::Event& event) override {
         if (event.GetId() == Rml::EventId::Tabchange) {
             int tab_index = event.GetParameter<int>("tab_index", 0);
-            bool in_mod_tab = (tab_index == recompui::config_tab_to_index(recompui::ConfigTab::Mods));
+            bool in_mod_tab = (tab_index == recompui::config_tab_to_index(recompui::ConfigTabId::Mods));
             if (in_mod_tab) {
                 recompui::set_config_tabset_mod_nav();
             }
@@ -703,7 +703,7 @@ void recompui::toggle_fullscreen() {
     graphics_model_handle.DirtyVariable("wm_option");
 }
 
-void recompui::set_config_tab(ConfigTab tab) {
+void recompui::set_config_tab(ConfigTabId tab) {
     get_config_tabset()->SetActiveTab(config_tab_to_index(tab));
 }
 

@@ -213,7 +213,7 @@ bool read_json(std::ifstream input_file, nlohmann::json& json_out) {
     return true;
 }
 
-bool read_json_with_backups(const std::filesystem::path& path, nlohmann::json& json_out) {
+bool banjo::read_json_with_backups(const std::filesystem::path& path, nlohmann::json& json_out) {
     // Try reading and parsing the base file.
     if (read_json(std::ifstream{path}, json_out)) {
         return true;
@@ -228,7 +228,7 @@ bool read_json_with_backups(const std::filesystem::path& path, nlohmann::json& j
     return false;
 }
 
-bool save_json_with_backups(const std::filesystem::path& path, const nlohmann::json& json_data) {
+bool banjo::save_json_with_backups(const std::filesystem::path& path, const nlohmann::json& json_data) {
     {
         std::ofstream output_file = recomp::open_output_file_with_backup(path);
         if (!output_file.good()) {
@@ -253,7 +253,7 @@ bool save_general_config(const std::filesystem::path& path) {
     config_json["analog_camera_invert_mode"] = banjo::get_analog_camera_invert_mode();
     config_json["debug_mode"] = banjo::get_debug_mode_enabled();
 
-    return save_json_with_backups(path, config_json);
+    return banjo::save_json_with_backups(path, config_json);
 }
 
 void set_general_settings_from_json(const nlohmann::json& config_json) {
@@ -270,7 +270,7 @@ void set_general_settings_from_json(const nlohmann::json& config_json) {
 
 bool load_general_config(const std::filesystem::path& path) {
     nlohmann::json config_json{};
-    if (!read_json_with_backups(path, config_json)) {
+    if (!banjo::read_json_with_backups(path, config_json)) {
         return false;
     }
 
@@ -318,7 +318,10 @@ void assign_all_mappings(int profile_index, const recomp::DefaultN64Mappings& va
 
     assign_mapping_complete(profile_index, recomp::GameInput::TOGGLE_MENU, values.toggle_menu);
     assign_mapping_complete(profile_index, recomp::GameInput::ACCEPT_MENU, values.accept_menu);
+    assign_mapping_complete(profile_index, recomp::GameInput::BACK_MENU, values.back_menu);
     assign_mapping_complete(profile_index, recomp::GameInput::APPLY_MENU, values.apply_menu);
+    assign_mapping_complete(profile_index, recomp::GameInput::TAB_LEFT_MENU, values.tab_left_menu);
+    assign_mapping_complete(profile_index, recomp::GameInput::TAB_RIGHT_MENU, values.tab_right_menu);
 };
 
 void banjo::reset_input_bindings() {
@@ -365,12 +368,12 @@ void reset_graphics_options() {
 bool save_graphics_config(const std::filesystem::path& path) {
     nlohmann::json config_json{};
     ultramodern::to_json(config_json, ultramodern::renderer::get_graphics_config());
-    return save_json_with_backups(path, config_json);
+    return banjo::save_json_with_backups(path, config_json);
 }
 
 bool load_graphics_config(const std::filesystem::path& path) {
     nlohmann::json config_json{};
-    if (!read_json_with_backups(path, config_json)) {
+    if (!banjo::read_json_with_backups(path, config_json)) {
         return false;
     }
 
@@ -420,7 +423,7 @@ bool save_controls_config(const std::filesystem::path& path) {
         controller["profile"] = recomp::get_input_profile_key(recomp::get_controller_profile_index(i));
     }
 
-    return save_json_with_backups(path, config_json);
+    return banjo::save_json_with_backups(path, config_json);
 }
 
 bool load_input_device_from_json(const nlohmann::json& config_json, int profile_index, recomp::InputDevice device, const std::string& key) {
@@ -466,7 +469,7 @@ bool load_input_device_from_json(const nlohmann::json& config_json, int profile_
 
 bool load_controls_config(const std::filesystem::path& path) {
     nlohmann::json config_json{};
-    if (!read_json_with_backups(path, config_json)) {
+    if (!banjo::read_json_with_backups(path, config_json)) {
         return false;
     }
 
@@ -526,12 +529,12 @@ bool save_sound_config(const std::filesystem::path& path) {
     config_json["main_volume"] = banjo::get_main_volume();
     config_json["bgm_volume"] = banjo::get_bgm_volume();
 
-    return save_json_with_backups(path, config_json);
+    return banjo::save_json_with_backups(path, config_json);
 }
 
 bool load_sound_config(const std::filesystem::path& path) {
     nlohmann::json config_json{};
-    if (!read_json_with_backups(path, config_json)) {
+    if (!banjo::read_json_with_backups(path, config_json)) {
         return false;
     }
 

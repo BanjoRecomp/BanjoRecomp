@@ -51,6 +51,14 @@ namespace recompui {
         right = context.create_element<Container>(this, FlexDirection::Row, JustifyContent::FlexEnd, 0);
         set_header_footer_side_styles(right);
     }
+
+    void ConfigHeaderFooter::hide() {
+        set_display(Display::None);
+    }
+
+    void ConfigHeaderFooter::show() {
+        set_display(Display::Flex);
+    }
     
     static void set_config_body_side_styles(Element *el) {
         el->set_flex_grow(1.0f);
@@ -78,7 +86,7 @@ namespace recompui {
         set_config_body_side_styles(right);
     }
 
-    ConfigPage::ConfigPage(Element *parent) : Element(parent, 0, "div", false) {
+    ConfigPage::ConfigPage(Element *parent, uint32_t events_enabled) : Element(parent, events_enabled, "div", false) {
         set_display(Display::Flex);
         set_position(Position::Relative);
 
@@ -92,40 +100,37 @@ namespace recompui {
         set_width(100.0f, Unit::Percent);
         set_height(100.0f, Unit::Percent);
 
-        set_border_top_width(theme::border::width);
-        set_border_top_color(theme::color::BorderSoft);
-
         ContextId context = get_current_context();
 
         header = context.create_element<ConfigHeaderFooter>(this, true);
-        header->set_visibility(Visibility::Hidden);
+        header->hide();
 
         body = context.create_element<ConfigBody>(this);
         set_border_bottom_left_radius(theme::border::radius_lg);
         set_border_bottom_right_radius(theme::border::radius_lg);
 
         footer = context.create_element<ConfigHeaderFooter>(this, false);
-        footer->set_visibility(Visibility::Hidden);
+        footer->hide();
     }
 
     ConfigHeaderFooter* ConfigPage::add_header() {
-        header->set_visibility(Visibility::Visible);
+        header->show();
         return header;
     }
 
     void ConfigPage::hide_header() {
-        header->set_visibility(Visibility::Hidden);
+        header->hide();
     }
     
     ConfigHeaderFooter* ConfigPage::add_footer() {
-        footer->set_visibility(Visibility::Visible);
+        footer->show();
         set_border_bottom_left_radius(0);
         set_border_bottom_right_radius(0);
         return footer;
     }
 
     void ConfigPage::hide_footer() {
-        footer->set_visibility(Visibility::Hidden);
+        footer->hide();
         set_border_bottom_left_radius(theme::border::radius_lg);
         set_border_bottom_right_radius(theme::border::radius_lg);
     }

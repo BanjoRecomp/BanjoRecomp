@@ -9,6 +9,7 @@ namespace recompui {
         std::string text;
         std::vector<std::function<void(const std::string &)>> text_changed_callbacks;
         std::function<void(bool)> focus_callback = nullptr;
+        Style focus_style;
     protected:
         virtual void process_event(const Event &e) override;
         std::string_view get_type_name() override { return "TextInput"; }
