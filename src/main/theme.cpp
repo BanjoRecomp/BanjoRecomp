@@ -1,4 +1,4 @@
-#include "recomp_ui.h"
+#include "elements/ui_theme.h"
 #include "theme.h"
 
 void recomptheme::set_custom_theme() {

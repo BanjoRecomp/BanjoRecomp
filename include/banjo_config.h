@@ -2,64 +2,40 @@
 #define __BANJO_CONFIG_H__
 
 #include <filesystem>
+#include <string>
 #include <string_view>
-#include "ultramodern/config.hpp"
-#include "recomp_input.h"
 
 namespace banjo {
-    constexpr std::u8string_view program_id = u8"BanjoRecompiled";
-    constexpr std::string_view program_name = "Banjo: Recompiled";
+    inline const std::u8string program_id = u8"BanjoRecompiled";
+    inline const std::string program_name = "Banjo: Recompiled";
+
+    namespace configkeys {
+        namespace general {
+            inline const std::string camera_invert_mode = "camera_invert_mode";
+            inline const std::string analog_cam_mode = "analog_cam_mode";
+            inline const std::string analog_camera_invert_mode = "analog_camera_invert_mode";
+        }
+
+        namespace sound {
+            inline const std::string bgm_volume = "bgm_volume";
+        }
+    }
 
     // TODO: Move loading configs to the runtime once we have a way to allow per-project customization.
-    void load_config();
-    void save_config();
-    bool read_json_with_backups(const std::filesystem::path& path, nlohmann::json& json_out);
-    bool save_json_with_backups(const std::filesystem::path& path, const nlohmann::json& json_data);
+    void init_config();
 
-    void reset_input_bindings();
-    void reset_cont_input_bindings(int profile_index);
-    void reset_kb_input_bindings(int profile_index);
-    void reset_single_input_binding(int profile_index, recomp::InputDevice device, recomp::GameInput input);
-
-    std::filesystem::path get_app_folder_path();
-    
-    bool get_debug_mode_enabled();
-    void set_debug_mode_enabled(bool enabled);
-    
     enum class CameraInvertMode {
         InvertNone,
         InvertX,
         InvertY,
-        InvertBoth,
-        OptionCount
+        InvertBoth
     };
-
-    NLOHMANN_JSON_SERIALIZE_ENUM(banjo::CameraInvertMode, {
-        {banjo::CameraInvertMode::InvertNone, "InvertNone"},
-        {banjo::CameraInvertMode::InvertX, "InvertX"},
-        {banjo::CameraInvertMode::InvertY, "InvertY"},
-        {banjo::CameraInvertMode::InvertBoth, "InvertBoth"}
-    });
 
     CameraInvertMode get_camera_invert_mode();
-    void set_camera_invert_mode(CameraInvertMode mode);
 
     CameraInvertMode get_analog_camera_invert_mode();
-    void set_analog_camera_invert_mode(CameraInvertMode mode);
 
-    enum class AnalogCamMode {
-        On,
-        Off,
-		OptionCount
-    };
-
-    NLOHMANN_JSON_SERIALIZE_ENUM(banjo::AnalogCamMode, {
-        {banjo::AnalogCamMode::On, "On"},
-        {banjo::AnalogCamMode::Off, "Off"}
-    });
-
-    AnalogCamMode get_analog_cam_mode();
-    void set_analog_cam_mode(AnalogCamMode mode);
+    bool get_analog_cam_mode();
 
     void open_quit_game_prompt();
 };

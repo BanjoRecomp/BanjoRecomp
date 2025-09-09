@@ -62,6 +62,7 @@ add_subdirectory(${CMAKE_SOURCE_DIR}/lib/RmlUi)
 target_compile_definitions(rmlui_core PRIVATE LUNASVG_BUILD_STATIC)
 
 add_subdirectory(${CMAKE_SOURCE_DIR}/lib/N64ModernRuntime)
+add_subdirectory(${CMAKE_SOURCE_DIR}/lib/RecompFrontend)
 
 target_include_directories(rt64 PRIVATE ${CMAKE_BINARY_DIR}/rt64/src)
 
@@ -149,14 +150,10 @@ add_executable(BanjoRecompiled)
 
 set (SOURCES
     ${CMAKE_SOURCE_DIR}/src/main/main.cpp
-    ${CMAKE_SOURCE_DIR}/src/main/support.cpp
     ${CMAKE_SOURCE_DIR}/src/main/register_overlays.cpp
     ${CMAKE_SOURCE_DIR}/src/main/register_patches.cpp
-    ${CMAKE_SOURCE_DIR}/src/main/rt64_render_context.cpp
     ${CMAKE_SOURCE_DIR}/src/main/theme.cpp
 
-    ${CMAKE_SOURCE_DIR}/src/game/input.cpp
-    ${CMAKE_SOURCE_DIR}/src/game/controls.cpp
     ${CMAKE_SOURCE_DIR}/src/game/config.cpp
     ${CMAKE_SOURCE_DIR}/src/game/debug.cpp
     ${CMAKE_SOURCE_DIR}/src/game/recomp_api.cpp
@@ -164,68 +161,10 @@ set (SOURCES
     ${CMAKE_SOURCE_DIR}/src/game/recomp_data_api.cpp
     ${CMAKE_SOURCE_DIR}/src/game/rom_decompression.cpp
 
-    ${CMAKE_SOURCE_DIR}/src/ui/ui_renderer.cpp
-    ${CMAKE_SOURCE_DIR}/src/ui/ui_state.cpp
-    ${CMAKE_SOURCE_DIR}/src/ui/ui_launcher.cpp
-    ${CMAKE_SOURCE_DIR}/src/ui/ui_config.cpp
-    ${CMAKE_SOURCE_DIR}/src/ui/ui_assign_players_modal.cpp
-    ${CMAKE_SOURCE_DIR}/src/ui/ui_color_element.cpp
-    ${CMAKE_SOURCE_DIR}/src/ui/ui_config_modal.cpp
-    ${CMAKE_SOURCE_DIR}/src/ui/ui_config_page_example.cpp
-    ${CMAKE_SOURCE_DIR}/src/ui/ui_config_page_controls_element.cpp
-    ${CMAKE_SOURCE_DIR}/src/ui/ui_prompt.cpp
-    ${CMAKE_SOURCE_DIR}/src/ui/ui_player_card.cpp
-    ${CMAKE_SOURCE_DIR}/src/ui/ui_config_sub_menu.cpp
-    ${CMAKE_SOURCE_DIR}/src/ui/ui_color_hack.cpp
-    ${CMAKE_SOURCE_DIR}/src/ui/ui_rml_hacks.cpp
-    ${CMAKE_SOURCE_DIR}/src/ui/ui_elements.cpp
-    ${CMAKE_SOURCE_DIR}/src/ui/ui_mod_details_panel.cpp
-    ${CMAKE_SOURCE_DIR}/src/ui/ui_mod_installer.cpp
-    ${CMAKE_SOURCE_DIR}/src/ui/ui_mod_menu.cpp
-    ${CMAKE_SOURCE_DIR}/src/ui/ui_api.cpp
-    ${CMAKE_SOURCE_DIR}/src/ui/ui_api_events.cpp
-    ${CMAKE_SOURCE_DIR}/src/ui/ui_api_images.cpp
-    ${CMAKE_SOURCE_DIR}/src/ui/ui_utils.cpp
-    ${CMAKE_SOURCE_DIR}/src/ui/util/hsv.cpp
-    ${CMAKE_SOURCE_DIR}/src/ui/config/ui_config_page_options_menu.cpp
-    ${CMAKE_SOURCE_DIR}/src/ui/config/ui_config_page_controls.cpp
-    ${CMAKE_SOURCE_DIR}/src/ui/config/ui_config_tab_controls.cpp
-    ${CMAKE_SOURCE_DIR}/src/ui/config/ui_config_tab_graphics.cpp
-    ${CMAKE_SOURCE_DIR}/src/ui/config/ui_config_tab_manifest.cpp
-    ${CMAKE_SOURCE_DIR}/src/ui/config/ui_config_option.cpp
-    ${CMAKE_SOURCE_DIR}/src/ui/core/ui_context.cpp
-    ${CMAKE_SOURCE_DIR}/src/ui/elements/ui_binding_button.cpp
-    ${CMAKE_SOURCE_DIR}/src/ui/elements/ui_button.cpp
-    ${CMAKE_SOURCE_DIR}/src/ui/elements/ui_icon_button.cpp
-    ${CMAKE_SOURCE_DIR}/src/ui/elements/ui_clickable.cpp
-    ${CMAKE_SOURCE_DIR}/src/ui/elements/ui_config_page.cpp
-    ${CMAKE_SOURCE_DIR}/src/ui/elements/ui_container.cpp
-    ${CMAKE_SOURCE_DIR}/src/ui/elements/ui_element.cpp
-    ${CMAKE_SOURCE_DIR}/src/ui/elements/ui_image.cpp
-    ${CMAKE_SOURCE_DIR}/src/ui/elements/ui_label.cpp
-    ${CMAKE_SOURCE_DIR}/src/ui/elements/ui_modal.cpp
-    ${CMAKE_SOURCE_DIR}/src/ui/elements/ui_pill_button.cpp
-    ${CMAKE_SOURCE_DIR}/src/ui/elements/ui_pseudo_border.cpp
-    ${CMAKE_SOURCE_DIR}/src/ui/elements/ui_radio.cpp
-    ${CMAKE_SOURCE_DIR}/src/ui/elements/ui_scroll_container.cpp
-    ${CMAKE_SOURCE_DIR}/src/ui/elements/ui_select.cpp
-    ${CMAKE_SOURCE_DIR}/src/ui/elements/ui_slider.cpp
-    ${CMAKE_SOURCE_DIR}/src/ui/elements/ui_span.cpp
-    ${CMAKE_SOURCE_DIR}/src/ui/elements/ui_style.cpp
-    ${CMAKE_SOURCE_DIR}/src/ui/elements/ui_svg.cpp
-    ${CMAKE_SOURCE_DIR}/src/ui/elements/ui_tab_set.cpp
-    ${CMAKE_SOURCE_DIR}/src/ui/elements/ui_text_input.cpp
-    ${CMAKE_SOURCE_DIR}/src/ui/elements/ui_theme.cpp
-    ${CMAKE_SOURCE_DIR}/src/ui/elements/ui_toggle.cpp
-
     ${CMAKE_SOURCE_DIR}/rsp/n_aspMain.cpp
 
     ${CMAKE_SOURCE_DIR}/lib/RmlUi/Backends/RmlUi_Platform_SDL.cpp
 )
-
-if (APPLE)
-    list(APPEND SOURCES ${CMAKE_SOURCE_DIR}/src/main/support_apple.mm)
-endif()
 
 target_include_directories(BanjoRecompiled PRIVATE
     ${CMAKE_SOURCE_DIR}/include
@@ -240,6 +179,9 @@ target_include_directories(BanjoRecompiled PRIVATE
     ${CMAKE_SOURCE_DIR}/lib/rt64/src
     ${CMAKE_SOURCE_DIR}/lib/rt64/src/rhi
     ${CMAKE_SOURCE_DIR}/lib/rt64/src/render
+    ${CMAKE_SOURCE_DIR}/lib/RecompFrontend/recompinput/include
+    ${CMAKE_SOURCE_DIR}/lib/RecompFrontend/recompui/include
+    ${CMAKE_SOURCE_DIR}/lib/RecompFrontend/recompui/src
     ${CMAKE_SOURCE_DIR}/lib/freetype-windows-binaries/include
     ${CMAKE_SOURCE_DIR}/lib/rt64/src/contrib/nativefiledialog-extended/src/include
     ${CMAKE_SOURCE_DIR}/lib/slot_map/slot_map
@@ -377,6 +319,8 @@ target_link_libraries(BanjoRecompiled PRIVATE
     rt64
     RmlUi::Core
     RmlUi::Debugger
+    recompinput
+    recompui
     nfd
     lunasvg
 )
