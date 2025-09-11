@@ -592,7 +592,7 @@ int main(int argc, char** argv) {
 
     recompui::programconfig::set_program_name(banjo::program_name);
     recompui::programconfig::set_program_id(banjo::program_id);
-    recompui::register_primary_font("Suplexmentary Comic NC.ttf");
+    recompui::register_primary_font("Suplexmentary Comic NC.ttf", "Suplexmentary Comic NC");
     recomp::register_config_path(recompui::file::get_app_folder_path());
 
     // Register supported games and patches

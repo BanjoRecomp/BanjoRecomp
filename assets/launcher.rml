@@ -1,15 +1,7 @@
 <rml>
 	<head>
 		<title>Launcher</title>
-		<link type="text/rcss" href="rml.rcss"/>
 		<link type="text/rcss" href="recomp.rcss"/>
-		<style>
-			body
-			{
-				width: 100%;
-				height: 100%;
-			}
-		</style>
 	</head>
 	<body>
 		<div id="window" data-model="launcher_model">

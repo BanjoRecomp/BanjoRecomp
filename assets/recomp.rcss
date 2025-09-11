@@ -57,7 +57,7 @@ h3, .tab {
   font-weight: 400;
 }
 
-.config-debug__select-wrapper select, .config-debug__select-wrapper input, .config-description__contents, .config-option-dropdown__select, .config-option-dropdown__wrapper, .config-option-textfield__select, .config-option-textfield__wrapper, .config__wrapper p, body {
+.config-debug__select-wrapper select, .config-debug__select-wrapper input, .config-description__contents, .config-option-dropdown__select, .config-option-dropdown__wrapper, .config-option-textfield__select, .config-option-textfield__wrapper, .config__wrapper p {
   font-size: 20dp;
   letter-spacing: 0dp;
   line-height: 20dp;
@@ -184,7 +184,7 @@ h3, .tab {
   font-weight: 400;
 }
 
-.config-debug__select-wrapper select, .config-debug__select-wrapper input, .config-description__contents, .config-option-dropdown__select, .config-option-dropdown__wrapper, .config-option-textfield__select, .config-option-textfield__wrapper, .config__wrapper p, body {
+.config-debug__select-wrapper select, .config-debug__select-wrapper input, .config-description__contents, .config-option-dropdown__select, .config-option-dropdown__wrapper, .config-option-textfield__select, .config-option-textfield__wrapper, .config__wrapper p {
   font-size: 20dp;
   letter-spacing: 0dp;
   line-height: 20dp;
@@ -249,38 +249,12 @@ h3, .tab {
   tab-index: auto;
 }
 
-/*
-@include set-color(COLOR);
-*/
-body {
-  box-sizing: border-box;
-  color: Text;
-  font-family: "Suplexmentary Comic NC";
-}
-
-/* stylelint-disable color-no-hex */
-/* stylelint-disable selector-max-id */
-* {
-  box-sizing: border-box;
-}
-
 hr {
   display: block;
   padding: 1.5dp;
   background: Background1;
 }
 
-body {
-  color: #fff;
-  font-size: 20dp;
-  font-style: normal;
-  font-weight: normal;
-}
-
-/* div { 
-    focus:none;
-    tab-index:none;
-} */
 div#window {
   position: relative;
   box-sizing: border-box;
@@ -1845,10 +1819,6 @@ scrollbarhorizontal sliderbar {
 }
 .rmlui-window:not([mouse-active]) {
   pointer-events: none;
-}
-
-*, *:before, *:after {
-  box-sizing: border-box;
 }
 
 button {
