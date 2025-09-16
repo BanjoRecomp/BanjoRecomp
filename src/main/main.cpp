@@ -528,6 +528,25 @@ void reorder_texture_pack(recomp::mods::ModContext&) {
     recompui::renderer::trigger_texture_pack_update();
 }
 
+void on_launcher_init(recompui::LauncherMenu *menu) {
+    auto game_options_menu = menu->init_game_options_menu(
+        supported_games[0].game_id,
+        supported_games[0].mod_game_id,
+        recompui::GameOptionsMenuLayout::Center
+    );
+    game_options_menu->add_default_options();
+
+    // TODO: Style launcher and get better background.
+    auto bg_element = menu->set_launcher_background_svg("banjkazoobg.svg");
+    bg_element->set_top(0.0f);
+    bg_element->set_bottom(0.0f);
+    bg_element->set_left(50.0f, recompui::Unit::Percent);
+    bg_element->set_height(1080.0f, recompui::Unit::Dp);
+    bg_element->set_width(1920.0f, recompui::Unit::Dp);
+    bg_element->set_translate_2D(-50.0f, 0.0f, recompui::Unit::Percent);
+    bg_element->set_opacity(0.25f);
+}
+
 #define REGISTER_FUNC(name) recomp::overlays::register_base_export(#name, name)
 
 int main(int argc, char** argv) {
@@ -621,6 +640,8 @@ int main(int argc, char** argv) {
     recompinput::players::set_max_number_of_players(4);
 
     banjo::init_config();
+
+    recompui::register_launcher_init_callback(on_launcher_init);
 
     recomp::rsp::callbacks_t rsp_callbacks{
         .get_rsp_microcode = get_rsp_microcode,
