@@ -5,8 +5,8 @@ void recomptheme::set_custom_theme() {
     recompui::theme::set_theme_color(recompui::theme::color::Background1, recompui::Color{10, 10, 11, 255});
     recompui::theme::set_theme_color(recompui::theme::color::Background2, recompui::Color{19, 20, 21, 255});
     recompui::theme::set_theme_color(recompui::theme::color::Background3, recompui::Color{27, 27, 29, 255});
-    recompui::theme::set_theme_color(recompui::theme::color::BGOverlay, recompui::Color{199, 200, 204, 26});
-    recompui::theme::set_theme_color(recompui::theme::color::ModalOverlay, recompui::Color{10, 10, 11, 229});
+    recompui::theme::set_theme_color(recompui::theme::color::BGOverlay, recompui::Color{199, 200, 204, 26}); // actually the overlay for the modal
+    recompui::theme::set_theme_color(recompui::theme::color::ModalOverlay, recompui::Color{10, 10, 11, 242}); // actually the background color of the modal itself
     recompui::theme::set_theme_color(recompui::theme::color::BGShadow, recompui::Color{0, 0, 0, 89});
     recompui::theme::set_theme_color(recompui::theme::color::BGShadow2, recompui::Color{10, 10, 11, 184});
     recompui::theme::set_theme_color(recompui::theme::color::Text, recompui::Color{242, 242, 242, 255});

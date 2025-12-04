@@ -637,7 +637,7 @@ int main(int argc, char** argv) {
     banjo::register_bk_patches();
     recomputil::init_extended_actor_data();
 
-    recompinput::players::set_max_number_of_players(4);
+    recompinput::players::set_single_player_mode(true);
 
     banjo::init_config();
 
