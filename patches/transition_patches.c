@@ -294,9 +294,7 @@ RECOMP_PATCH void gctransition_draw(Gfx **gdl, Mtx **mptr, Vtx **vptr){
     }
     
     // @recomp Calculate the ratio between the original aspect ratio and the current aspect ratio.
-    // TODO change this back to using the actual framebuffer size when RT64 uses that aspect ratio instead of adjusting to 4:3.
-    // float original_aspect = (float)DEFAULT_FRAMEBUFFER_WIDTH / DEFAULT_FRAMEBUFFER_HEIGHT;
-    float original_aspect = 4.0f / 3.0f;
+    float original_aspect = (float)DEFAULT_FRAMEBUFFER_WIDTH / DEFAULT_FRAMEBUFFER_HEIGHT;
     float cur_aspect = recomp_get_target_aspect_ratio(original_aspect);
     float aspect_ratio_ratio = cur_aspect / original_aspect;
 
