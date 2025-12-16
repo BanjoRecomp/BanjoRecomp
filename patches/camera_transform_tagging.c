@@ -1,6 +1,7 @@
 #include "patches.h"
 #include "transform_ids.h"
 #include "core1/core1.h"
+#include "core2/nc/camera.h"
 
 s32 cur_perspective_projection_transform_id = 0;
 s32 backup_perspective_projection_transform_id = 0;
@@ -75,7 +76,7 @@ RECOMP_PATCH void viewport_setRenderPerspectiveMatrix(Gfx **gfx, Mtx **mtx, f32 
     gEXSetViewMatrixFloat((*gfx)++, view->m);
 
     // @recomp If a perspective projection transform ID is set, apply it as the projection matrix group. Otherwise, use auto as the projection matrix group.
-    if (all_interpolation_skipped()) {
+    if (all_interpolation_skipped() || perspective_interpolation_skipped) {
         gEXMatrixGroupNoInterpolate((*gfx)++, G_EX_NOPUSH, G_MTX_PROJECTION, G_EX_EDIT_NONE);
     }
     else if (cur_perspective_projection_transform_id != 0) {
@@ -167,4 +168,83 @@ RECOMP_PATCH void viewport_restoreState(void) {
     // @recomp Restore the backed up projection transform IDs.
     cur_perspective_projection_transform_id = backup_perspective_projection_transform_id;
     cur_ortho_projection_transform_id = backup_ortho_projection_transform_id;
+}
+
+extern s32 ncCameraType;
+extern u8 D_8037D8C5;
+extern u8 D_8037D8C6;
+void ncDynamicCamera_update(void);
+void ncStaticCamera_update(void);
+void ncRandomCamera_update(void);
+void func_802BB4D8(f32 position[3], f32 rotation[3]);
+void func_802BEFB0(void);
+void func_802BBA84(void);
+
+// @recomp Patched to detect camera type changes or sudden camera movements and skip perspective interpolation when they happen.
+RECOMP_PATCH void ncCamera_update(void) {
+    f32 vpPos[3];
+    f32 vpRot[3];
+    s32 camType;
+
+    camType = ncCameraType;
+    if (!D_8037D8C5 && !D_8037D8C6) {
+        camType = 0;
+    }
+
+    switch (camType) {
+    case CAMERA_TYPE_2_DYNAMIC://dynamic viewport position
+        ncDynamicCamera_update();
+        break;
+    case CAMERA_TYPE_3_STATIC://set viewport to static location
+        ncStaticCamera_update();
+        break;
+    case CAMERA_TYPE_4_RANDOM: //set viewport to random location
+        ncRandomCamera_update();
+        break;
+    }
+
+    viewport_getPosition_vec3f(vpPos);
+    viewport_getRotation_vec3f(vpRot);
+    func_802BB4D8(vpPos, vpRot);
+    viewport_setPosition_vec3f(vpPos);
+    viewport_setRotation_vec3f(vpRot);
+    
+    // @recomp Detect camera type changes or sudden camera movements.
+    static s32 camTypePrev = 0;
+    static f32 vpPosPrev[3] = {};
+    static f32 vpPosVel[3] = {};
+    f32 vpPosDelta[3];
+    ml_vec3f_diff_copy(vpPosDelta, vpPos, vpPosPrev);
+    if (camType != camTypePrev) {
+        // Always skip perspective interpolation on camera type changes.
+        perspective_interpolation_skipped = TRUE;
+    }
+    else if (camType == CAMERA_TYPE_2_DYNAMIC) {
+        // Never skip interpolation during controllable gameplay.
+        perspective_interpolation_skipped = FALSE;
+    }
+    else {
+        // Check for sudden position differences. They must be within an arbitrary threshold o
+        // the projected position from using the previous frame's velocity.
+        f32 vpPosProjected[3];
+        ml_vec3f_add(vpPosProjected, vpPosPrev, vpPosVel);
+
+        f32 distToProjected = ml_vec3f_distance(vpPos, vpPosProjected);
+        const f32 SkipThreshold = 100.0f;
+        if (distToProjected > SkipThreshold) {
+            ml_vec3f_clear(vpPosVel);
+            perspective_interpolation_skipped = TRUE;
+        }
+        else {
+            ml_vec3f_copy(vpPosVel, vpPosDelta);
+            perspective_interpolation_skipped = FALSE;
+        }
+    }
+
+    camTypePrev = camType;
+    ml_vec3f_copy(vpPosPrev, vpPos);
+
+    viewport_update();
+    func_802BEFB0();
+    func_802BBA84();
 }
