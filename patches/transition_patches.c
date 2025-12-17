@@ -293,9 +293,13 @@ RECOMP_PATCH void gctransition_draw(Gfx **gdl, Mtx **mptr, Vtx **vptr){
         modelRender_setDepthMode(MODEL_RENDER_DEPTH_FULL);
     }
     
-    // @recomp Calculate the ratio between the original aspect ratio and the current aspect ratio.
+    // @recomp Calculate the ratio between the original aspect ratio and the current aspect ratio, except when in picture mode.
     float original_aspect = (float)DEFAULT_FRAMEBUFFER_WIDTH / DEFAULT_FRAMEBUFFER_HEIGHT;
     float cur_aspect = recomp_get_target_aspect_ratio(original_aspect);
+    if (getGameMode() == GAME_MODE_A_SNS_PICTURE) {
+        cur_aspect = original_aspect;
+    }
+
     float aspect_ratio_ratio = cur_aspect / original_aspect;
 
     // @recomp Determine what scaling to use based on the transition type.

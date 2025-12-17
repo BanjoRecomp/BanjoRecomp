@@ -13,6 +13,10 @@ void reset_projection_ids() {
     cur_ortho_projection_transform_id = 0;
 }
 
+bool perspective_interpolation_skipped = FALSE;
+
+s32 getGameMode(void);
+
 extern f32 sViewportFOVy;
 extern f32 sViewportAspect;
 extern f32 sViewportNear;
@@ -69,7 +73,16 @@ RECOMP_PATCH void viewport_setRenderPerspectiveMatrix(Gfx **gfx, Mtx **mtx, f32 
         gEXMatrixGroupNoInterpolate((*gfx)++, G_EX_NOPUSH, G_MTX_PROJECTION, G_EX_EDIT_NONE);
     }
     else if (cur_perspective_projection_transform_id != 0) {
-        gEXMatrixGroupSimpleNormal((*gfx)++, cur_perspective_projection_transform_id, G_EX_NOPUSH, G_MTX_PROJECTION, G_EX_EDIT_NONE);
+        // Force the projection to not adjust itself for a wider aspect ratio when it's being rendered for the Bottles' bonus puzzle or the Mumbo photo.
+        u16 aspect = G_EX_ASPECT_AUTO;
+        bool inPictureGameMode = (getGameMode() == GAME_MODE_8_BOTTLES_BONUS) || (getGameMode() == GAME_MODE_A_SNS_PICTURE);
+        bool isGameplayTransformId = (cur_perspective_projection_transform_id == PROJECTION_GAMEPLAY_TRANSFORM_ID);
+        bool isTransitionTransformId = (cur_perspective_projection_transform_id == PROJECTION_TRANSITION_TRANSFORM_ID);
+        if (inPictureGameMode && (isGameplayTransformId || isTransitionTransformId)) {
+            aspect = G_EX_ASPECT_STRETCH;
+        }
+
+        gEXMatrixGroup((*gfx)++, cur_perspective_projection_transform_id, G_EX_INTERPOLATE_SIMPLE, G_EX_NOPUSH, G_MTX_PROJECTION, G_EX_COMPONENT_INTERPOLATE, G_EX_COMPONENT_INTERPOLATE, G_EX_COMPONENT_INTERPOLATE, G_EX_COMPONENT_INTERPOLATE, G_EX_COMPONENT_INTERPOLATE, G_EX_COMPONENT_SKIP, G_EX_COMPONENT_INTERPOLATE, G_EX_ORDER_LINEAR, G_EX_EDIT_NONE, aspect, G_EX_COMPONENT_SKIP, G_EX_COMPONENT_AUTO);
     }
     else {
         gEXMatrixGroupSimpleNormal((*gfx)++, G_EX_ID_AUTO, G_EX_NOPUSH, G_MTX_PROJECTION, G_EX_EDIT_NONE);
