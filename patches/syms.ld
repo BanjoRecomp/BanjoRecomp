@@ -38,3 +38,5 @@ recomp_get_target_aspect_ratio = 0x8F000084;
 osExQueueDisplaylistEvent_recomp = 0x8F000088;
 recomp_xxh3 = 0x8F00008C;
 recomp_get_bgm_volume = 0x8F000090;
+sinf_recomp = 0x8F000094;
+__cosf_recomp = 0x8F000098;

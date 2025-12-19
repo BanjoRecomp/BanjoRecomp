@@ -29,6 +29,8 @@ void osWriteBackDCacheAll(void);
 #define strlen strlen_recomp
 #define osVirtualToPhysical osVirtualToPhysical_recomp
 #define osPiStartDma osPiStartDma_recomp
+#define sinf sinf_recomp
+#define cosf __cosf_recomp
 
 #include "ultra64.h"
 #pragma GCC diagnostic push

@@ -5,7 +5,7 @@ LD      ?= ld.lld
 
 GBI_DEFINE := -DF3DEX_GBI
 CFLAGS   := -target mips -mips2 -mabi=32 -O2 -G0 -mno-abicalls -mno-odd-spreg -mno-check-zero-division \
-			-fomit-frame-pointer -ffast-math -fno-unsafe-math-optimizations -fno-builtin-memset -funsigned-char \
+			-fomit-frame-pointer -ffast-math -fno-unsafe-math-optimizations -fno-builtin-memset -funsigned-char -fno-builtin-sinf -fno-builtin-cosf \
 			-Wall -Wextra -Wno-incompatible-library-redeclaration -Wno-unused-parameter -Wno-unknown-pragmas -Wno-unused-variable -Wno-missing-braces -Wno-unsupported-floating-point-opt -Wno-cast-function-type-mismatch
 CPPFLAGS := -nostdinc -D_LANGUAGE_C -DMIPS -I ../lib/bk-decomp/include -I ../lib/bk-decomp/include/2.0L -I ../lib/bk-decomp/include/2.0L/PR -I../lib/rt64/include -I../lib/N64ModernRuntime/ultramodern/include $(GBI_DEFINE)
 LDFLAGS  := -nostdlib -T patches.ld -T syms.ld -Map patches.map --unresolved-symbols=ignore-all --emit-relocs
