@@ -21,6 +21,35 @@ extern Gfx D_8036A030[];
 extern void func_80347FC0(Gfx **gfx, BKSprite *sprite, s32 frame, s32 tmem, s32 rtile, s32 uls, s32 ult, s32 cms, s32 cmt, s32 *width, s32 *height);
 extern f32 func_802FDE60(f32 arg0);
 extern f32 func_802FB0E4(struct8s *this);
+extern s32 func_802FB0D4(struct8s *this);
+extern s32 itemPrint_getValue(s32 item_id);
+extern s32 getGameMode(void);
+extern f32 vtxList_getGlobalNorm(BKVertexList *);
+
+typedef struct {
+    u8 pad0[0x14];
+    s32 unk14;
+    u8 pad18[0x8];
+    s32 item_id; //item_id
+    s32 model_id; //model_id
+    s32 anim_id; //anim_id
+    f32 anim_duration; //anim_duration
+    f32 unk30;
+    f32 unk34;
+    f32 unk38;
+    f32 unk3C; //scale?
+    f32 unk40;
+    f32 unk44;
+    f32 unk48;
+    f32 unk4C;
+    f32 unk50;
+    f32 unk54;
+    BKModelBin *model;
+    char value_string[0xC];
+    f32 unk68;
+    f32 unk6C;
+    AnimCtrl *anim_ctrl;
+}Struct_core2_79830_0;
 
 // @recomp Tag the matrices for each honeycomb piece.
 RECOMP_PATCH void fxhoneycarrierscore_draw(s32 arg0, struct8s *arg1, Gfx **arg2, Mtx **arg3, Vtx **arg4) {
@@ -107,4 +136,51 @@ RECOMP_PATCH void fxhoneycarrierscore_draw(s32 arg0, struct8s *arg1, Gfx **arg2,
         gDPPipelineMode((*arg2)++, G_PM_NPRIMITIVE);
         viewport_setRenderViewportAndPerspectiveMatrix(arg2, arg3);
     }
+}
+
+// @recomp Tag the matrices for any model using this score type.
+RECOMP_PATCH void fxcommon3score_draw(enum item_e item_id, void *arg1, Gfx **gfx, Mtx **mtx, Vtx **vtx) {
+    Struct_core2_79830_0 *a1 = (Struct_core2_79830_0 *)arg1;
+    f32 sp68[3];
+    f32 sp5C[3];
+    f32 sp50[3];
+    f32 sp44[3];
+    f32 sp40;
+    f32 sp3C;
+
+    sp40 = func_802FB0E4(arg1) * a1->unk54 + a1->unk34;
+    if (a1->model != NULL && func_802FB0D4(arg1)) {
+        a1->value_string[0] = '\0';
+        strIToA(a1->value_string, itemPrint_getValue(item_id));
+        print_bold_spaced(a1->unk30 + a1->unk40, sp40 + a1->unk44, a1->value_string);
+        sp3C = viewport_transformCoordinate(a1->unk30, sp40, sp5C, sp68);
+
+        sp44[0] = 0.0f;
+        sp44[1] = a1->unk38;
+        sp44[2] = 0.0f;
+
+        sp50[0] = 0.0f;
+        sp50[1] = a1->unk68;
+        sp50[2] = 0.0f;
+        func_8033A308(sp50);
+        if (getGameMode() != GAME_MODE_4_PAUSED) {
+            modelRender_setDepthMode(MODEL_RENDER_DEPTH_FULL);
+        }
+        sp68[0] += a1->unk4C;
+        if (a1->unk6C == 0.0f) {
+            a1->unk6C = 1.1 * (vtxList_getGlobalNorm(model_getVtxList(a1->model)) * a1->unk3C);
+        }
+        func_80253208(gfx, a1->unk30 - a1->unk6C, sp40 - a1->unk6C, 2 * a1->unk6C, 2 * a1->unk6C, gFramebuffers[getActiveFramebuffer()]);
+        if (a1->anim_ctrl != NULL) {
+            anctrl_drawSetup(a1->anim_ctrl, sp5C, 1);
+        }
+
+        // @recomp Set the model transform ID.
+        cur_drawn_model_transform_id = HUD_SCORE3_TRANSFORM_ID_START + item_id * MARKER_TRANSFORM_ID_COUNT;
+
+        modelRender_draw(gfx, mtx, sp5C, sp68, a1->unk3C * sp3C, sp44, a1->model);
+
+        // @recomp Clear the model transform ID.
+        cur_drawn_model_transform_id = 0;
+    }//L80300BA4
 }
