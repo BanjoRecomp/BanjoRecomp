@@ -235,22 +235,51 @@ void func_803382FC(s32);
 void func_80338308(s32 arg0, s32 arg1);
 void func_8033837C(s32 arg0);
 void spriteRender_draw(Gfx **gfx, Vtx **vtx, BKSprite *sp, u32 frame);
-void assetCache_free(void *arg0);
+
+#define PROJECTILE_RESET_FLAG 0x1
+#define PROJECTILE_MOVED_FLAG 0x2
 
 extern Struct_B8860_0s D_80385000[0x32];
-u8 projectileSkipInterpolation[0x32];
+u8 projectileSkipFlags[0x32];
 
-// @recomp Patched to indicate the projectile should skip interpolation the next time it's used.
-RECOMP_PATCH void projectile_freeByIndex(u8 indx) {
-    if (D_80385000[indx].sprite_0) {
-        assetCache_free(D_80385000[indx].sprite_0);
+// @recomp Patched to indicate a projectile has been moved.
+RECOMP_PATCH void projectile_setPosition(u8 indx, f32 position[3]) {
+    ml_vec3f_copy(D_80385000[indx].position, position);
+
+    // @recomp Mark the projectile as moved only if the position is not at the origin.
+    if (ml_isNonzero_vec3f(position)) {
+        projectileSkipFlags[indx] |= PROJECTILE_MOVED_FLAG;
     }
+}
 
-    D_80385000[indx].sprite_0 = NULL;
-    D_80385000[indx].unk28_13 = 0;
+// @recomp Patched to indicate when projectiles have been reset.
+RECOMP_PATCH u8 func_8033FA84(void) {
+    int i;
+    for (i = 1; i < 0x32; i++) {
+        if (!D_80385000[i].unk28_13) {
+            ml_vec3f_clear(D_80385000[i].position);
+            ml_vec3f_clear(D_80385000[i].rotation);
+            D_80385000[i].frame_28_31 = 0;
+            D_80385000[i].unk28_13 = TRUE;
+            D_80385000[i].unk28_23 = 0;
+            D_80385000[i].unk28_21 = 0xb;
+            D_80385000[i].sprite_0 = NULL;
+            D_80385000[i].unk28_12 = TRUE;
+            D_80385000[i].unk20[0] = 100;
+            D_80385000[i].unk20[1] = 100;
+            D_80385000[i].color[0] = 0xff;
+            D_80385000[i].color[1] = 0xff;
+            D_80385000[i].color[2] = 0xff;
+            D_80385000[i].unk27 = 0xff;
+            D_80385000[i].unk1C = 0.0f;
 
-    // @recomp Mark the projectile to skip interpolation the next time it's drawn.
-    projectileSkipInterpolation[indx] = TRUE;
+            // @recomp Mark the projectile as reset.
+            projectileSkipFlags[i] = PROJECTILE_RESET_FLAG;
+
+            return i;
+        }
+    }
+    return 0;
 }
 
 // @recomp Patched to tag projectiles.
@@ -285,9 +314,14 @@ RECOMP_PATCH void func_8033F7F0(u8 indx, Gfx **gfx, Mtx **mtx, Vtx **vtx){
 
         // @recomp Set a matrix group before drawing the sprite. Skip interpolation if it was just freed.
         u32 projectileID = PROJECTILE_TRANSFORM_ID_START + indx;
-        if (projectileSkipInterpolation[indx]) {
+        if (projectileSkipFlags[indx] & PROJECTILE_RESET_FLAG) {
             gEXMatrixGroupSkipAll((*gfx)++, projectileID, G_EX_PUSH, G_MTX_MODELVIEW, G_EX_EDIT_NONE);
-            projectileSkipInterpolation[indx] = FALSE;
+
+            // @recomp Some projectiles are spawned but not used right away and are visible at (0, 0, 0) due to a bug
+            // (visible on the magic carpets and jiggies), so the reset flag is not cleared until the projectile is moved.
+            if (projectileSkipFlags[indx] & PROJECTILE_MOVED_FLAG) {
+                projectileSkipFlags[indx] &= ~PROJECTILE_RESET_FLAG;
+            }
         }
         else {
             gEXMatrixGroupSimpleNormal((*gfx)++, projectileID, G_EX_PUSH, G_MTX_MODELVIEW, G_EX_EDIT_NONE);
