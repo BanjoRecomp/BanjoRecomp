@@ -235,8 +235,23 @@ void func_803382FC(s32);
 void func_80338308(s32 arg0, s32 arg1);
 void func_8033837C(s32 arg0);
 void spriteRender_draw(Gfx **gfx, Vtx **vtx, BKSprite *sp, u32 frame);
+void assetCache_free(void *arg0);
 
 extern Struct_B8860_0s D_80385000[0x32];
+u8 projectileSkipInterpolation[0x32];
+
+// @recomp Patched to indicate the projectile should skip interpolation the next time it's used.
+RECOMP_PATCH void projectile_freeByIndex(u8 indx) {
+    if (D_80385000[indx].sprite_0) {
+        assetCache_free(D_80385000[indx].sprite_0);
+    }
+
+    D_80385000[indx].sprite_0 = NULL;
+    D_80385000[indx].unk28_13 = 0;
+
+    // @recomp Mark the projectile to skip interpolation the next time it's drawn.
+    projectileSkipInterpolation[indx] = TRUE;
+}
 
 // @recomp Patched to tag projectiles.
 RECOMP_PATCH void func_8033F7F0(u8 indx, Gfx **gfx, Mtx **mtx, Vtx **vtx){
@@ -268,8 +283,14 @@ RECOMP_PATCH void func_8033F7F0(u8 indx, Gfx **gfx, Mtx **mtx, Vtx **vtx){
         func_8033837C(1);
         func_80338370();
 
-        // @recomp Set a matrix group before drawing the sprite.
-        gEXMatrixGroupSimpleNormal((*gfx)++, PROJECTILE_TRANSFORM_ID_START + indx, G_EX_PUSH, G_MTX_MODELVIEW, G_EX_EDIT_NONE);
+        // @recomp Set a matrix group before drawing the sprite. Skip interpolation if it was just freed.
+        if (projectileSkipInterpolation[indx]) {
+            gEXMatrixGroupNoInterpolate((*gfx)++, G_EX_PUSH, G_MTX_MODELVIEW, G_EX_EDIT_NONE);
+            projectileSkipInterpolation[indx] = FALSE;
+        }
+        else {
+            gEXMatrixGroupSimpleNormal((*gfx)++, PROJECTILE_TRANSFORM_ID_START + indx, G_EX_PUSH, G_MTX_MODELVIEW, G_EX_EDIT_NONE);
+        }
 
         spriteRender_draw(gfx, vtx, sp54->sprite_0, sp54->frame_28_31);
         gSPPopMatrix((*gfx)++, G_MTX_MODELVIEW);
