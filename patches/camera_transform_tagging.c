@@ -65,7 +65,13 @@ RECOMP_PATCH void viewport_setRenderPerspectiveMatrix(Gfx **gfx, Mtx **mtx, f32 
     // @recomp Create an isolated view matrix for the viewport translation and provide it as the view matrix to counteract the camera translation.
     MtxF* view = (MtxF*)*mtx;
     (*mtx)++;
-    guTranslateF(view->m, sViewportPosition[0], sViewportPosition[1], sViewportPosition[2]);
+    if (cur_perspective_projection_transform_id == PROJECTION_GAMEPLAY_TRANSFORM_ID) {
+        guTranslateF(view->m, sViewportPosition[0], sViewportPosition[1], sViewportPosition[2]);
+    }
+    else {
+        guMtxIdentF(view->m);
+    }
+
     gEXSetViewMatrixFloat((*gfx)++, view->m);
 
     // @recomp If a perspective projection transform ID is set, apply it as the projection matrix group. Otherwise, use auto as the projection matrix group.
