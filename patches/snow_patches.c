@@ -80,6 +80,7 @@ RECOMP_PATCH void func_802F9134(s32 gfx) {
     }
 }
 
+// @recomp Patched to increase the amount of snow particles, the spawn area and assign transform IDs to them.
 RECOMP_PATCH void func_802F919C(void) {
     f32 temp_f20;
     s32 sp68;
@@ -174,6 +175,7 @@ RECOMP_PATCH void func_802F919C(void) {
     }
 }
 
+// @recomp Patched to remove the frustum check and tag the snow particle with its assigned transform ID.
 RECOMP_PATCH bool func_802F989C(Gfx **gfx, Mtx **mtx, f32 arg2[3]) {
     D_80381070[0] = arg2[0] - D_80381050[0]; \
         D_80381070[1] = arg2[1] - D_80381050[1]; \
