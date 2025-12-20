@@ -284,12 +284,13 @@ RECOMP_PATCH void func_8033F7F0(u8 indx, Gfx **gfx, Mtx **mtx, Vtx **vtx){
         func_80338370();
 
         // @recomp Set a matrix group before drawing the sprite. Skip interpolation if it was just freed.
+        u32 projectileID = PROJECTILE_TRANSFORM_ID_START + indx;
         if (projectileSkipInterpolation[indx]) {
-            gEXMatrixGroupNoInterpolate((*gfx)++, G_EX_PUSH, G_MTX_MODELVIEW, G_EX_EDIT_NONE);
+            gEXMatrixGroupSkipAll((*gfx)++, projectileID, G_EX_PUSH, G_MTX_MODELVIEW, G_EX_EDIT_NONE);
             projectileSkipInterpolation[indx] = FALSE;
         }
         else {
-            gEXMatrixGroupSimpleNormal((*gfx)++, PROJECTILE_TRANSFORM_ID_START + indx, G_EX_PUSH, G_MTX_MODELVIEW, G_EX_EDIT_NONE);
+            gEXMatrixGroupSimpleNormal((*gfx)++, projectileID, G_EX_PUSH, G_MTX_MODELVIEW, G_EX_EDIT_NONE);
         }
 
         spriteRender_draw(gfx, vtx, sp54->sprite_0, sp54->frame_28_31);
