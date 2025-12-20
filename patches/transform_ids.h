@@ -72,6 +72,7 @@ void reset_projection_ids();
 
 extern s32 cur_drawn_model_is_map;
 extern s32 cur_drawn_model_transform_id;
+extern s32 cur_drawn_model_transform_id_skip_interpolation;
 extern s32 cur_perspective_projection_transform_id;
 extern s32 cur_ortho_projection_transform_id;
 

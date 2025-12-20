@@ -29,6 +29,7 @@ void set_additional_model_scale(f32 x, f32 y, f32 z) {
 
 s32 cur_drawn_model_is_map = FALSE;
 s32 cur_drawn_model_transform_id = 0;
+s32 cur_drawn_model_transform_id_skip_interpolation = FALSE;
 
 Mtx identity_fixed_mtx = {{
     {
@@ -92,11 +93,7 @@ void func_802E6BD0(BKModelUnk28List *arg0, BKVertexList *arg1, AnimMtxList *mtx_
 void assetCache_free(void *arg0);
 
 void set_model_matrix_group(Gfx **gfx, void *geo_list, u32 bone_index) {
-    if (skip_all_interpolation || cur_drawn_model_transform_id == -1) {
-        // @recomp Skip interpolation if all interpolation is currently skipped or the transform id is -1.
-        gEXMatrixGroupNoInterpolate((*gfx)++, G_EX_PUSH, G_MTX_MODELVIEW, G_EX_EDIT_ALLOW);
-    }
-    else if (cur_drawn_model_transform_id != 0) {
+    if (cur_drawn_model_transform_id != 0) {
         u32 group_id;
         // Pick a group ID based on whether this is a map or not.
         if (cur_drawn_model_is_map) {
@@ -107,11 +104,18 @@ void set_model_matrix_group(Gfx **gfx, void *geo_list, u32 bone_index) {
             // Other models use a group ID determined by the bone index.
             group_id = cur_drawn_model_transform_id + bone_index;
         }
-        // @recomp Tag the matrix.
-        // gEXMatrixGroupSimpleNormal((*gfx)++, group_id, G_EX_PUSH, G_MTX_MODELVIEW, G_EX_EDIT_ALLOW);
-        gEXMatrixGroupSimpleVerts((*gfx)++, group_id, G_EX_PUSH, G_MTX_MODELVIEW, G_EX_EDIT_ALLOW);
-        // gEXMatrixGroupDecomposedNormal((*gfx)++, group_id, G_EX_PUSH, G_MTX_MODELVIEW, G_EX_EDIT_ALLOW);
-        // gEXMatrixGroupDecomposedVerts((*gfx)++, group_id, G_EX_PUSH, G_MTX_MODELVIEW, G_EX_EDIT_ALLOW);
+
+        if (skip_all_interpolation || cur_drawn_model_transform_id_skip_interpolation) {
+            // @recomp Skip interpolation if all interpolation is currently skipped or the transform was specified to be skipped.
+            gEXMatrixGroupSkipAll((*gfx)++, group_id, G_EX_PUSH, G_MTX_MODELVIEW, G_EX_EDIT_NONE);
+        }
+        else {
+            // @recomp Tag the matrix.
+            gEXMatrixGroupSimpleVerts((*gfx)++, group_id, G_EX_PUSH, G_MTX_MODELVIEW, G_EX_EDIT_NONE);
+        }
+    }
+    else if (skip_all_interpolation) {
+        gEXMatrixGroupNoInterpolate((*gfx)++, G_EX_PUSH, G_MTX_MODELVIEW, G_EX_EDIT_NONE);
     }
 }
 
@@ -639,12 +643,12 @@ RECOMP_PATCH BKModelBin *modelRender_draw(Gfx **gfx, Mtx **mtx, f32 position[3],
     gSPMatrix((*gfx)++, (*mtx)++, G_MTX_PUSH | G_MTX_LOAD | G_MTX_MODELVIEW);
     
     // @recomp Create a matrix group if a transform id is set.
-    if (skip_all_interpolation || cur_drawn_model_transform_id == -1) {
-        // @recomp Skip interpolation if all interpolation is currently skipped or the transform id is -1.
-        gEXMatrixGroupNoInterpolate((*gfx)++, G_EX_PUSH, G_MTX_MODELVIEW, G_EX_EDIT_ALLOW);
+    if (skip_all_interpolation || cur_drawn_model_transform_id_skip_interpolation) {
+        // @recomp Skip interpolation if all interpolation is currently skipped or the transform was specified to be skipped.
+        gEXMatrixGroupSkipAll((*gfx)++, cur_drawn_model_transform_id, G_EX_PUSH, G_MTX_MODELVIEW, G_EX_EDIT_NONE);
     }
     else if (cur_drawn_model_transform_id != 0) {
-        gEXMatrixGroupDecomposedVerts((*gfx)++, cur_drawn_model_transform_id, G_EX_PUSH, G_MTX_MODELVIEW, G_EX_EDIT_ALLOW);
+        gEXMatrixGroupDecomposedVerts((*gfx)++, cur_drawn_model_transform_id, G_EX_PUSH, G_MTX_MODELVIEW, G_EX_EDIT_NONE);
     }
     
     modelRenderScale = scale;

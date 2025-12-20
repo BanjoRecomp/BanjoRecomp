@@ -198,12 +198,13 @@ RECOMP_PATCH bool func_802F989C(Gfx **gfx, Mtx **mtx, f32 arg2[3]) {
         // @recomp Set a matrix group before drawing the snow particle. If the interpolation skip bit is enabled as the snow particle was just
         // created, do not interpolate and clear the bit instead.
         s32 snowIndex = (struct struct_4D_s *)(arg2)-D_80369280->unk1C;
+        u32 snowId = SNOW_TRANSFORM_ID_START + snowIDArray[snowIndex];
         if (snowIDArray[snowIndex] & SNOW_SKIP_INTERPOLATION_MASK) {
-            gEXMatrixGroupNoInterpolate((*gfx)++, G_EX_PUSH, G_MTX_MODELVIEW, G_EX_EDIT_NONE);
+            gEXMatrixGroupSkipAll((*gfx)++, snowId, G_EX_PUSH, G_MTX_MODELVIEW, G_EX_EDIT_NONE);
             snowIDArray[snowIndex] ^= SNOW_SKIP_INTERPOLATION_MASK;
         }
         else {
-            gEXMatrixGroupSimpleNormal((*gfx)++, SNOW_TRANSFORM_ID_START + snowIDArray[snowIndex], G_EX_PUSH, G_MTX_MODELVIEW, G_EX_EDIT_NONE);
+            gEXMatrixGroupSimpleNormal((*gfx)++, snowId, G_EX_PUSH, G_MTX_MODELVIEW, G_EX_EDIT_NONE);
         }
 
         gSPMatrix((*gfx)++, (*mtx)++, G_MTX_PUSH | G_MTX_LOAD | G_MTX_MODELVIEW);

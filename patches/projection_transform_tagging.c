@@ -291,14 +291,17 @@ RECOMP_PATCH void func_803163A8(GcZoombox *this, Gfx **gfx, Mtx **mtx) {
         anctrl_drawSetup(this->anim_ctrl, sp50, 1);
     }
 
-    // @recomp Set the model transform ID.
+    // @recomp Set the model transform ID. Skip interpolation when the camera does a cut.
     u32 prev_transform_id = cur_drawn_model_transform_id;
+    s32 prev_skip = cur_drawn_model_transform_id_skip_interpolation;
     cur_drawn_model_transform_id = ZOOMBOX_TRANSFORM_ID_START + this->portrait_id;
+    cur_drawn_model_transform_id_skip_interpolation = perspective_interpolation_skipped();
 
     modelRender_draw(gfx, mtx, sp50, sp5C, this->unk198 * sp34, sp38, this->model);
 
     // @recomp Reset the model transform ID.
     cur_drawn_model_transform_id = prev_transform_id;
+    cur_drawn_model_transform_id_skip_interpolation = prev_skip;
 }
 
 // @recomp Patched to set the zoombox portrait's model and ortho projection transform IDs.

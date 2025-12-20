@@ -132,7 +132,7 @@ RECOMP_PATCH void __particleEmitter_drawOnPass(ParticleEmitter *this, Gfx **gfx,
             func_80344C2C(this->unk0_16);
             // @recomp Get the particle's ID and use it to set a matrix group for this particle.
             u32 transform_id = NORMAL_PARTICLE_TRANSFORM_ID_START + get_particle_id(iPtr);
-            gEXMatrixGroupDecomposedNormal((*gfx)++, transform_id, G_EX_PUSH, G_MTX_MODELVIEW, G_EX_EDIT_ALLOW);
+            gEXMatrixGroupDecomposedNormal((*gfx)++, transform_id, G_EX_PUSH, G_MTX_MODELVIEW, G_EX_EDIT_NONE);
 
             if(this->draw_mode & PART_EMIT_ROTATABLE){
                 func_80344720(this->unk34, (s32)iPtr->frame, 0, position, flat_rotation, scale, gfx, mtx);

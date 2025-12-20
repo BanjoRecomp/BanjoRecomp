@@ -14,7 +14,11 @@ void reset_projection_ids() {
     cur_ortho_projection_transform_id = 0;
 }
 
-bool perspective_interpolation_skipped = FALSE;
+bool skip_perspective_interpolation = FALSE;
+
+bool perspective_interpolation_skipped() {
+    return skip_perspective_interpolation;
+}
 
 s32 getGameMode(void);
 
@@ -76,20 +80,26 @@ RECOMP_PATCH void viewport_setRenderPerspectiveMatrix(Gfx **gfx, Mtx **mtx, f32 
     gEXSetViewMatrixFloat((*gfx)++, view->m);
 
     // @recomp If a perspective projection transform ID is set, apply it as the projection matrix group. Otherwise, use auto as the projection matrix group.
-    if (all_interpolation_skipped() || perspective_interpolation_skipped) {
-        gEXMatrixGroupNoInterpolate((*gfx)++, G_EX_NOPUSH, G_MTX_PROJECTION, G_EX_EDIT_NONE);
-    }
-    else if (cur_perspective_projection_transform_id != 0) {
-        // Force the projection to not adjust itself for a wider aspect ratio when it's being rendered for the Bottles' bonus puzzle or the Mumbo photo.
-        u16 aspect = G_EX_ASPECT_AUTO;
-        bool inPictureGameMode = (getGameMode() == GAME_MODE_8_BOTTLES_BONUS) || (getGameMode() == GAME_MODE_A_SNS_PICTURE);
-        bool isGameplayTransformId = (cur_perspective_projection_transform_id == PROJECTION_GAMEPLAY_TRANSFORM_ID);
-        bool isTransitionTransformId = (cur_perspective_projection_transform_id == PROJECTION_TRANSITION_TRANSFORM_ID);
-        if (inPictureGameMode && (isGameplayTransformId || isTransitionTransformId)) {
-            aspect = G_EX_ASPECT_STRETCH;
+    bool skip_interpolation = all_interpolation_skipped() || perspective_interpolation_skipped();
+    if (cur_perspective_projection_transform_id != 0) {
+        if (skip_interpolation) {
+            gEXMatrixGroupSkipAll((*gfx)++, cur_perspective_projection_transform_id, G_EX_NOPUSH, G_MTX_PROJECTION, G_EX_EDIT_NONE);
         }
+        else {
+            // Force the projection to not adjust itself for a wider aspect ratio when it's being rendered for the Bottles' bonus puzzle or the Mumbo photo.
+            u16 aspect = G_EX_ASPECT_AUTO;
+            bool inPictureGameMode = (getGameMode() == GAME_MODE_8_BOTTLES_BONUS) || (getGameMode() == GAME_MODE_A_SNS_PICTURE);
+            bool isGameplayTransformId = (cur_perspective_projection_transform_id == PROJECTION_GAMEPLAY_TRANSFORM_ID);
+            bool isTransitionTransformId = (cur_perspective_projection_transform_id == PROJECTION_TRANSITION_TRANSFORM_ID);
+            if (inPictureGameMode && (isGameplayTransformId || isTransitionTransformId)) {
+                aspect = G_EX_ASPECT_STRETCH;
+            }
 
-        gEXMatrixGroup((*gfx)++, cur_perspective_projection_transform_id, G_EX_INTERPOLATE_SIMPLE, G_EX_NOPUSH, G_MTX_PROJECTION, G_EX_COMPONENT_INTERPOLATE, G_EX_COMPONENT_INTERPOLATE, G_EX_COMPONENT_INTERPOLATE, G_EX_COMPONENT_INTERPOLATE, G_EX_COMPONENT_INTERPOLATE, G_EX_COMPONENT_SKIP, G_EX_COMPONENT_INTERPOLATE, G_EX_ORDER_LINEAR, G_EX_EDIT_NONE, aspect, G_EX_COMPONENT_SKIP, G_EX_COMPONENT_AUTO);
+            gEXMatrixGroup((*gfx)++, cur_perspective_projection_transform_id, G_EX_INTERPOLATE_SIMPLE, G_EX_NOPUSH, G_MTX_PROJECTION, G_EX_COMPONENT_INTERPOLATE, G_EX_COMPONENT_INTERPOLATE, G_EX_COMPONENT_INTERPOLATE, G_EX_COMPONENT_INTERPOLATE, G_EX_COMPONENT_INTERPOLATE, G_EX_COMPONENT_SKIP, G_EX_COMPONENT_INTERPOLATE, G_EX_ORDER_LINEAR, G_EX_EDIT_NONE, aspect, G_EX_COMPONENT_SKIP, G_EX_COMPONENT_AUTO);
+        }
+    }
+    else if (skip_interpolation) {
+        gEXMatrixGroupNoInterpolate((*gfx)++, G_EX_NOPUSH, G_MTX_PROJECTION, G_EX_EDIT_NONE);
     }
     else {
         gEXMatrixGroupSimpleNormal((*gfx)++, G_EX_ID_AUTO, G_EX_NOPUSH, G_MTX_PROJECTION, G_EX_EDIT_NONE);
@@ -117,11 +127,16 @@ RECOMP_PATCH void viewport_setRenderViewportAndOrthoMatrix(Gfx **gfx, Mtx **mtx)
     gEXSetViewMatrixFloat((*gfx)++, identity_matrix);
 
     // @recomp If an ortho projection transform ID is set, apply it as the projection matrix group. Otherwise, use auto as the projection matrix group.
-    if (all_interpolation_skipped()) {
-        gEXMatrixGroupNoInterpolate((*gfx)++, G_EX_NOPUSH, G_MTX_PROJECTION, G_EX_EDIT_NONE);
+    if (cur_ortho_projection_transform_id != 0) {
+        if (all_interpolation_skipped()) {
+            gEXMatrixGroupSkipAll((*gfx)++, cur_ortho_projection_transform_id, G_EX_NOPUSH, G_MTX_PROJECTION, G_EX_EDIT_NONE);
+        }
+        else {
+            gEXMatrixGroupSimpleNormal((*gfx)++, cur_ortho_projection_transform_id, G_EX_NOPUSH, G_MTX_PROJECTION, G_EX_EDIT_NONE);
+        }
     }
-    else if (cur_ortho_projection_transform_id != 0) {
-        gEXMatrixGroupSimpleNormal((*gfx)++, cur_ortho_projection_transform_id, G_EX_NOPUSH, G_MTX_PROJECTION, G_EX_EDIT_NONE);
+    else if (all_interpolation_skipped()) {
+        gEXMatrixGroupNoInterpolate((*gfx)++, G_EX_NOPUSH, G_MTX_PROJECTION, G_EX_EDIT_NONE);
     }
     else {
         gEXMatrixGroupSimpleNormal((*gfx)++, G_EX_ID_AUTO, G_EX_NOPUSH, G_MTX_PROJECTION, G_EX_EDIT_NONE);
@@ -217,11 +232,11 @@ RECOMP_PATCH void ncCamera_update(void) {
     ml_vec3f_diff_copy(vpPosDelta, vpPos, vpPosPrev);
     if (camType != camTypePrev) {
         // Always skip perspective interpolation on camera type changes.
-        perspective_interpolation_skipped = TRUE;
+        skip_perspective_interpolation = TRUE;
     }
     else if (camType == CAMERA_TYPE_2_DYNAMIC) {
         // Never skip interpolation during controllable gameplay.
-        perspective_interpolation_skipped = FALSE;
+        skip_perspective_interpolation = FALSE;
     }
     else {
         // Check for sudden position differences. They must be within an arbitrary threshold o
@@ -233,11 +248,11 @@ RECOMP_PATCH void ncCamera_update(void) {
         const f32 SkipThreshold = 100.0f;
         if (distToProjected > SkipThreshold) {
             ml_vec3f_clear(vpPosVel);
-            perspective_interpolation_skipped = TRUE;
+            skip_perspective_interpolation = TRUE;
         }
         else {
             ml_vec3f_copy(vpPosVel, vpPosDelta);
-            perspective_interpolation_skipped = FALSE;
+            skip_perspective_interpolation = FALSE;
         }
     }
 

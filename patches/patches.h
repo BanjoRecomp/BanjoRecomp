@@ -50,6 +50,9 @@ void osWriteBackDCacheAll(void);
     )
 #endif
 
+#define gEXMatrixGroupSkipAll(cmd, id, push, proj, edit) \
+    gEXMatrixGroup(cmd, id, G_EX_INTERPOLATE_SIMPLE, push, proj, G_EX_COMPONENT_SKIP, G_EX_COMPONENT_SKIP, G_EX_COMPONENT_SKIP, G_EX_COMPONENT_SKIP, G_EX_COMPONENT_SKIP, G_EX_COMPONENT_SKIP, G_EX_COMPONENT_SKIP, G_EX_ORDER_LINEAR, edit, G_EX_ASPECT_AUTO, G_EX_COMPONENT_SKIP, G_EX_COMPONENT_SKIP)
+
 #define gEXMatrixGroupSimpleNormal(cmd, id, push, proj, edit) \
     gEXMatrixGroup(cmd, id, G_EX_INTERPOLATE_SIMPLE, push, proj, G_EX_COMPONENT_INTERPOLATE, G_EX_COMPONENT_INTERPOLATE, G_EX_COMPONENT_INTERPOLATE, G_EX_COMPONENT_INTERPOLATE, G_EX_COMPONENT_INTERPOLATE, G_EX_COMPONENT_SKIP, G_EX_COMPONENT_INTERPOLATE, G_EX_ORDER_LINEAR, edit, G_EX_ASPECT_AUTO, G_EX_COMPONENT_SKIP, G_EX_COMPONENT_AUTO)
     
@@ -82,5 +85,6 @@ void set_additional_model_scale(f32 x, f32 y, f32 z);
 void set_frustum_checks_enabled(int enabled);
 void set_all_interpolation_skipped(bool skipped);
 bool all_interpolation_skipped();
+bool perspective_interpolation_skipped();
 
 #endif
