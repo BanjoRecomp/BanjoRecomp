@@ -4,6 +4,8 @@
 #include "functions.h"
 #include "../src/core2/gc/zoombox.h"
 
+extern MtxF sViewportMatrix;
+extern f32 sViewportLookVector[3];
 extern u32 D_803835E0;
 void func_802BBD2C(f32 *arg0, f32 *arg1);
 s32 func_80320708(void);
@@ -108,6 +110,31 @@ RECOMP_PATCH void func_802E39D0(Gfx **gdl, Mtx **mptr, Vtx **vptr, s32 framebuff
     if (!game_is_frozen() && func_80335134()) {
         func_8032D474(gdl, mptr, vptr);
     }
+    
+    // @recomp Set the HUD projection transform ID.
+    cur_perspective_projection_transform_id = PROJECTION_HUD_TRANSFORM_ID;
+
+    // @recomp Create a new projection for HUD elements to prevent them from being drawn in world space.
+    // This helps with high framerates, as they no longer have to interpolate in space which would cause minor jittering.
+
+    // @recomp Create a backup of the viewport state. Avoid using viewport_backupState so that calls in the following
+    // functions don't override the saved state.
+    f32 saved_viewport_pos[3];
+    f32 saved_viewport_rot[3];
+    f32 saved_viewport_planes[4][4];
+    f32 saved_viewport_look[3];
+    MtxF saved_viewport_matrix;
+    viewport_getPosition_vec3f(saved_viewport_pos);
+    viewport_getRotation_vec3f(saved_viewport_rot);
+    viewport_getFrustumPlanes(saved_viewport_planes[0], saved_viewport_planes[1], saved_viewport_planes[2], saved_viewport_planes[3]);
+    viewport_getLookVector(saved_viewport_look);
+    saved_viewport_matrix = sViewportMatrix;
+
+    // @recomp Zero out the viewport position and rotation, then update the viewport.
+    viewport_setPosition_f3(0.0f, 0.0f, 0.0f);
+    viewport_setRotation_f3(0.0f, 0.0f, 0.0f);
+    viewport_update();
+    viewport_setRenderViewportAndPerspectiveMatrix(gdl, mptr);
 
     gcpausemenu_draw(gdl, mptr, vptr);
     if (!game_is_frozen()) {
@@ -120,6 +147,16 @@ RECOMP_PATCH void func_802E39D0(Gfx **gdl, Mtx **mptr, Vtx **vptr, s32 framebuff
     }
 
     printbuffer_draw(gdl, mptr, vptr);
+    
+    // @recomp Return to the normal gameplay projection transform ID.
+    cur_perspective_projection_transform_id = PROJECTION_GAMEPLAY_TRANSFORM_ID;
+
+    // @recomp Restore the saved viewport state.
+    viewport_setPosition_vec3f(saved_viewport_pos);
+    viewport_setRotation_vec3f(saved_viewport_rot);
+    viewport_setFrustumPlanes(saved_viewport_planes[0], saved_viewport_planes[1], saved_viewport_planes[2], saved_viewport_planes[3]);
+    ml_vec3f_copy(sViewportLookVector, saved_viewport_look);
+    sViewportMatrix = saved_viewport_matrix;
 
     if (D_8037E8E0.game_mode != GAME_MODE_A_SNS_PICTURE
         || D_8037E8E0.unk19 == 6
@@ -320,12 +357,13 @@ RECOMP_PATCH void func_803164B0(GcZoombox *this, Gfx **gfx, Mtx **mtx, s32 arg3,
     func_80335D30(gfx);
 
     // @recomp Set the ortho projection transform ID for the portrait.
+    u32 prev_ortho_id = cur_ortho_projection_transform_id;
     cur_ortho_projection_transform_id = PROJECTION_PORTRAIT_TRANSFORM_ID_START + this->portrait_id;
 
     viewport_setRenderViewportAndOrthoMatrix(gfx, mtx);
 
-    // @recomp Clear the current ortho projection transform ID.
-    cur_ortho_projection_transform_id = 0;
+    // @recomp Reset the ortho projection transform ID.
+    cur_ortho_projection_transform_id = prev_ortho_id;
 
     mlMtxIdent();
     if (this->unk1A4_24) {
@@ -348,16 +386,7 @@ RECOMP_PATCH void func_803164B0(GcZoombox *this, Gfx **gfx, Mtx **mtx, s32 arg3,
     modelRender_setDepthMode(MODEL_RENDER_DEPTH_NONE);
     func_80344090(arg5, this->unk186, gfx);
     func_8033687C(gfx);
-
-    // @recomp Set the perpsective projection transform ID before restoring the game's normal projection.
-    // This is because zoomboxes are drawn in the normal gameplay projection.
-    u32 prev_projection_id = cur_perspective_projection_transform_id;
-    cur_perspective_projection_transform_id = PROJECTION_GAMEPLAY_TRANSFORM_ID;
-
     viewport_setRenderViewportAndPerspectiveMatrix(gfx, mtx);
-
-    // @recomp Reset the projection ID.
-    cur_perspective_projection_transform_id = prev_projection_id;
 
     // @recomp Pop the model matrix group.
     gEXPopMatrixGroup((*gfx)++, G_MTX_MODELVIEW);

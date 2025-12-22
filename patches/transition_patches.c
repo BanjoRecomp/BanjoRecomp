@@ -279,6 +279,7 @@ RECOMP_PATCH void gctransition_draw(Gfx **gdl, Mtx **mptr, Vtx **vptr){
     viewport_update(); //camera_updateNormal
 
     // @recomp Set the perspective projection transform ID for the transition projection.
+    u32 prev_projection_id = cur_perspective_projection_transform_id;
     cur_perspective_projection_transform_id = PROJECTION_TRANSITION_TRANSFORM_ID;
 
     viewport_setRenderViewportAndPerspectiveMatrix(gdl, mptr);
@@ -451,6 +452,10 @@ RECOMP_PATCH void gctransition_draw(Gfx **gdl, Mtx **mptr, Vtx **vptr){
         gDPSetTextureFilter((*gdl)++, G_TF_BILERP);
     }
     viewport_restoreState();
+
+    // @recomp Restore the previous projection ID.
+    cur_perspective_projection_transform_id = prev_projection_id;
+
     viewport_setRenderViewportAndPerspectiveMatrix(gdl, mptr);
     
 }
