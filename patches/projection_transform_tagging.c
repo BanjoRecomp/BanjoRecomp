@@ -40,98 +40,100 @@ void func_8033687C(Gfx **);
 void func_80335D30(Gfx **);
 void func_80344090(BKSpriteDisplayData *self, s32 frame, Gfx **gfx);
 
-// @recomp Patched to set the projection transform ID for the main projection.
-RECOMP_PATCH void func_80334540(Gfx** gdl, Mtx **mptr, Vtx **vptr) {
-    f32 sp44;
-    f32 sp40;
-
-    if (D_803835E0 == 0) {
-        drawRectangle2D(gdl, 0, 0, gFramebufferWidth, gFramebufferHeight, 0, 0, 0);
-        func_802BBD2C(&sp44, &sp40);
-        viewport_setNearAndFar(sp44, sp40);
-
-        // @recomp Set the perpsective projection transform ID.
-        cur_perspective_projection_transform_id = PROJECTION_GAMEPLAY_TRANSFORM_ID;
-        
-        viewport_setRenderViewportAndPerspectiveMatrix(gdl, mptr);
-        return;
-    }
-    if (func_80320708() == 0) {
-        eeprom_writeBlocks(0, 0, (void*)0x80BC7230, EEPROM_MAXBLOCKS);
-    }
-    spawnQueue_unlock();
-    sky_draw(gdl, mptr, vptr);
-    func_802BBD2C(&sp44, &sp40);
-    viewport_setNearAndFar(sp44, sp40);
-    
-    // @recomp Set the perpsective projection transform ID.
-    cur_perspective_projection_transform_id = PROJECTION_GAMEPLAY_TRANSFORM_ID;
-
-    viewport_setRenderViewportAndPerspectiveMatrix(gdl, mptr);
-    if (mapModel_has_xlu_bin() != 0) {
-        mapModel_opa_draw(gdl, mptr, vptr);
-        if (game_is_frozen() == 0) {
-            func_80322E64(gdl, mptr, vptr);
-        }
-        if (game_is_frozen() == 0) {
-            player_draw(gdl, mptr, vptr);
-        }
-        if (game_is_frozen() == 0) {
-            func_80302C94(gdl, mptr, vptr);
-        }
-        if (game_is_frozen() == 0) {
-            jiggylist_draw(gdl, mptr, vptr);
-        }
-        if (game_is_frozen() == 0) {
-            func_803500D8(gdl, mptr, vptr);
-        }
-        if (game_is_frozen() == 0) {
-            func_802F2ED0(func_8032994C(), gdl, mptr, vptr);
-        }
-        if (game_is_frozen() == 0) {
-            partEmitMgr_drawPass0(gdl, mptr, vptr);
-        }
-        if (game_is_frozen() == 0) {
-            mapModel_xlu_draw(gdl, mptr, vptr);
-        }
-        if (game_is_frozen() == 0) {
-            func_8032D3D8(gdl, mptr, vptr);
-        }
-        if (game_is_frozen() == 0) {
-            partEmitMgr_drawPass1(gdl, mptr, vptr);
-        }
-        if (game_is_frozen() == 0) {
-            func_8034F6F0(gdl, mptr, vptr);
-        }
-        func_802D520C(gdl, mptr, vptr);
-    } else {
-        mapModel_opa_draw(gdl, mptr, vptr);
-        func_80322E64(gdl, mptr, vptr);
-        func_8034F6F0(gdl, mptr, vptr);
-        player_draw(gdl, mptr, vptr);
-        func_80302C94(gdl, mptr, vptr);
-        func_8032D3D8(gdl, mptr, vptr);
-        jiggylist_draw(gdl, mptr, vptr);
-        func_803500D8(gdl, mptr, vptr);
-        func_802F2ED0(func_8032994C(), gdl, mptr, vptr);
-        func_802D520C(gdl, mptr, vptr);
-        partEmitMgr_draw(gdl, mptr, vptr);
-    }
-    if (game_is_frozen() == 0) {
-        func_80350818(gdl, mptr, vptr);
-    }
-    if (game_is_frozen() == 0) {
-        func_802BBD0C(gdl, mptr, vptr);
-    }
-    spawnQueue_lock();
-    
-    // @recomp Clear the perpsective projection transform ID.
-    cur_perspective_projection_transform_id = 0;
-}
-
 void actor_predrawMethod(Actor *);
 void actor_postdrawMethod(ActorMarker *);
 extern bool D_8037DE84;
+
+extern struct {
+    s32 unk0;
+    s32 game_mode; //game_mode
+    f32 unk8;
+    s32 unkC; //freeze_scene_flag (used for pause menu)
+    f32 unk10;
+    u8 transition;
+    u8 map;
+    u8 exit;
+    u8 unk17; //reset_on_map_load
+    u8 unk18;
+    u8 unk19;
+    u8 unk1A;
+    u8 unk1B;
+    u8 unk1C;
+} D_8037E8E0;
+
+extern void func_80334540(Gfx **gdl, Mtx **mptr, Vtx **vptr);
+extern void func_802E67AC(void);
+extern void func_802E3BD0(s32 frame_buffer_indx);
+extern void func_802E67C4(void);
+extern void func_802E5F10(Gfx **gdl);
+extern void func_8030C2D4(Gfx **gdl, Mtx **mptr, Vtx **vptr);
+extern s32 func_80335134();
+extern void func_8032D474(Gfx **gdl, Mtx **mptr, Vtx **vptr);
+extern void gcpausemenu_draw(Gfx **gfx, Mtx **mtx, Vtx **vtx);
+extern void dummy_func_8025AFC0(Gfx **gfx, Mtx **mtx, Vtx **vtx);
+extern void gcdialog_draw(Gfx **gfx, Mtx **mtx, Vtx **vtx);
+extern void itemPrint_draw(Gfx **gdl, Mtx **mptr, Vtx **vptr);
+extern void printbuffer_draw(Gfx **gfx, Mtx **mtx, Vtx **vtx);
+
+// @recomp Patched to set the projection transform ID for the main projection.
+RECOMP_PATCH void func_802E39D0(Gfx **gdl, Mtx **mptr, Vtx **vptr, s32 framebuffer_idx, s32 arg4) {
+    // @recomp Set the perspective projection transform ID.
+    cur_perspective_projection_transform_id = PROJECTION_GAMEPLAY_TRANSFORM_ID;
+
+    Mtx *m_start = *mptr;
+    Vtx *v_start = *vptr;
+
+    scissorBox_SetForGameMode(gdl, framebuffer_idx);
+    D_8037E8E0.unkC = FALSE;
+    func_80334540(gdl, mptr, vptr);
+    if (!arg4) {
+        func_802E67AC();
+        func_802E3BD0(getActiveFramebuffer());
+        func_802E67C4();
+        func_802E5F10(gdl);
+    }
+    if (D_8037E8E0.game_mode == GAME_MODE_A_SNS_PICTURE
+        && D_8037E8E0.unk19 != 6
+        && D_8037E8E0.unk19 != 5
+        ) {
+        gctransition_draw(gdl, mptr, vptr);
+    }
+
+    if (D_8037E8E0.game_mode == GAME_MODE_8_BOTTLES_BONUS
+        || D_8037E8E0.game_mode == GAME_MODE_A_SNS_PICTURE
+        ) {
+        func_8030C2D4(gdl, mptr, vptr);
+    }
+
+    if (!game_is_frozen() && func_80335134()) {
+        func_8032D474(gdl, mptr, vptr);
+    }
+
+    gcpausemenu_draw(gdl, mptr, vptr);
+    if (!game_is_frozen()) {
+        dummy_func_8025AFC0(gdl, mptr, vptr);
+    }
+
+    gcdialog_draw(gdl, mptr, vptr);
+    if (!game_is_frozen()) {
+        itemPrint_draw(gdl, mptr, vptr);
+    }
+
+    printbuffer_draw(gdl, mptr, vptr);
+
+    if (D_8037E8E0.game_mode != GAME_MODE_A_SNS_PICTURE
+        || D_8037E8E0.unk19 == 6
+        || D_8037E8E0.unk19 == 5
+        ) {
+        gctransition_draw(gdl, mptr, vptr);
+    }
+    finishFrame(gdl);
+    osWritebackDCache(m_start, sizeof(Mtx) * (*mptr - m_start));
+    osWritebackDCache(v_start, sizeof(Vtx) * (*vptr - v_start));
+
+    // @recomp Clear the perspective projection transform ID.
+    cur_perspective_projection_transform_id = 0;
+}
 
 // @recomp Patched to set the transform ID for the press start projection.
 RECOMP_PATCH Actor *chOverlayPressStart_draw(ActorMarker *marker, Gfx **gdl, Mtx **mptr, Vtx **vptr){
