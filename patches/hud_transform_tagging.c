@@ -180,10 +180,17 @@ RECOMP_PATCH void fxcommon3score_draw(enum item_e item_id, void *arg1, Gfx **gfx
         // This fixes an issue where the rectangle would teleport ahead of the movement of the model in HFR
         // and it also provides a minor performance boost by skipping the need to switch render targets.
         if (getGameMode() != GAME_MODE_4_PAUSED) {
+            u32 depth_rect_transform_id = HUD_SCORE3_DEPTH_RECT_TRANSFORM_ID_START + item_id;
+            guMtxIdent(*mtx);
+            gSPMatrix((*gfx)++, OS_K0_TO_PHYSICAL((*mtx)++), G_MTX_NOPUSH | G_MTX_LOAD | G_MTX_MODELVIEW);
+            gEXMatrixGroupSimpleVerts((*gfx)++, depth_rect_transform_id, G_EX_PUSH, G_MTX_MODELVIEW, G_EX_EDIT_NONE);
+
             f32 x = a1->unk30 - a1->unk6C;
             f32 y = sp40 - a1->unk6C;
             f32 w = 2 * a1->unk6C;
             f32 h = 2 * a1->unk6C;
+            gSPVertex((*gfx)++, *vtx, 4, 0);
+
             f32 vpos[3];
             f32 vrot[3];
             for (u32 v_y = 0; v_y < 2; v_y++) {
@@ -196,11 +203,6 @@ RECOMP_PATCH void fxcommon3score_draw(enum item_e item_id, void *arg1, Gfx **gfx
                 }
             }
 
-            u32 depth_rect_transform_id = HUD_SCORE3_DEPTH_RECT_TRANSFORM_ID_START + item_id;
-            guMtxIdent(*mtx);
-            gEXMatrixGroupSimpleVerts((*gfx)++, depth_rect_transform_id, G_EX_PUSH, G_MTX_MODELVIEW, G_EX_EDIT_NONE);
-            gSPMatrix((*gfx)++, OS_K0_TO_PHYSICAL((*mtx)++), G_MTX_NOPUSH | G_MTX_LOAD | G_MTX_MODELVIEW);
-            gSPVertex((*gfx)++, *vtx, 4, 0);
             gEXPushOtherMode((*gfx)++);
             gEXPushCombineMode((*gfx)++);
             gDPSetRenderMode((*gfx)++, RM_DEPTH_SET(1), RM_DEPTH_SET(2));
