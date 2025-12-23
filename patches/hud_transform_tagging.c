@@ -198,10 +198,10 @@ RECOMP_PATCH void fxcommon3score_draw(enum item_e item_id, void *arg1, Gfx **gfx
                 }
             }
 
-            u32 depth_rect_transform_id = HUD_SCORE3_TRANSFORM_ID_START + item_id;
-            gEXMatrixGroupSimpleVerts((*gfx)++, depth_rect_transform_id, G_EX_PUSH, G_MTX_MODELVIEW, G_EX_EDIT_NONE);
+            u32 depth_rect_transform_id = HUD_SCORE3_DEPTH_RECT_TRANSFORM_ID_START + item_id;
             guMtxIdent(*mtx);
             gSPMatrix((*gfx)++, OS_K0_TO_PHYSICAL((*mtx)++), G_MTX_NOPUSH | G_MTX_LOAD | G_MTX_MODELVIEW);
+            gEXMatrixGroupSimpleVerts((*gfx)++, depth_rect_transform_id, G_EX_PUSH, G_MTX_MODELVIEW, G_EX_EDIT_NONE);
             gEXPushOtherMode((*gfx)++);
             gEXPushCombineMode((*gfx)++);
             gDPSetRenderMode((*gfx)++, RM_DEPTH_SET(1), RM_DEPTH_SET(2));
@@ -219,7 +219,7 @@ RECOMP_PATCH void fxcommon3score_draw(enum item_e item_id, void *arg1, Gfx **gfx
         }
 
         // @recomp Set the model transform ID.
-        cur_drawn_model_transform_id = HUD_SCORE3_TRANSFORM_ID_START + (item_id + 1) * MARKER_TRANSFORM_ID_COUNT;
+        cur_drawn_model_transform_id = HUD_SCORE3_TRANSFORM_ID_START + item_id * MARKER_TRANSFORM_ID_COUNT;
 
         modelRender_draw(gfx, mtx, sp5C, sp68, a1->unk3C * sp3C, sp44, a1->model);
 
