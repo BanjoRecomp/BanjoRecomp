@@ -138,6 +138,11 @@ RECOMP_PATCH void fxhoneycarrierscore_draw(s32 arg0, struct8s *arg1, Gfx **arg2,
     }
 }
 
+#define RM_DEPTH_SET(clk) \
+        Z_UPD | CVG_DST_FULL | ALPHA_CVG_SEL | FORCE_BL | G_ZS_PRIM | \
+        ZMODE_OPA | \
+        GBL_c##clk(G_BL_CLR_BL, G_BL_0, G_BL_CLR_MEM, G_BL_1MA)
+
 // @recomp Tag the matrices for any model using this score type.
 RECOMP_PATCH void fxcommon3score_draw(enum item_e item_id, void *arg1, Gfx **gfx, Mtx **mtx, Vtx **vtx) {
     Struct_core2_79830_0 *a1 = (Struct_core2_79830_0 *)arg1;
@@ -170,13 +175,51 @@ RECOMP_PATCH void fxcommon3score_draw(enum item_e item_id, void *arg1, Gfx **gfx
         if (a1->unk6C == 0.0f) {
             a1->unk6C = 1.1 * (vtxList_getGlobalNorm(model_getVtxList(a1->model)) * a1->unk3C);
         }
-        func_80253208(gfx, a1->unk30 - a1->unk6C, sp40 - a1->unk6C, 2 * a1->unk6C, 2 * a1->unk6C, gFramebuffers[getActiveFramebuffer()]);
+
+        // @recomp Draw a rectangle that clears the depth and gets interpolated along with the 3D model.
+        // This fixes an issue where the rectangle would teleport ahead of the movement of the model in HFR
+        // and it also provides a minor performance boost by skipping the need to switch render targets.
+        if (getGameMode() != GAME_MODE_4_PAUSED) {
+            f32 x = a1->unk30 - a1->unk6C;
+            f32 y = sp40 - a1->unk6C;
+            f32 w = 2 * a1->unk6C;
+            f32 h = 2 * a1->unk6C;
+            gSPVertex((*gfx)++, *vtx, 4, 0);
+
+            f32 vpos[3];
+            f32 vrot[3];
+            for (u32 v_y = 0; v_y < 2; v_y++) {
+                for (u32 v_x = 0; v_x < 2; v_x++) {
+                    viewport_transformCoordinate(x + (w * v_x), y + (h * v_y), vpos, vrot);
+                    (*vtx)->v.ob[0] = vpos[0];
+                    (*vtx)->v.ob[1] = vpos[1];
+                    (*vtx)->v.ob[2] = vpos[2];
+                    (*vtx)++;
+                }
+            }
+
+            u32 depth_rect_transform_id = HUD_SCORE3_TRANSFORM_ID_START + item_id;
+            gEXMatrixGroupSimpleVerts((*gfx)++, depth_rect_transform_id, G_EX_PUSH, G_MTX_MODELVIEW, G_EX_EDIT_NONE);
+            guMtxIdent(*mtx);
+            gSPMatrix((*gfx)++, OS_K0_TO_PHYSICAL((*mtx)++), G_MTX_NOPUSH | G_MTX_LOAD | G_MTX_MODELVIEW);
+            gEXPushOtherMode((*gfx)++);
+            gEXPushCombineMode((*gfx)++);
+            gDPSetRenderMode((*gfx)++, RM_DEPTH_SET(1), RM_DEPTH_SET(2));
+            gDPSetCycleType((*gfx)++, G_CYC_1CYCLE);
+            gDPSetCombineLERP((*gfx)++, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+            gDPSetPrimDepth((*gfx)++, 0xFFFF, 0xFFFF);
+            gSP1Quadrangle((*gfx)++, 0, 1, 3, 2, 0);
+            gEXPopMatrixGroup((*gfx)++, G_MTX_MODELVIEW);
+            gEXPopOtherMode((*gfx)++);
+            gEXPopCombineMode((*gfx)++);
+        }
+
         if (a1->anim_ctrl != NULL) {
             anctrl_drawSetup(a1->anim_ctrl, sp5C, 1);
         }
 
         // @recomp Set the model transform ID.
-        cur_drawn_model_transform_id = HUD_SCORE3_TRANSFORM_ID_START + item_id * MARKER_TRANSFORM_ID_COUNT;
+        cur_drawn_model_transform_id = HUD_SCORE3_TRANSFORM_ID_START + (item_id + 1) * MARKER_TRANSFORM_ID_COUNT;
 
         modelRender_draw(gfx, mtx, sp5C, sp68, a1->unk3C * sp3C, sp44, a1->model);
 
