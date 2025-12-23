@@ -4,6 +4,10 @@
 #include "functions.h"
 #include "../src/core2/gc/zoombox.h"
 
+extern u16 gScissorBoxLeft;
+extern u16 gScissorBoxRight;
+extern u16 gScissorBoxTop;
+extern u16 gScissorBoxBottom;
 extern MtxF sViewportMatrix;
 extern f32 sViewportLookVector[3];
 extern u32 D_803835E0;
@@ -41,6 +45,8 @@ void func_803382E4(s32);
 void func_8033687C(Gfx **);
 void func_80335D30(Gfx **);
 void func_80344090(BKSpriteDisplayData *self, s32 frame, Gfx **gfx);
+void func_802F7B90(s32 arg0, s32 arg1, s32 arg2);
+void gcpausemenu_zoombox_callback(s32 portrait_id, s32 zoombox_state);
 
 void actor_predrawMethod(Actor *);
 void actor_postdrawMethod(ActorMarker *);
@@ -76,6 +82,9 @@ extern void dummy_func_8025AFC0(Gfx **gfx, Mtx **mtx, Vtx **vtx);
 extern void gcdialog_draw(Gfx **gfx, Mtx **mtx, Vtx **vtx);
 extern void itemPrint_draw(Gfx **gdl, Mtx **mptr, Vtx **vptr);
 extern void printbuffer_draw(Gfx **gfx, Mtx **mtx, Vtx **vtx);
+
+extern u32 cur_pushed_text_transform_id;
+extern u32 cur_pushed_text_transform_origin;
 
 // @recomp Patched to set the projection transform ID for the main projection.
 RECOMP_PATCH void func_802E39D0(Gfx **gdl, Mtx **mptr, Vtx **vptr, s32 framebuffer_idx, s32 arg4) {
@@ -309,6 +318,10 @@ RECOMP_PATCH Actor *func_802DC320(ActorMarker *marker, Gfx **gfx, Mtx **mtx, Vtx
     return this;
 }
 
+bool left_aligned_zoombox(GcZoombox *this) {
+    return !this->unk1A4_15 && this->callback == &gcpausemenu_zoombox_callback;
+}
+
 // @recomp Patched to set the zoombox's model transform ID.
 RECOMP_PATCH void func_803163A8(GcZoombox *this, Gfx **gfx, Mtx **mtx) {
     f32 sp5C[3];
@@ -316,6 +329,16 @@ RECOMP_PATCH void func_803163A8(GcZoombox *this, Gfx **gfx, Mtx **mtx) {
     f32 sp44[3];
     f32 sp38[3];
     f32 sp34;
+
+    // @recomp
+    // NOTE: gScissorBoxRight/gScissorBoxTop are incorrectly named in the decompilation and must be swapped.
+    if (left_aligned_zoombox(this)) {
+        gEXPushScissor((*gfx)++);
+        gEXSetScissor((*gfx)++, G_SC_NON_INTERLACE, G_EX_ORIGIN_LEFT, G_EX_ORIGIN_RIGHT, 0, gScissorBoxRight, 0, gScissorBoxBottom);
+        gEXSetViewportAlign((*gfx)++, G_EX_ORIGIN_LEFT, 0, 0);
+    }
+
+    viewport_setRenderViewportAndPerspectiveMatrix(gfx, mtx);
 
     sp34 = viewport_transformCoordinate(this->unk170, this->unk172, sp50, sp5C);
     if (this->unk1A4_24) {
@@ -338,6 +361,12 @@ RECOMP_PATCH void func_803163A8(GcZoombox *this, Gfx **gfx, Mtx **mtx) {
 
     // @recomp Reset the model transform ID.
     cur_drawn_model_transform_id = prev_transform_id;
+
+    // @recomp Clear the matrix group.
+    if (left_aligned_zoombox(this)) {
+        gEXSetViewportAlign((*gfx)++, G_EX_ORIGIN_NONE, 0, 0);
+        gEXPopScissor((*gfx)++);
+    }
 }
 
 // @recomp Patched to set the zoombox portrait's model and ortho projection transform IDs.
@@ -356,6 +385,14 @@ RECOMP_PATCH void func_803164B0(GcZoombox *this, Gfx **gfx, Mtx **mtx, s32 arg3,
     // @recomp Set the ortho projection transform ID for the portrait.
     u32 prev_ortho_id = cur_ortho_projection_transform_id;
     cur_ortho_projection_transform_id = PROJECTION_PORTRAIT_TRANSFORM_ID_START + this->portrait_id;
+
+    // @recomp
+    // NOTE: gScissorBoxRight/gScissorBoxTop are incorrectly named in the decompilation and must be swapped.
+    if (left_aligned_zoombox(this)) {
+        gEXPushScissor((*gfx)++);
+        gEXSetScissor((*gfx)++, G_SC_NON_INTERLACE, G_EX_ORIGIN_LEFT, G_EX_ORIGIN_RIGHT, 0, gScissorBoxRight, 0, gScissorBoxBottom);
+        gEXSetViewportAlign((*gfx)++, G_EX_ORIGIN_LEFT, 0, 0);
+    }
 
     viewport_setRenderViewportAndOrthoMatrix(gfx, mtx);
 
@@ -387,4 +424,46 @@ RECOMP_PATCH void func_803164B0(GcZoombox *this, Gfx **gfx, Mtx **mtx, s32 arg3,
 
     // @recomp Pop the model matrix group.
     gEXPopMatrixGroup((*gfx)++, G_MTX_MODELVIEW);
+
+    if (left_aligned_zoombox(this)) {
+        gEXSetViewportAlign((*gfx)++, G_EX_ORIGIN_NONE, 0, 0);
+        gEXPopScissor((*gfx)++);
+    }
+}
+
+// @recomp
+RECOMP_PATCH void func_803162B4(GcZoombox *this) {
+    // @recomp
+    // cur_pushed_text_transform_id = ZOOMBOX_PRINT_TRANSFORM_ID_START + this->portrait_id * ZOOMBOX_PRINT_TRANSFORM_ID_COUNT;
+    if (left_aligned_zoombox(this)) {
+        cur_pushed_text_transform_origin = G_EX_ORIGIN_LEFT;
+    }
+
+    func_802F7B90(this->unk168, this->unk168, this->unk168);
+    if (this->unk1A4_30) {
+        if (this->unk1A4_17) {
+            func_802F79D0(this->unk16A, this->unk16C, this->unk0, this->unk166, -1);
+        }
+        else if (this->unk1A4_15) {
+            print_bold_spaced(this->unk16A, this->unk16C, this->unk0);
+        }
+        else {
+            print_dialog(this->unk16A, this->unk16C, this->unk0);
+        }
+    }
+    if (this->unk1A4_29) {
+        if (this->unk1A4_15) {
+            print_bold_spaced(this->unk16A, this->unk16E, this->unk30);
+        }
+        else {
+            print_dialog(this->unk16A, this->unk16E, this->unk30);
+        }
+    }
+    func_802F7B90(0xff, 0xff, 0xff);
+
+    // @recomp
+    // cur_pushed_text_transform_id = 0;
+    if (left_aligned_zoombox(this)) {
+        cur_pushed_text_transform_origin = G_EX_ORIGIN_NONE;
+    }
 }
