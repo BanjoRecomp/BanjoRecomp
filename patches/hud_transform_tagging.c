@@ -38,6 +38,7 @@ extern s32 D_803815E8;
 extern f32 gHealth;
 extern void *D_8036A010;
 extern void *D_8036A014;
+extern Gfx D_80369920[];
 extern Gfx D_8036A030[];
 extern Gfx D_8036A228[];
 extern Gfx D_8036A278[];
@@ -63,6 +64,8 @@ extern s32 level_get(void);
 extern s32 itemscore_noteScores_getTotal(void);
 extern s32 getGameMode(void);
 extern f32 vtxList_getGlobalNorm(BKVertexList *);
+
+s32 itemPrint_lastValues[0x2C];
 
 typedef struct {
     u8 pad0[0x14];
@@ -139,6 +142,7 @@ extern struct {
 
 extern u32 cur_pushed_text_transform_id;
 extern u32 cur_pushed_text_transform_origin;
+extern u32 cur_pushed_text_transform_skip_interpolation;
 
 // @recomp Tag the matrices for each honeycomb piece.
 RECOMP_PATCH void fxhoneycarrierscore_draw(s32 arg0, struct8s *arg1, Gfx **arg2, Mtx **arg3, Vtx **arg4) {
@@ -262,6 +266,7 @@ RECOMP_PATCH void fxjinjoscore_draw(s32 arg0, struct8s *arg1, Gfx **gfx, Mtx **m
 
     gSPDisplayList((*gfx)++, D_8036A228);
     viewport_setRenderViewportAndOrthoMatrix(gfx, mtx);
+
     pos_x = 44.0f;
     // Draw all jinjo heads
     for (jinjo_id = 0; jinjo_id < 5; jinjo_id++) {
@@ -292,10 +297,17 @@ RECOMP_PATCH void fxjinjoscore_draw(s32 arg0, struct8s *arg1, Gfx **gfx, Mtx **m
                     gDPSetPrimColor((*gfx)++, 0, 0, 0x00, 0x00, 0x00, jinjo_collected ? 0xFF : 0x6E);
                 }
                 center_x = pos_x - (f32)gFramebufferWidth / 2 + x_offset;
-                center_y = (f32)gFramebufferHeight / 2 + func_802FB0E4(arg1) - 266.0f + 40.0f + y_offset - D_80381E78[jinjo_id];
+
+                // @recomp Remove vertical translation from the vertices.
+                center_y = (f32)gFramebufferHeight / 2 - 266.0f + 40.0f + y_offset;
+                //center_y = (f32)gFramebufferHeight / 2 + func_802FB0E4(arg1) - 266.0f + 40.0f + y_offset - D_80381E78[jinjo_id];
 
                 // @recomp Assign the matrix group for each Jinjo and its shadow separately.
-                gEXMatrixGroupSimpleVerts((*gfx)++, HUD_JINJOSCORE_TRANSFORM_ID_START + jinjo_id * 2 + draw_index, G_EX_PUSH, G_MTX_MODELVIEW, G_EX_EDIT_NONE);
+                gEXMatrixGroupSimpleNormal((*gfx)++, HUD_JINJOSCORE_TRANSFORM_ID_START + jinjo_id * 2 + draw_index, G_EX_PUSH, G_MTX_MODELVIEW, G_EX_EDIT_NONE);
+
+                // @recomp Add vertical translation to matrix.
+                guTranslate(*mtx, 0.0f, (func_802FB0E4(arg1) - D_80381E78[jinjo_id]) * 4.0f, 0.0f);
+                gSPMatrix((*gfx)++, OS_K0_TO_PHYSICAL((*mtx)++), G_MTX_NOPUSH | G_MTX_LOAD | G_MTX_MODELVIEW);
 
                 gSPVertex((*gfx)++, *vtx, 4, 0);
                 // Set up the positions of the four vertices
@@ -522,11 +534,18 @@ RECOMP_PATCH void fxlifescore_draw(enum item_e item_id, struct8s *arg1, Gfx **gf
     cur_pushed_text_transform_id = HUD_LIFESCORE_TRANSFORM_PRINT_ID_START;
     cur_pushed_text_transform_origin = G_EX_ORIGIN_LEFT;
 
+    // @recomp Keep track of the last item value. If the value has changed, skip vertex interpolation this frame.
+    if (itemPrint_lastValues[item_id] != itemPrint_getValue(item_id)) {
+        cur_pushed_text_transform_skip_interpolation = TRUE;
+        itemPrint_lastValues[item_id] = itemPrint_getValue(item_id);
+    }
+
     print_bold_spaced(0x4E, (s32)(func_802FB0E4(arg1) + -16.0f + 4.0f), (char *)&code_78E50_ItemValueString);
 
     // @recomp Clear the ID and alignment for the text.
     cur_pushed_text_transform_id = 0;
     cur_pushed_text_transform_origin = G_EX_ORIGIN_NONE;
+    cur_pushed_text_transform_skip_interpolation = FALSE;
 
     if (1); //fake
     if (D_80381EB0[D_80381EC4] != NULL) {
@@ -589,6 +608,72 @@ RECOMP_PATCH void fxlifescore_draw(enum item_e item_id, struct8s *arg1, Gfx **gf
     }
 }
 
+// @recomp Patched to remove translation of the score element from the vertices and move it to the matrix.
+RECOMP_PATCH void func_802FD360(struct8s *arg0, Gfx **gfx, Mtx **mtx, Vtx **vtx) {
+    s32 tmp_s2 = 0;
+    s32 tmp_s4;
+    s32 texture_width;
+    s32 texture_height;
+    f32 tmp_f26;
+    f32 f2;
+
+
+    if (arg0->unk50 == NULL) return;
+
+    gSPDisplayList((*gfx)++, &D_80369920);
+    if (arg0->unk20 == ITEM_C_NOTE) {
+        gDPSetCombineMode((*gfx)++, G_CC_MODULATEIA, G_CC_MODULATEIA);
+    }
+    viewport_setRenderViewportAndOrthoMatrix(gfx, mtx);
+
+    // @recomp Add vertical animation component to the matrix.
+    guTranslate(*mtx - 1, 0.0f, -func_802FB0E4(arg0) * arg0->unk4C * 4.0f, 0.0f);
+
+    gSPVertex((*gfx)++, *vtx, 4, 0);
+    if (arg0->unk20 == ITEM_0_HOURGLASS_TIMER) {
+        tmp_s2 = 0xC;
+    }
+    func_80347FC0(gfx, (BKSprite *)(arg0->unk50), ((s32)arg0->unk60 + tmp_s2) % arg0->unk2C, 0, 0, 0, 0, 2, 2, &texture_width, &texture_height);
+    tmp_f26 = (arg0->unk20 == ITEM_0_HOURGLASS_TIMER && texture_width == 0x10) ? 1.0f : 0.0f;
+    for (tmp_s4 = 0; tmp_s4 < 2; tmp_s4++) {//L802FD528
+        for (tmp_s2 = 0; tmp_s2 < 2; tmp_s2++) {//
+            (*vtx)->v.ob[0] = ((func_802FB0DC(arg0) + (((texture_width * arg0->unk40 * tmp_s2 - texture_width * arg0->unk40 / 2) - (f32)gFramebufferWidth / 2) + arg0->unk38)) + tmp_f26) * 4.0f;
+            // @recomp Removed vertical animation component from the vertices.
+            //(*vtx)->v.ob[1] = ((((texture_height * arg0->unk40 / 2 - texture_height * arg0->unk40 * tmp_s4) + (f32)gFramebufferHeight / 2) - arg0->unk3C) - func_802FB0E4(arg0) * arg0->unk4C) * 4.0f;
+            (*vtx)->v.ob[1] = ((((texture_height * arg0->unk40 / 2 - texture_height * arg0->unk40 * tmp_s4) + (f32)gFramebufferHeight / 2) - arg0->unk3C)) * 4.0f;
+            (*vtx)->v.ob[2] = -0x14;
+            (*vtx)->v.tc[0] = ((texture_width - 1) * tmp_s2) << 6;
+            (*vtx)->v.tc[1] = ((texture_height - 1) * tmp_s4) << 6;
+            if (arg0->unk20 == ITEM_C_NOTE) {
+                if (tmp_s4 == 0) {
+                    (*vtx)->v.cn[0] = 0xff;
+                    (*vtx)->v.cn[1] = 0xff;
+                    (*vtx)->v.cn[2] = 0x0;
+                    (*vtx)->v.cn[3] = 0xff;
+                }
+                else if (tmp_s2 != 0) {
+                    (*vtx)->v.cn[0] = 0xff;
+                    (*vtx)->v.cn[1] = 100;
+                    (*vtx)->v.cn[2] = 0x0;
+                    (*vtx)->v.cn[3] = 0xff;
+                }
+                else {
+                    (*vtx)->v.cn[0] = 0xff;
+                    (*vtx)->v.cn[1] = 200;
+                    (*vtx)->v.cn[2] = 0x0;
+                    (*vtx)->v.cn[3] = 0xff;
+                }
+            }
+            (*vtx)++;
+        }
+    }
+    gSP1Quadrangle((*gfx)++, 0, 1, 3, 2, 0);
+    gDPPipeSync((*gfx)++);
+    gDPSetTextureLUT((*gfx)++, G_TT_NONE);
+    gDPPipelineMode((*gfx)++, G_PM_NPRIMITIVE);
+    viewport_setRenderViewportAndPerspectiveMatrix(gfx, mtx);
+}
+
 // @recomp Patch to tag any 2D score elements and align them to the right side of the screen.
 RECOMP_PATCH void fxcommon2score_draw(enum item_e item_id, struct8s *arg1, Gfx **gfx, Mtx **mtx, Vtx **vtx) {
     f32 pad;
@@ -623,6 +708,12 @@ RECOMP_PATCH void fxcommon2score_draw(enum item_e item_id, struct8s *arg1, Gfx *
     cur_pushed_text_transform_id = HUD_SCORE2_TRANSFORM_PRINT_ID_START + item_id * HUD_SCORE2_TRANSFORM_PRINT_ID_COUNT;
     cur_pushed_text_transform_origin = left_alignment ? G_EX_ORIGIN_LEFT : G_EX_ORIGIN_RIGHT;
 
+    // @recomp Keep track of the last item value. If the value has changed, skip vertex interpolation this frame.
+    if (itemPrint_lastValues[item_id] != sp38) {
+        cur_pushed_text_transform_skip_interpolation = TRUE;
+        itemPrint_lastValues[item_id] = sp38;
+    }
+
     //print text (blue egg font)
     print_bold_spaced(
         (s32)(func_802FB0DC(arg1) + arg1->unk38 + arg1->unk44 + sp34),
@@ -633,6 +724,7 @@ RECOMP_PATCH void fxcommon2score_draw(enum item_e item_id, struct8s *arg1, Gfx *
     // @recomp Clear the ID and alignment for the text.
     cur_pushed_text_transform_id = 0;
     cur_pushed_text_transform_origin = G_EX_ORIGIN_NONE;
+    cur_pushed_text_transform_skip_interpolation = FALSE;
 
     // @recomp Align the score element to either the left or the right side of the screen.
     // NOTE: gScissorBoxRight/gScissorBoxTop are incorrectly named in the decompilation and must be swapped.
@@ -641,7 +733,7 @@ RECOMP_PATCH void fxcommon2score_draw(enum item_e item_id, struct8s *arg1, Gfx *
     gEXSetViewportAlign((*gfx)++, left_alignment ? G_EX_ORIGIN_LEFT : G_EX_ORIGIN_RIGHT, left_alignment ? 0 : gScissorBoxTop * -4, 0);
 
     // @recomp Assign a matrix group to the score element.
-    gEXMatrixGroupSimpleVerts((*gfx)++, HUD_SCORE2_TRANSFORM_ID_START + item_id, G_EX_PUSH, G_MTX_MODELVIEW, G_EX_EDIT_NONE);
+    gEXMatrixGroupSimpleNormal((*gfx)++, HUD_SCORE2_TRANSFORM_ID_START + item_id, G_EX_PUSH, G_MTX_MODELVIEW, G_EX_EDIT_NONE);
 
     //draw sprite?
     func_802FD360(arg1, gfx, mtx, vtx);
@@ -677,11 +769,18 @@ RECOMP_PATCH void fxcommon3score_draw(enum item_e item_id, void *arg1, Gfx **gfx
         cur_pushed_text_transform_id = HUD_SCORE3_TRANSFORM_PRINT_ID_START + item_id * HUD_SCORE3_TRANSFORM_PRINT_ID_COUNT;
         cur_pushed_text_transform_origin = aligned_to_the_right ? G_EX_ORIGIN_RIGHT : G_EX_ORIGIN_NONE;
 
+        // @recomp Keep track of the last item value. If the value has changed, skip vertex interpolation this frame.
+        if (itemPrint_lastValues[item_id] != itemPrint_getValue(item_id)) {
+            cur_pushed_text_transform_skip_interpolation = TRUE;
+            itemPrint_lastValues[item_id] = itemPrint_getValue(item_id);
+        }
+
         print_bold_spaced(a1->unk30 + a1->unk40, sp40 + a1->unk44, a1->value_string);
 
         // @recomp Clear the ID and alignment for the text.
         cur_pushed_text_transform_id = 0;
         cur_pushed_text_transform_origin = G_EX_ORIGIN_NONE;
+        cur_pushed_text_transform_skip_interpolation = FALSE;
 
         sp3C = viewport_transformCoordinate(a1->unk30, sp40, sp5C, sp68);
 

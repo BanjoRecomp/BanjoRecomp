@@ -59,10 +59,13 @@ extern struct {
 // @recomp This ID plus the index of the character in the string will be used to tag each letter if it's assigned before printing text.
 u32 cur_pushed_text_transform_id = 0;
 u32 cur_pushed_text_transform_origin = G_EX_ORIGIN_NONE;
+u32 cur_pushed_text_transform_skip_interpolation = FALSE;
 u32 cur_drawn_text_transform_id = 0;
+u32 cur_drawn_text_transform_skip_interpolation = 0;
 Mtx *cur_drawn_text_mtx = NULL;
 u32 print_sPrintBufferIDs[0x20];
 u32 print_sPrintBufferOrigins[0x20];
+u32 print_sPrintBufferSkipInterpolationFlags[0x20];
 
 // @recomp Patched to assign the current ID and origin from the global variables to the print buffer array.
 RECOMP_PATCH void _printbuffer_push_new(s32 x, s32 y, u8 *string) {
@@ -86,6 +89,7 @@ RECOMP_PATCH void _printbuffer_push_new(s32 x, s32 y, u8 *string) {
     u32 bufferIndex = print_sCurrentPtr - print_sPrintBuffer;
     print_sPrintBufferIDs[bufferIndex] = cur_pushed_text_transform_id;
     print_sPrintBufferOrigins[bufferIndex] = cur_pushed_text_transform_origin;
+    print_sPrintBufferSkipInterpolationFlags[bufferIndex] = cur_pushed_text_transform_skip_interpolation;
 }
 
 // @recomp Patched to force orthographic projections to be used for all letters.
@@ -329,7 +333,14 @@ RECOMP_PATCH void _printbuffer_draw_letter(char letter, f32 *xPtr, f32 *yPtr, f3
             // @recomp Assign a unique matrix and group to each letter drawn if an ID is currently assigned.
             if (cur_drawn_text_transform_id != 0) {
                 gSPMatrix((*gfx)++, OS_K0_TO_PHYSICAL(cur_drawn_text_mtx), G_MTX_NOPUSH | G_MTX_LOAD | G_MTX_MODELVIEW);
-                gEXMatrixGroupSimpleVerts((*gfx)++, cur_drawn_text_transform_id, G_EX_PUSH, G_MTX_MODELVIEW, G_EX_EDIT_NONE);
+
+                if (cur_drawn_text_transform_skip_interpolation) {
+                    gEXMatrixGroupSkipAll((*gfx)++, cur_drawn_text_transform_id, G_EX_PUSH, G_MTX_MODELVIEW, G_EX_EDIT_NONE);
+                }
+                else {
+                    gEXMatrixGroupSimpleVerts((*gfx)++, cur_drawn_text_transform_id, G_EX_PUSH, G_MTX_MODELVIEW, G_EX_EDIT_NONE);
+                }
+
                 cur_drawn_text_transform_id++;
             }
 
@@ -398,6 +409,7 @@ RECOMP_PATCH void printbuffer_draw(Gfx **gfx, Mtx **mtx, Vtx **vtx) {
             // @recomp When the origin changes, set up a new viewport with the alignment specified for the print buffer.
             u32 bufferIndex = print_sCurrentPtr - print_sPrintBuffer;
             cur_drawn_text_transform_id = print_sPrintBufferIDs[bufferIndex];
+            cur_drawn_text_transform_skip_interpolation = print_sPrintBufferSkipInterpolationFlags[bufferIndex];
             if (curOrigin != print_sPrintBufferOrigins[bufferIndex]) {
                 curOrigin = print_sPrintBufferOrigins[bufferIndex];
                 s32 viewportOffset = (gScissorBoxTop * curOrigin * -4) / G_EX_ORIGIN_RIGHT;
