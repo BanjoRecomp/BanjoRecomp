@@ -363,9 +363,6 @@ RECOMP_PATCH void _printbuffer_draw_letter(char letter, f32 *xPtr, f32 *yPtr, f3
         }
         *xPtr += sp1F8 * arg3;
     }
-
-    // @recomp Clear the assigned transform group for the letters.
-    cur_drawn_text_transform_id = 0;
 }
 
 // @recomp Patched to set up an orthographic projection for each print and align them to their corresponding side on the screen.
@@ -461,10 +458,11 @@ RECOMP_PATCH void printbuffer_draw(Gfx **gfx, Mtx **mtx, Vtx **vtx) {
         }
     }
 
-    // @recomp Clear the alignment and the scissor.
+    // @recomp Clear the alignment and the scissor. Also clear the assigned transform group for the letters.
     gEXSetViewportAlign((*gfx)++, G_EX_ORIGIN_NONE, 0, 0);
     gEXSetRectAlign((*gfx)++, G_EX_ORIGIN_NONE, G_EX_ORIGIN_NONE, 0, 0, 0, 0);
     gEXPopScissor((*gfx)++);
+    cur_drawn_text_transform_id = 0;
 
     gDPPipeSync((*gfx)++);
     gDPSetTexturePersp((*gfx)++, G_TP_PERSP);

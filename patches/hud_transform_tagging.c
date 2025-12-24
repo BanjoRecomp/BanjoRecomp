@@ -541,7 +541,7 @@ RECOMP_PATCH void fxlifescore_draw(enum item_e item_id, struct8s *arg1, Gfx **gf
         if (gfx);
 
         // @recomp Assign a matrix group to the life icon.
-        gEXMatrixGroupSimpleVerts((*gfx)++, HUD_LIFESCORE_TRANSFORM_ID_START, G_EX_PUSH, G_MTX_MODELVIEW, G_EX_EDIT_NONE);
+        gEXMatrixGroupSimpleNormal((*gfx)++, HUD_LIFESCORE_TRANSFORM_ID_START, G_EX_PUSH, G_MTX_MODELVIEW, G_EX_EDIT_NONE);
 
         gDPPipeSync((*gfx)++);
         gDPSetCombineLERP((*gfx)++, 0, 0, 0, TEXEL0, TEXEL0, 0, PRIMITIVE, 0, 0, 0, 0, TEXEL0, TEXEL0, 0, PRIMITIVE, 0);
@@ -559,6 +559,11 @@ RECOMP_PATCH void fxlifescore_draw(enum item_e item_id, struct8s *arg1, Gfx **gf
 
             var_s5 = (40.0f - ((f32)gFramebufferWidth / 2)) + spE0;
             var_s4 = (((((f32)gFramebufferHeight / 2) - func_802FB0E4(arg1)) - -16.0f) - spDC);
+
+            // @recomp Assign the vertical translation of the life icon to the matrix.
+            guTranslate(*mtx - 1, 0.0f, -func_802FB0E4(arg1) * 4.0f, 0.0f);
+            var_s4 += func_802FB0E4(arg1);
+
             for (var_v1 = 0; var_v1 < 2; var_v1++) {
                 for (var_v0 = 0; var_v0 < 2; var_v0++) {
                     (*vtx)->v.ob[0] = (s16)(s32)(((((f32)spF0 * D_80381EB8 * (f32)var_v0) - (((f32)spE8 * D_80381EB8) / 2)) + var_s5) * 4.0f);
@@ -613,9 +618,10 @@ RECOMP_PATCH void fxcommon2score_draw(enum item_e item_id, struct8s *arg1, Gfx *
     //convert to string
     strIToA(arg1->string_54, sp38);
 
-    // @recomp Assign an ID to the text and align it to the right side of the screen.
+    // @recomp Assign an ID to the text and align it to the left or the right side of the screen.
+    bool left_alignment = arg1->unk38 < (gFramebufferWidth * 1.0f / 3.0f);
     cur_pushed_text_transform_id = HUD_SCORE2_TRANSFORM_PRINT_ID_START + item_id * HUD_SCORE2_TRANSFORM_PRINT_ID_COUNT;
-    cur_pushed_text_transform_origin = G_EX_ORIGIN_RIGHT;
+    cur_pushed_text_transform_origin = left_alignment ? G_EX_ORIGIN_LEFT : G_EX_ORIGIN_RIGHT;
 
     //print text (blue egg font)
     print_bold_spaced(
@@ -628,11 +634,11 @@ RECOMP_PATCH void fxcommon2score_draw(enum item_e item_id, struct8s *arg1, Gfx *
     cur_pushed_text_transform_id = 0;
     cur_pushed_text_transform_origin = G_EX_ORIGIN_NONE;
 
-    // @recomp Align the score element to the right side of the screen.
+    // @recomp Align the score element to either the left or the right side of the screen.
     // NOTE: gScissorBoxRight/gScissorBoxTop are incorrectly named in the decompilation and must be swapped.
     gEXPushScissor((*gfx)++);
-    gEXSetScissor((*gfx)++, G_SC_NON_INTERLACE, G_EX_ORIGIN_RIGHT, G_EX_ORIGIN_RIGHT, gScissorBoxLeft - gScissorBoxTop, gScissorBoxRight, 0, gScissorBoxBottom);
-    gEXSetViewportAlign((*gfx)++, G_EX_ORIGIN_RIGHT, gScissorBoxTop * -4, 0);
+    gEXSetScissor((*gfx)++, G_SC_NON_INTERLACE, G_EX_ORIGIN_LEFT, G_EX_ORIGIN_RIGHT, 0, gScissorBoxRight, 0, gScissorBoxBottom);
+    gEXSetViewportAlign((*gfx)++, left_alignment ? G_EX_ORIGIN_LEFT : G_EX_ORIGIN_RIGHT, left_alignment ? 0 : gScissorBoxTop * -4, 0);
 
     // @recomp Assign a matrix group to the score element.
     gEXMatrixGroupSimpleVerts((*gfx)++, HUD_SCORE2_TRANSFORM_ID_START + item_id, G_EX_PUSH, G_MTX_MODELVIEW, G_EX_EDIT_NONE);
