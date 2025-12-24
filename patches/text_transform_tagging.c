@@ -64,7 +64,7 @@ Mtx *cur_drawn_text_mtx = NULL;
 u32 print_sPrintBufferIDs[0x20];
 u32 print_sPrintBufferOrigins[0x20];
 
-// @recomp
+// @recomp Patched to assign the current ID and origin from the global variables to the print buffer array.
 RECOMP_PATCH void _printbuffer_push_new(s32 x, s32 y, u8 *string) {
     for (print_sCurrentPtr = print_sPrintBuffer; print_sCurrentPtr < print_sPrintBuffer + 0x20 && print_sCurrentPtr->string; print_sCurrentPtr++) {
     }
@@ -82,13 +82,13 @@ RECOMP_PATCH void _printbuffer_push_new(s32 x, s32 y, u8 *string) {
     print_sCurrentPtr->rgba[2] = (u8)D_80369078.unk2;
     print_sCurrentPtr->rgba[3] = (u8)D_80369078.unk3;
 
-    // @recomp
+    // @recomp Store the current ID and origin in the arrays that run parallel to the print buffer.
     u32 bufferIndex = print_sCurrentPtr - print_sPrintBuffer;
     print_sPrintBufferIDs[bufferIndex] = cur_pushed_text_transform_id;
     print_sPrintBufferOrigins[bufferIndex] = cur_pushed_text_transform_origin;
 }
 
-// @recomp
+// @recomp Patched to force orthographic projections to be used for all letters.
 RECOMP_PATCH void _printbuffer_draw_letter(char letter, f32 *xPtr, f32 *yPtr, f32 arg3, Gfx **gfx, Mtx **mtx, Vtx **vtx) {
     static f32 D_80380FA0;
 
@@ -207,18 +207,19 @@ RECOMP_PATCH void _printbuffer_draw_letter(char letter, f32 *xPtr, f32 *yPtr, f3
 
         case 'v': //L802F59A0 
             //toggle letter gradient
-            // @recomp
             D_80380AF4 ^= 1;
             if (D_80380AF4) {
-                // viewport_setRenderViewportAndOrthoMatrix(gfx, mtx);
-                // gDPPipeSync((*gfx)++);
-                // gDPSetTexturePersp((*gfx)++, G_TP_PERSP);
+                // @recomp Comment these lines out, as the viewport is now set in the parent function.
+                //viewport_setRenderViewportAndOrthoMatrix(gfx, mtx);
+                //gDPPipeSync((*gfx)++);
+                //gDPSetTexturePersp((*gfx)++, G_TP_PERSP);
                 gDPSetPrimColor((*gfx)++, 0, 0, 0x00, 0x00, 0x00, 0xFF);
                 gDPSetCombineLERP((*gfx)++, 0, 0, 0, TEXEL0, TEXEL0, 0, SHADE, 0, 0, 0, 0, TEXEL0, TEXEL0, 0, SHADE, 0);
             }
             else {//L802F5A44
                 gDPSetCombineMode((*gfx)++, G_CC_DECALRGBA, G_CC_DECALRGBA);
-                // gDPSetTexturePersp((*gfx)++, G_TP_NONE);
+                // @recomp Comment this line out, as texture rectangle letters are no longer possible.
+                //gDPSetTexturePersp((*gfx)++, G_TP_NONE);
             }
             break;
 
@@ -311,7 +312,7 @@ RECOMP_PATCH void _printbuffer_draw_letter(char letter, f32 *xPtr, f32 *yPtr, f3
 
         }//L802F677C
         
-        // @recomp
+        // @recomp Force orthographic projection rectangles to be used for all letters as it allows them to be interpolated.
         if (TRUE) { //if (D_80380AF4 != 0) {
             f32 temp_f24;
             f32 spD0;
@@ -325,7 +326,7 @@ RECOMP_PATCH void _printbuffer_draw_letter(char letter, f32 *xPtr, f32 *yPtr, f3
             temp_f26 = (f64)sp200 - (f32)gFramebufferWidth * 0.5;
             spC0 = (f64)f28 - (f32)gFramebufferHeight * 0.5 - 0.5f;
 
-            // @recomp
+            // @recomp Assign a unique matrix and group to each letter drawn if an ID is currently assigned.
             if (cur_drawn_text_transform_id != 0) {
                 gSPMatrix((*gfx)++, OS_K0_TO_PHYSICAL(cur_drawn_text_mtx), G_MTX_NOPUSH | G_MTX_LOAD | G_MTX_MODELVIEW);
                 gEXMatrixGroupSimpleVerts((*gfx)++, cur_drawn_text_transform_id, G_EX_PUSH, G_MTX_MODELVIEW, G_EX_EDIT_NONE);
@@ -362,8 +363,12 @@ RECOMP_PATCH void _printbuffer_draw_letter(char letter, f32 *xPtr, f32 *yPtr, f3
         }
         *xPtr += sp1F8 * arg3;
     }
+
+    // @recomp Clear the assigned transform group for the letters.
+    cur_drawn_text_transform_id = 0;
 }
 
+// @recomp Patched to set up an orthographic projection for each print and align them to their corresponding side on the screen.
 RECOMP_PATCH void printbuffer_draw(Gfx **gfx, Mtx **mtx, Vtx **vtx) {
     static f32 D_80380FA8[0x20];
 
@@ -374,22 +379,26 @@ RECOMP_PATCH void printbuffer_draw(Gfx **gfx, Mtx **mtx, Vtx **vtx) {
 
     gSPDisplayList((*gfx)++, D_80369238);
 
-    // @recomp
+    // @recomp Set up a scissor that covers the entire screen.
+    gEXPushScissor((*gfx)++);
+    gEXSetScissor((*gfx)++, G_SC_NON_INTERLACE, G_EX_ORIGIN_LEFT, G_EX_ORIGIN_RIGHT, 0, gScissorBoxRight, 0, gScissorBoxBottom);
+
+    // @recomp Set up an orthographic projection that will be used for all letters by default.
     u32 curOrigin = G_EX_ORIGIN_NONE;
     gEXSetViewportAlign((*gfx)++, G_EX_ORIGIN_NONE, 0, 0);
     gEXSetRectAlign((*gfx)++, G_EX_ORIGIN_NONE, G_EX_ORIGIN_NONE, 0, 0, 0, 0);
     viewport_setRenderViewportAndOrthoMatrix(gfx, mtx);
     cur_drawn_text_mtx = (*mtx - 1);
+
+    // @recomp Set up some drawing parameters that were set up when changing between rectangle and orthographic mode.
     gDPPipeSync((*gfx)++);
     gDPSetTexturePersp((*gfx)++, G_TP_PERSP);
     gDPSetPrimColor((*gfx)++, 0, 0, 0x00, 0x00, 0x00, 0xFF);
     gDPSetCombineLERP((*gfx)++, 0, 0, 0, TEXEL0, TEXEL0, 0, SHADE, 0, 0, 0, 0, TEXEL0, TEXEL0, 0, SHADE, 0);
-    gEXPushScissor((*gfx)++);
-    gEXSetScissor((*gfx)++, G_SC_NON_INTERLACE, G_EX_ORIGIN_LEFT, G_EX_ORIGIN_RIGHT, 0, gScissorBoxRight, 0, gScissorBoxBottom);
 
     for (print_sCurrentPtr = print_sPrintBuffer; print_sCurrentPtr < print_sPrintBuffer + 0x20; print_sCurrentPtr++) {
         if (print_sCurrentPtr->string != 0) {
-            // @recomp
+            // @recomp When the origin changes, set up a new viewport with the alignment specified for the print buffer.
             u32 bufferIndex = print_sCurrentPtr - print_sPrintBuffer;
             cur_drawn_text_transform_id = print_sPrintBufferIDs[bufferIndex];
             if (curOrigin != print_sPrintBufferOrigins[bufferIndex]) {
@@ -416,9 +425,8 @@ RECOMP_PATCH void printbuffer_draw(Gfx **gfx, Mtx **mtx, Vtx **vtx) {
                 gDPPipeSync((*gfx)++);
 
             }//L802F73E8
-            // @recomp
-            //if ((D_80380AF8 == 0) && (D_80380AF4 == 0)) {
-            if (D_80380AF8 == 0) {
+            // @recomp Ignore the condition for not setting up these parameters while on orthographic mode.
+            if (D_80380AF8 == 0) { //if ((D_80380AF8 == 0) && (D_80380AF4 == 0)) {
                 if (D_80380AE8 != 0) {
                     gDPSetCombineMode((*gfx)++, G_CC_DECALRGBA, G_CC_DECALRGBA);
                     gDPSetPrimColor((*gfx)++, 0, 0, 0xFF, 0xFF, 0xFF, 0xFF);
@@ -453,7 +461,7 @@ RECOMP_PATCH void printbuffer_draw(Gfx **gfx, Mtx **mtx, Vtx **vtx) {
         }
     }
 
-    // @recomp
+    // @recomp Clear the alignment and the scissor.
     gEXSetViewportAlign((*gfx)++, G_EX_ORIGIN_NONE, 0, 0);
     gEXSetRectAlign((*gfx)++, G_EX_ORIGIN_NONE, G_EX_ORIGIN_NONE, 0, 0, 0, 0);
     gEXPopScissor((*gfx)++);

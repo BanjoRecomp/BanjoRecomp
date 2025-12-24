@@ -330,7 +330,7 @@ RECOMP_PATCH void func_803163A8(GcZoombox *this, Gfx **gfx, Mtx **mtx) {
     f32 sp38[3];
     f32 sp34;
 
-    // @recomp
+    // @recomp Align the zoombox to the left of the screen if necessary.
     // NOTE: gScissorBoxRight/gScissorBoxTop are incorrectly named in the decompilation and must be swapped.
     if (left_aligned_zoombox(this)) {
         gEXPushScissor((*gfx)++);
@@ -386,7 +386,7 @@ RECOMP_PATCH void func_803164B0(GcZoombox *this, Gfx **gfx, Mtx **mtx, s32 arg3,
     u32 prev_ortho_id = cur_ortho_projection_transform_id;
     cur_ortho_projection_transform_id = PROJECTION_PORTRAIT_TRANSFORM_ID_START + this->portrait_id;
 
-    // @recomp
+    // @recomp Align the zoombox's portrait to the left of the screen if necessary.
     // NOTE: gScissorBoxRight/gScissorBoxTop are incorrectly named in the decompilation and must be swapped.
     if (left_aligned_zoombox(this)) {
         gEXPushScissor((*gfx)++);
@@ -431,13 +431,16 @@ RECOMP_PATCH void func_803164B0(GcZoombox *this, Gfx **gfx, Mtx **mtx, s32 arg3,
     }
 }
 
-// @recomp
+// @recomp Patched to assign an ID to the text drawn by the zoombox.
 RECOMP_PATCH void func_803162B4(GcZoombox *this) {
-    // @recomp
-    // cur_pushed_text_transform_id = ZOOMBOX_PRINT_TRANSFORM_ID_START + this->portrait_id * ZOOMBOX_PRINT_TRANSFORM_ID_COUNT;
+    // @recomp Align the zoombox to the left of the screen if necessary.
     if (left_aligned_zoombox(this)) {
         cur_pushed_text_transform_origin = G_EX_ORIGIN_LEFT;
     }
+
+    // FIXME: Text inside the zoombox can be tagged but suffers from interpolation errors when scrolling
+    // to the next line. This can probably be fixed by assigning IDs in a more clever way.
+    //cur_pushed_text_transform_id = ZOOMBOX_PRINT_TRANSFORM_ID_START + this->portrait_id * ZOOMBOX_PRINT_TRANSFORM_ID_COUNT;
 
     func_802F7B90(this->unk168, this->unk168, this->unk168);
     if (this->unk1A4_30) {
@@ -461,9 +464,10 @@ RECOMP_PATCH void func_803162B4(GcZoombox *this) {
     }
     func_802F7B90(0xff, 0xff, 0xff);
 
-    // @recomp
-    // cur_pushed_text_transform_id = 0;
     if (left_aligned_zoombox(this)) {
         cur_pushed_text_transform_origin = G_EX_ORIGIN_NONE;
     }
+
+    // @recomp If IDs were assigned to the zoombox's text, it would get cleared here.
+    //cur_pushed_text_transform_id = 0;
 }

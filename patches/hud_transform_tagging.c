@@ -160,7 +160,7 @@ RECOMP_PATCH void fxhoneycarrierscore_draw(s32 arg0, struct8s *arg1, Gfx **arg2,
     if (D_8036A010 != 0) {
         func_80347FC0(arg2, (sp118) ? (D_8036A014 != 0) ? D_8036A014 : D_8036A010 : D_8036A010, 0, 0, 0, 0, 0, 2, 2, &sp13C, &sp138);
 
-        // @recomp
+        // @recomp Align the honeycomb pieces to the right side of the screen.
         // NOTE: gScissorBoxRight/gScissorBoxTop are incorrectly named in the decompilation and must be swapped.
         gEXPushScissor((*arg2)++);
         gEXSetScissor((*arg2)++, G_SC_NON_INTERLACE, G_EX_ORIGIN_RIGHT, G_EX_ORIGIN_RIGHT, gScissorBoxLeft - gScissorBoxTop, gScissorBoxRight, 0, gScissorBoxBottom);
@@ -254,7 +254,7 @@ RECOMP_PATCH void fxjinjoscore_draw(s32 arg0, struct8s *arg1, Gfx **gfx, Mtx **m
     s32 i; // v1 (spFC)
     s32 j; // v0_2 (spF8)
 
-    // @recomp
+    // @recomp Align the Jinjos to the left side of the screen.
     // NOTE: gScissorBoxRight/gScissorBoxTop are incorrectly named in the decompilation and must be swapped.
     gEXPushScissor((*gfx)++);
     gEXSetScissor((*gfx)++, G_SC_NON_INTERLACE, G_EX_ORIGIN_LEFT, G_EX_ORIGIN_LEFT, gScissorBoxLeft, gScissorBoxRight, gScissorBoxTop, gScissorBoxBottom);
@@ -294,7 +294,7 @@ RECOMP_PATCH void fxjinjoscore_draw(s32 arg0, struct8s *arg1, Gfx **gfx, Mtx **m
                 center_x = pos_x - (f32)gFramebufferWidth / 2 + x_offset;
                 center_y = (f32)gFramebufferHeight / 2 + func_802FB0E4(arg1) - 266.0f + 40.0f + y_offset - D_80381E78[jinjo_id];
 
-                // @recomp
+                // @recomp Assign the matrix group for each Jinjo and its shadow separately.
                 gEXMatrixGroupSimpleVerts((*gfx)++, HUD_JINJOSCORE_TRANSFORM_ID_START + jinjo_id * 2 + draw_index, G_EX_PUSH, G_MTX_MODELVIEW, G_EX_EDIT_NONE);
 
                 gSPVertex((*gfx)++, *vtx, 4, 0);
@@ -333,7 +333,7 @@ RECOMP_PATCH void fxjinjoscore_draw(s32 arg0, struct8s *arg1, Gfx **gfx, Mtx **m
     viewport_setRenderViewportAndPerspectiveMatrix(gfx, mtx);
 }
 
-// @recomp
+// @recomp Patched to tag the pieces of air and also align them to the left side of the screen.
 RECOMP_PATCH void fxairscore_draw(enum item_e item_id, struct8s *arg1, Gfx **gfx, Mtx **mtx, Vtx **vtx) {
     f32 y;
     f32 x;
@@ -348,7 +348,7 @@ RECOMP_PATCH void fxairscore_draw(enum item_e item_id, struct8s *arg1, Gfx **gfx
         gSPDisplayList((*gfx)++, s_fxairscore_context);
         func_80347FC0(gfx, s_sprite, 0, 0, 0, 0, 0, 2, 2, &texture_width, &texture_height);
 
-        // @recomp
+        // @recomp Align the pieces of air to the left side of the screen.
         // NOTE: gScissorBoxRight/gScissorBoxTop are incorrectly named in the decompilation and must be swapped.
         gEXPushScissor((*gfx)++);
         gEXSetScissor((*gfx)++, G_SC_NON_INTERLACE, G_EX_ORIGIN_LEFT, G_EX_ORIGIN_LEFT, gScissorBoxLeft, gScissorBoxRight, gScissorBoxTop, gScissorBoxBottom);
@@ -374,7 +374,7 @@ RECOMP_PATCH void fxairscore_draw(enum item_e item_id, struct8s *arg1, Gfx **gfx
             x = ((-40 + x) + D_80381F68[var_s6]) - ((f32)gFramebufferWidth / 2);
             y = ((78 + (i_part * 15.5)) - ((f32)gFramebufferHeight / 2));
 
-            // @recomp
+            // @recomp Assign a matrix group to each piece of air.
             gEXMatrixGroupSimpleVerts((*gfx)++, HUD_AIRSCORE_TRANSFORM_ID_START + i_part, G_EX_PUSH, G_MTX_MODELVIEW, G_EX_EDIT_NONE);
 
             //stagger x position
@@ -407,7 +407,7 @@ RECOMP_PATCH void fxairscore_draw(enum item_e item_id, struct8s *arg1, Gfx **gfx
     }
 }
 
-// @recomp
+// @recomp Patched to tag the health bar and align it to the left side of the screen.
 RECOMP_PATCH void fxhealthscore_draw(enum item_e item_id, struct8s *arg1, Gfx **gfx, Mtx **mtx, Vtx **vtx) {
     int i;
     int tmp_v1;
@@ -427,7 +427,7 @@ RECOMP_PATCH void fxhealthscore_draw(enum item_e item_id, struct8s *arg1, Gfx **
     gSPDisplayList((*gfx)++, D_8036A918);
     func_80347FC0(gfx, gSpriteHealth, 0, 0, 0, 0, 0, 2, 2, &honeycomb_width, &honeycomb_height);
 
-    // @recomp
+    // @recomp Align the health bar to the left side of the screen.
     // NOTE: gScissorBoxRight/gScissorBoxTop are incorrectly named in the decompilation and must be swapped.
     gEXPushScissor((*gfx)++);
     gEXSetScissor((*gfx)++, G_SC_NON_INTERLACE, G_EX_ORIGIN_LEFT, G_EX_ORIGIN_LEFT, gScissorBoxLeft, gScissorBoxRight, gScissorBoxTop, gScissorBoxBottom);
@@ -464,7 +464,7 @@ RECOMP_PATCH void fxhealthscore_draw(enum item_e item_id, struct8s *arg1, Gfx **
         f14 = (f32)gFramebufferHeight / 2 - func_802FB0E4(arg1) - D_80381F08[s6] - -48.0f;
         f14 = (i & 1) ? f14 + 5.75 : f14 - 5.75;
 
-        // @recomp
+        // @recomp Assign a matrix group to each piece of health.
         gEXMatrixGroupSimpleVerts((*gfx)++, HUD_HEALTHSCORE_TRANSFORM_ID_START + i, G_EX_PUSH, G_MTX_MODELVIEW, G_EX_EDIT_NONE);
 
         gSPVertex((*gfx)++, *vtx, 4, 0);
@@ -497,7 +497,7 @@ RECOMP_PATCH void fxhealthscore_draw(enum item_e item_id, struct8s *arg1, Gfx **
     viewport_setRenderViewportAndPerspectiveMatrix(gfx, mtx);
 }
 
-// @recomp 
+// @recomp Patched to tag the life icon and align it to the left side of the screen. 
 RECOMP_PATCH void fxlifescore_draw(enum item_e item_id, struct8s *arg1, Gfx **gfx, Mtx **mtx, Vtx **vtx) {
     s32 sp10C;
     Vtx *sp108;
@@ -518,19 +518,19 @@ RECOMP_PATCH void fxlifescore_draw(enum item_e item_id, struct8s *arg1, Gfx **gf
     code_78E50_ItemValueString[0] = '\0';
     strIToA(code_78E50_ItemValueString, MIN(9, itemPrint_getValue(item_id)));
 
-    // @recomp
+    // @recomp Assign an ID to the text and align it to the left side of the screen.
     cur_pushed_text_transform_id = HUD_LIFESCORE_TRANSFORM_PRINT_ID_START;
     cur_pushed_text_transform_origin = G_EX_ORIGIN_LEFT;
 
     print_bold_spaced(0x4E, (s32)(func_802FB0E4(arg1) + -16.0f + 4.0f), (char *)&code_78E50_ItemValueString);
 
-    // @recomp
+    // @recomp Clear the ID and alignment for the text.
     cur_pushed_text_transform_id = 0;
     cur_pushed_text_transform_origin = G_EX_ORIGIN_NONE;
 
     if (1); //fake
     if (D_80381EB0[D_80381EC4] != NULL) {
-        // @recomp
+        // @recomp Align the life icon to the left side of the screen. 
         // NOTE: gScissorBoxRight/gScissorBoxTop are incorrectly named in the decompilation and must be swapped.
         gEXPushScissor((*gfx)++);
         gEXSetScissor((*gfx)++, G_SC_NON_INTERLACE, G_EX_ORIGIN_LEFT, G_EX_ORIGIN_LEFT, gScissorBoxLeft, gScissorBoxRight, gScissorBoxTop, gScissorBoxBottom);
@@ -540,7 +540,7 @@ RECOMP_PATCH void fxlifescore_draw(enum item_e item_id, struct8s *arg1, Gfx **gf
         viewport_setRenderViewportAndOrthoMatrix(gfx, mtx);
         if (gfx);
 
-        // @recomp
+        // @recomp Assign a matrix group to the life icon.
         gEXMatrixGroupSimpleVerts((*gfx)++, HUD_LIFESCORE_TRANSFORM_ID_START, G_EX_PUSH, G_MTX_MODELVIEW, G_EX_EDIT_NONE);
 
         gDPPipeSync((*gfx)++);
@@ -584,7 +584,7 @@ RECOMP_PATCH void fxlifescore_draw(enum item_e item_id, struct8s *arg1, Gfx **gf
     }
 }
 
-// @recomp 
+// @recomp Patch to tag any 2D score elements and align them to the right side of the screen.
 RECOMP_PATCH void fxcommon2score_draw(enum item_e item_id, struct8s *arg1, Gfx **gfx, Mtx **mtx, Vtx **vtx) {
     f32 pad;
     s32 sp38;
@@ -613,7 +613,7 @@ RECOMP_PATCH void fxcommon2score_draw(enum item_e item_id, struct8s *arg1, Gfx *
     //convert to string
     strIToA(arg1->string_54, sp38);
 
-    // @recomp
+    // @recomp Assign an ID to the text and align it to the right side of the screen.
     cur_pushed_text_transform_id = HUD_SCORE2_TRANSFORM_PRINT_ID_START + item_id * HUD_SCORE2_TRANSFORM_PRINT_ID_COUNT;
     cur_pushed_text_transform_origin = G_EX_ORIGIN_RIGHT;
 
@@ -624,17 +624,17 @@ RECOMP_PATCH void fxcommon2score_draw(enum item_e item_id, struct8s *arg1, Gfx *
         arg1->string_54
     );
 
-    // @recomp
+    // @recomp Clear the ID and alignment for the text.
     cur_pushed_text_transform_id = 0;
     cur_pushed_text_transform_origin = G_EX_ORIGIN_NONE;
 
-    // @recomp
+    // @recomp Align the score element to the right side of the screen.
     // NOTE: gScissorBoxRight/gScissorBoxTop are incorrectly named in the decompilation and must be swapped.
     gEXPushScissor((*gfx)++);
     gEXSetScissor((*gfx)++, G_SC_NON_INTERLACE, G_EX_ORIGIN_RIGHT, G_EX_ORIGIN_RIGHT, gScissorBoxLeft - gScissorBoxTop, gScissorBoxRight, 0, gScissorBoxBottom);
     gEXSetViewportAlign((*gfx)++, G_EX_ORIGIN_RIGHT, gScissorBoxTop * -4, 0);
 
-    // @recomp
+    // @recomp Assign a matrix group to the score element.
     gEXMatrixGroupSimpleVerts((*gfx)++, HUD_SCORE2_TRANSFORM_ID_START + item_id, G_EX_PUSH, G_MTX_MODELVIEW, G_EX_EDIT_NONE);
 
     //draw sprite?
@@ -666,14 +666,14 @@ RECOMP_PATCH void fxcommon3score_draw(enum item_e item_id, void *arg1, Gfx **gfx
         a1->value_string[0] = '\0';
         strIToA(a1->value_string, itemPrint_getValue(item_id));
 
-        // @recomp
+        // @recomp Align the score element's text to the right or use its default alignment.
         bool aligned_to_the_right = a1->unk30 > (gFramebufferWidth * 2 / 3);
         cur_pushed_text_transform_id = HUD_SCORE3_TRANSFORM_PRINT_ID_START + item_id * HUD_SCORE3_TRANSFORM_PRINT_ID_COUNT;
         cur_pushed_text_transform_origin = aligned_to_the_right ? G_EX_ORIGIN_RIGHT : G_EX_ORIGIN_NONE;
 
         print_bold_spaced(a1->unk30 + a1->unk40, sp40 + a1->unk44, a1->value_string);
 
-        // @recomp
+        // @recomp Clear the ID and alignment for the text.
         cur_pushed_text_transform_id = 0;
         cur_pushed_text_transform_origin = G_EX_ORIGIN_NONE;
 
@@ -699,7 +699,7 @@ RECOMP_PATCH void fxcommon3score_draw(enum item_e item_id, void *arg1, Gfx **gfx
             anctrl_drawSetup(a1->anim_ctrl, sp5C, 1);
         }
 
-        // @recomp
+        // @recomp If necessary, align the score element to the right of the screen.
         // NOTE: gScissorBoxRight/gScissorBoxTop are incorrectly named in the decompilation and must be swapped.
         if (aligned_to_the_right) {
             gEXPushScissor((*gfx)++);
@@ -764,13 +764,14 @@ RECOMP_PATCH void fxcommon3score_draw(enum item_e item_id, void *arg1, Gfx **gfx
     }//L80300BA4
 }
 
+// @recomp: Patched to interpolate the header of the totals screen on the pause menu.
 RECOMP_PATCH void gcpausemenu_printTotalsHeader(s32 page_id) {
-    // @recomp
+    // @recomp Assign an ID for the totals text.
     cur_pushed_text_transform_id = HUD_TOTALS_PRINT_TRANSFORM_ID_START;
 
     struct1Cs_1 *v0 = D_8036C58C + page_id;
     print_bold_overlapping(v0->x, D_80383010.unk8, -1.05f, v0->string);
 
-    // @recomp
+    // @recomp Clear the ID text.
     cur_pushed_text_transform_id = 0;
 }
