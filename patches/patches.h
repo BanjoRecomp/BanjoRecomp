@@ -31,6 +31,7 @@ void osWriteBackDCacheAll(void);
 #define osPiStartDma osPiStartDma_recomp
 #define sinf sinf_recomp
 #define cosf __cosf_recomp
+#define osContGetReadData osContGetReadData_recomp
 
 #include "ultra64.h"
 #pragma GCC diagnostic push
