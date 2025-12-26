@@ -31,6 +31,7 @@ s32 cur_drawn_model_is_map = FALSE;
 s32 cur_drawn_model_transform_id = 0;
 s32 cur_drawn_model_transform_id_skip_interpolation = FALSE;
 s32 cur_model_transform_id_offset = 0;
+s32 cur_model_uses_bones = FALSE;
 
 Mtx identity_fixed_mtx = {{
     {
@@ -231,24 +232,28 @@ void pop_model_matrix_group(Gfx **gfx) {
     gEXPopMatrixGroup((*gfx)++, G_MTX_MODELVIEW);
 }
 
-// @recomp Patched to multiply the identity matrix to create a new matrix group and count up if drawing a map model.
+// @recomp Patched to multiply the identity matrix and create a new matrix group if the model uses bones.
 RECOMP_PATCH void func_80338904(Gfx **gfx, Mtx **mtx, void *arg2){
     GeoCmd3 *cmd = (GeoCmd3 *)arg2;
     Gfx *vptr;
 
     if(D_80370990){
+        // @recomp Create a new matrix by multiplying in the identity matrix if the model uses bones.
         bool pushed_matrix_group = FALSE;
-        // @recomp Create a new matrix by multiplying in the identity matrix.
-        gSPMatrix((*gfx)++, &identity_fixed_mtx, G_MTX_PUSH | G_MTX_MUL | G_MTX_MODELVIEW);
-        pushed_matrix_group = set_model_matrix_group(gfx, arg2, FALSE);
+        if (cur_model_uses_bones) {
+            gSPMatrix((*gfx)++, &identity_fixed_mtx, G_MTX_PUSH | G_MTX_MUL | G_MTX_MODELVIEW);
+            pushed_matrix_group = set_model_matrix_group(gfx, arg2, FALSE);
+        }
 
         vptr = &modelRenderDisplayList->list[cmd->unk8];
         gSPDisplayList((*gfx)++, osVirtualToPhysical(vptr));
         
-        // @recomp Pop the matrix and pop the matrix group if one was created.
-        gSPPopMatrix((*gfx)++, G_MTX_MODELVIEW);
-        if (pushed_matrix_group) {
-            pop_model_matrix_group(gfx);
+        // @recomp Pop the matrix and pop the matrix group if one was created if the model uses bones.
+        if (cur_model_uses_bones) {
+            gSPPopMatrix((*gfx)++, G_MTX_MODELVIEW);
+            if (pushed_matrix_group) {
+                pop_model_matrix_group(gfx);
+            }
         }
     }
 }
@@ -258,8 +263,9 @@ RECOMP_PATCH void func_803387F8(Gfx **gfx, Mtx **mtx, void *arg2){
     GeoCmd2 *cmd = (GeoCmd2 *)arg2;
     bool pushed_matrix_group = FALSE;
 
-    // @recomp Increment the transform ID offset when encountering a bone command.
+    // @recomp Increment the transform ID offset when encountering a bone command and set the flag.
     cur_model_transform_id_offset++;
+    cur_model_uses_bones = TRUE;
 
     if(D_8038371C){
         mlMtx_push_multiplied_2(&D_80383BF8, animMtxList_get(D_8038371C, cmd->unk9));
@@ -731,8 +737,9 @@ RECOMP_PATCH BKModelBin *modelRender_draw(Gfx **gfx, Mtx **mtx, f32 position[3],
     // @recomp Disable frustum checks before processing bones.
     set_frustum_checks_enabled(FALSE);
 
-    // @recomp Reset the transform ID offset.
+    // @recomp Reset the transform ID offset and the bones flag.
     cur_model_transform_id_offset = 0;
+    cur_model_uses_bones = FALSE;
 
     func_80339124(gfx, mtx, (BKGeoList *)((u8 *)model_bin + model_bin->geo_list_offset_4));
     
