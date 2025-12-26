@@ -208,13 +208,22 @@ bool set_model_matrix_group(Gfx **gfx, void *geo_list, bool skip_rotation) {
             // Skip interpolation if all interpolation is currently skipped or the transform was specified to be skipped.
             gEXMatrixGroupSkipAll((*gfx)++, group_id, G_EX_PUSH, G_MTX_MODELVIEW, G_EX_EDIT_NONE);
         }
-        else {
-            // Tag the matrix.
+        else if (cur_model_uses_bones) {
+            // Tag the matrix with simple matrix interpolation if the model uses bones.
             if (skip_rotation) {
-                gEXMatrixGroupSimpleVertsNoRotation((*gfx)++, group_id, G_EX_PUSH, G_MTX_MODELVIEW, G_EX_EDIT_NONE);
+                gEXMatrixGroupSimpleVertsSkipRot((*gfx)++, group_id, G_EX_PUSH, G_MTX_MODELVIEW, G_EX_EDIT_NONE);
             }
             else {
                 gEXMatrixGroupSimpleVerts((*gfx)++, group_id, G_EX_PUSH, G_MTX_MODELVIEW, G_EX_EDIT_NONE);
+            }
+        }
+        else {
+            // Tag the matrix with decomposed matrix interpolation on any other model.
+            if (skip_rotation) {
+                gEXMatrixGroupDecomposedVertsSkipRot((*gfx)++, group_id, G_EX_PUSH, G_MTX_MODELVIEW, G_EX_EDIT_NONE);
+            }
+            else {
+                gEXMatrixGroupDecomposedVerts((*gfx)++, group_id, G_EX_PUSH, G_MTX_MODELVIEW, G_EX_EDIT_NONE);
             }
         }
         return TRUE;
@@ -238,22 +247,18 @@ RECOMP_PATCH void func_80338904(Gfx **gfx, Mtx **mtx, void *arg2){
     Gfx *vptr;
 
     if(D_80370990){
-        // @recomp Create a new matrix by multiplying in the identity matrix if the model uses bones.
+        // @recomp Create a new matrix by multiplying in the identity matrix.
         bool pushed_matrix_group = FALSE;
-        if (cur_model_uses_bones) {
-            gSPMatrix((*gfx)++, &identity_fixed_mtx, G_MTX_PUSH | G_MTX_MUL | G_MTX_MODELVIEW);
-            pushed_matrix_group = set_model_matrix_group(gfx, arg2, FALSE);
-        }
+        gSPMatrix((*gfx)++, &identity_fixed_mtx, G_MTX_PUSH | G_MTX_MUL | G_MTX_MODELVIEW);
+        pushed_matrix_group = set_model_matrix_group(gfx, arg2, FALSE);
 
         vptr = &modelRenderDisplayList->list[cmd->unk8];
         gSPDisplayList((*gfx)++, osVirtualToPhysical(vptr));
         
-        // @recomp Pop the matrix and pop the matrix group if one was created if the model uses bones.
-        if (cur_model_uses_bones) {
-            gSPPopMatrix((*gfx)++, G_MTX_MODELVIEW);
-            if (pushed_matrix_group) {
-                pop_model_matrix_group(gfx);
-            }
+        // @recomp Pop the matrix and pop the matrix group if one was createds.
+        gSPPopMatrix((*gfx)++, G_MTX_MODELVIEW);
+        if (pushed_matrix_group) {
+            pop_model_matrix_group(gfx);
         }
     }
 }
