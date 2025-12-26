@@ -241,7 +241,7 @@ void pop_model_matrix_group(Gfx **gfx) {
     gEXPopMatrixGroup((*gfx)++, G_MTX_MODELVIEW);
 }
 
-// @recomp Patched to multiply the identity matrix and create a new matrix group if the model uses bones.
+// @recomp Patched to multiply the identity matrix and create a new matrix group for each display list.
 RECOMP_PATCH void func_80338904(Gfx **gfx, Mtx **mtx, void *arg2){
     GeoCmd3 *cmd = (GeoCmd3 *)arg2;
     Gfx *vptr;
