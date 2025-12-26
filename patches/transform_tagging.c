@@ -255,7 +255,7 @@ RECOMP_PATCH void func_80338904(Gfx **gfx, Mtx **mtx, void *arg2){
         vptr = &modelRenderDisplayList->list[cmd->unk8];
         gSPDisplayList((*gfx)++, osVirtualToPhysical(vptr));
         
-        // @recomp Pop the matrix and pop the matrix group if one was createds.
+        // @recomp Pop the matrix and pop the matrix group if one was created.
         gSPPopMatrix((*gfx)++, G_MTX_MODELVIEW);
         if (pushed_matrix_group) {
             pop_model_matrix_group(gfx);
