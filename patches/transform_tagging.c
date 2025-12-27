@@ -754,7 +754,7 @@ RECOMP_PATCH BKModelBin *modelRender_draw(Gfx **gfx, Mtx **mtx, f32 position[3],
         func_802ED52C(D_8038372C, modelRenderCameraPosition, scale);
     }
 
-    // @recomp Use higher precision vertex buffer.
+    // @recomp Use higher precision vertex buffer when the model requires CPU skinning.
     bool ex_vertex_components_used = FALSE;
     if(model_bin->unk28 != NULL && D_8038371C != NULL){
         func_802E6BD0((u8*)modelRenderModelBin + modelRenderModelBin->unk28, modelRendervertexList, D_8038371C);
