@@ -41,6 +41,8 @@ extern s32 sStackSelector;
 extern s32 gTextureFilterPoint;
 extern u32 heap_occupiedBytes;
 
+extern void recomp_reset_skinning_stack();
+
 // @recomp Patched to not free anything.
 RECOMP_PATCH void graphicsCache_release(void) {
     if (sGfxStack[0]) {
@@ -83,6 +85,10 @@ RECOMP_PATCH void game_draw(s32 arg0){
     if(D_8037E8E0.unkC == 1){
         getGraphicsStacks(&gfx, &mtx, &vtx);
     }
+
+    // @recomp Reset the high precision position skinning stack.
+    recomp_reset_skinning_stack();
+
     // @recomp Track the original values.
     Mtx* mtx_start = mtx;
     Vtx* vtx_start = vtx;

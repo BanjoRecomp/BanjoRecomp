@@ -447,6 +447,66 @@ RECOMP_PATCH void func_80339124(Gfx ** gfx, Mtx ** mtx, BKGeoList *geo_list){
     }while(1);
 }
 
+// @recomp Applies CPU skinning and saves the result to a higher precision vertex buffer.
+#define SKINNING_POSITIONS_MAX 65536
+
+f32 sSkinningFloats[SKINNING_POSITIONS_MAX] __attribute__((aligned(8)));
+u32 sSkinningFloatCount;
+
+void recomp_reset_skinning_stack() {
+    sSkinningFloatCount = 0;
+}
+
+float *recomp_apply_cpu_skinning(BKModelUnk28List *arg0, BKVertexList *arg1, AnimMtxList *mtx_list) {
+    if (sSkinningFloatCount + (arg1->count * 3) > SKINNING_POSITIONS_MAX) {
+        return NULL;
+    }
+
+    // Copy unmodified positions.
+    float *dst_pos = &sSkinningFloats[sSkinningFloatCount];
+    s32 i, j;
+    for (i = 0; i < arg1->count; i++) {
+        sSkinningFloats[sSkinningFloatCount++] = arg1->vtx_18[i].v.ob[0];
+        sSkinningFloats[sSkinningFloatCount++] = arg1->vtx_18[i].v.ob[1];
+        sSkinningFloats[sSkinningFloatCount++] = arg1->vtx_18[i].v.ob[2];
+    }
+
+    // Always align to multiples of 2.
+    if (sSkinningFloatCount & 0x1) {
+        sSkinningFloatCount++;
+    }
+
+    // Apply animation.
+    BKModelUnk28 *i_ptr = (BKModelUnk28 *)(arg0 + 1);
+    s32 mtx_index = -2;
+    f32 src_coord[3];
+    f32 dst_coord[3];
+    s32 vertex_index;
+    for (i = 0; i < arg0->count; i++) {
+        if (mtx_index != i_ptr->anim_index) {
+            mtx_index = i_ptr->anim_index;
+            mlMtxSet(animMtxList_get(mtx_list, mtx_index));
+        }
+
+        src_coord[0] = i_ptr->coord[0];
+        src_coord[1] = i_ptr->coord[1];
+        src_coord[2] = i_ptr->coord[2];
+        mlMtx_apply_vec3f(dst_coord, src_coord);
+
+        for (j = 0; j < i_ptr->vtx_count; j++) {
+            vertex_index = i_ptr->vtx_list[j] * 3;
+            dst_pos[vertex_index++] = dst_coord[0];
+            dst_pos[vertex_index++] = dst_coord[1];
+            dst_pos[vertex_index] = dst_coord[2];
+        }
+
+        i_ptr = (BKModelUnk28 *)((s16 *)(i_ptr + 1) + (i_ptr->vtx_count - 1));
+    }
+
+    return dst_pos;
+}
+
+
 // @recomp Patched to set an initial matrix group for the draw.
 RECOMP_PATCH BKModelBin *modelRender_draw(Gfx **gfx, Mtx **mtx, f32 position[3], f32 rotation[3], f32 scale, f32*arg5, BKModelBin* model_bin){
     f32 camera_focus[3];
@@ -694,8 +754,17 @@ RECOMP_PATCH BKModelBin *modelRender_draw(Gfx **gfx, Mtx **mtx, f32 position[3],
         func_802ED52C(D_8038372C, modelRenderCameraPosition, scale);
     }
 
+    // @recomp Use higher precision vertex buffer.
+    bool ex_vertex_components_used = FALSE;
     if(model_bin->unk28 != NULL && D_8038371C != NULL){
         func_802E6BD0((u8*)modelRenderModelBin + modelRenderModelBin->unk28, modelRendervertexList, D_8038371C);
+        
+        // @recomp Do the skinning again on a high precision version of the vertex buffer. Force its usage for any subsequent display lists.
+        f32 *skinned_pos = recomp_apply_cpu_skinning((u8 *)modelRenderModelBin + modelRenderModelBin->unk28, modelRendervertexList, D_8038371C);
+        if (skinned_pos != NULL) {
+            gEXSetVertexSegment((*gfx)++, G_EX_VERTEX_POSITION, G_EX_ENABLED, osVirtualToPhysical(skinned_pos), 0x0);
+            ex_vertex_components_used = TRUE;
+        }
     }
 
     mlMtxIdent();
@@ -756,6 +825,11 @@ RECOMP_PATCH BKModelBin *modelRender_draw(Gfx **gfx, Mtx **mtx, f32 position[3],
     // @recomp Pop the matrix group if a transform id is set.
     if (cur_drawn_model_transform_id != 0) {
         gEXPopMatrixGroup((*gfx)++, G_MTX_MODELVIEW);
+    }
+
+    // @recomp Clear use of high precision vertex buffers.
+    if (ex_vertex_components_used) {
+        gEXSetVertexSegment((*gfx)++, G_EX_VERTEX_POSITION, G_EX_DISABLED, 0, 0);
     }
 
     if(modelRenderCallback.post_method != NULL){
