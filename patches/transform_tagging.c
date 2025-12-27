@@ -762,7 +762,7 @@ RECOMP_PATCH BKModelBin *modelRender_draw(Gfx **gfx, Mtx **mtx, f32 position[3],
         // @recomp Do the skinning again on a high precision version of the vertex buffer. Force its usage for any subsequent display lists.
         f32 *skinned_pos = recomp_apply_cpu_skinning((u8 *)modelRenderModelBin + modelRenderModelBin->unk28, modelRendervertexList, D_8038371C);
         if (skinned_pos != NULL) {
-            gEXSetVertexSegment((*gfx)++, G_EX_VERTEX_POSITION, G_EX_ENABLED, osVirtualToPhysical(skinned_pos), 0x0);
+            gEXSetVertexSegment((*gfx)++, G_EX_VERTEX_POSITION, G_EX_ENABLED, osVirtualToPhysical(skinned_pos), osVirtualToPhysical(&modelRendervertexList->vtx_18));
             ex_vertex_components_used = TRUE;
         }
     }
