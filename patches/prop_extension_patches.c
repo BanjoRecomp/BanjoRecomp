@@ -6,6 +6,7 @@
 #include "bk_api.h"
 #include "core2/coords.h"
 #include "core2/file.h"
+#include "note_saving.h"
 
 // Max props per cube, limited by cube->prop2Cnt which is only 6 bits.
 #define CUBE_MAX_PROPS 63
@@ -32,6 +33,7 @@ s32 func_803058C0(f32 arg0);
 void code_A5BC0_initCubePropActorProp(Cube*);
 void func_80332B2C(ActorMarker * arg0);
 void bitfield_free(s32 *arg0);
+void func_8032DE78(SpriteProp *sprite_prop, enum asset_e *sprite_id_ptr);
 
 extern struct {
     Cube *cubes;
@@ -178,10 +180,24 @@ RECOMP_PATCH void __code7AF80_initCubeFromFile(Cube *cube, File* file_ptr) {
         }
     }
 
-    // @recomp Initialize prop handles after loading the cube.
+    // @recomp Initialize prop handles after loading the cube and handle note saving.
     for (u32 i = 0; i < cube->prop2Cnt; i++) {
         // TODO prop subtypes.
         cube_handle->prop_handles[i] = recomp_create_object_data(EXTENSION_TYPE_PROP, 0);
+
+        // Check if this prop is a sprite prop.
+        Prop *prop = &cube->prop2Ptr[i];
+        if (!prop->is_3d && !prop->is_actor) {
+            // Check if this sprite prop is a musical note.
+
+            // Get the asset ID for this sprite prop.
+            enum asset_e sprite_prop_asset_id;
+            func_8032DE78(&prop->spriteProp, &sprite_prop_asset_id);
+
+            if (sprite_prop_asset_id == ASSET_6D6_MODEL_MUSIC_NOTE) {
+                note_saving_handle_static_note(cube, prop);
+            }
+        }
     }
 }
 

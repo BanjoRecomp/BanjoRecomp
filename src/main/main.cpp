@@ -349,7 +349,8 @@ std::vector<recomp::GameEntry> supported_games = {
         .internal_name = "Banjo-Kazooie",
         .game_id = u8"bk.n64.us.1.0",
         .mod_game_id = "bk",
-        .save_type = recomp::SaveType::Eep4k,
+        // Eep16k instead of Eep4k to have room for extra save file data.
+        .save_type = recomp::SaveType::Eep16k,
         .is_enabled = false,
         .decompression_routine = banjo::decompress_bk,
         .has_compressed_code = true,
