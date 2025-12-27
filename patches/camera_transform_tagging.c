@@ -116,9 +116,15 @@ float identity_matrix[4][4] = {
 RECOMP_PATCH void viewport_setRenderViewportAndOrthoMatrix(Gfx **gfx, Mtx **mtx) {
     gSPViewport((*gfx)++, &sViewportStack[sViewportStackIndex]);
 
+    // @recomp Use a high precision version of the projection matrix instead of the fixed precision one. This fixes accuracy issues when rendering text using the orthographic projection.
+    guOrthoF(*mtx, -(2 * (f32)gFramebufferWidth), (2 * (f32)gFramebufferWidth), -(2 * (f32)gFramebufferHeight), (2 * (f32)gFramebufferHeight), 1.0f, 20.0f, 1.0f);
+    gEXMatrixFloat((*gfx)++, OS_K0_TO_PHYSICAL((*mtx)++), G_MTX_NOPUSH | G_MTX_LOAD | G_MTX_PROJECTION);
+
+#if 0
     guOrtho(*mtx, -(2*(f32)gFramebufferWidth), (2*(f32)gFramebufferWidth), -(2*(f32)gFramebufferHeight), (2*(f32)gFramebufferHeight), 1.0f, 20.0f, 1.0f);
     gSPMatrix((*gfx)++, OS_K0_TO_PHYSICAL((*mtx)++), G_MTX_NOPUSH | G_MTX_LOAD | G_MTX_PROJECTION);
-    
+#endif
+
     guTranslate(*mtx, 0.0f, 0.0f, 0.0f);
     gSPMatrix((*gfx)++, OS_K0_TO_PHYSICAL((*mtx)++), G_MTX_NOPUSH | G_MTX_LOAD | G_MTX_MODELVIEW);
 

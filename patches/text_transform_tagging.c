@@ -317,7 +317,8 @@ RECOMP_PATCH void _printbuffer_draw_letter(char letter, f32 *xPtr, f32 *yPtr, f3
         }//L802F677C
         
         // @recomp Force orthographic projection rectangles to be used for all letters as it allows them to be interpolated.
-        if (TRUE) { //if (D_80380AF4 != 0) {
+        //if (D_80380AF4 != 0) {
+        if (TRUE) {
             f32 temp_f24;
             f32 spD0;
             f32 ix;
@@ -328,7 +329,10 @@ RECOMP_PATCH void _printbuffer_draw_letter(char letter, f32 *xPtr, f32 *yPtr, f3
             temp_f24 = (sp214->x - 1.0);
             spD0 = sp214->y - 1.0;
             temp_f26 = (f64)sp200 - (f32)gFramebufferWidth * 0.5;
-            spC0 = (f64)f28 - (f32)gFramebufferHeight * 0.5 - 0.5f;
+
+            // @recomp Remove the incorrect half pixel offset that was applied.
+            //spC0 = (f64)f28 - (f32)gFramebufferHeight * 0.5 - 0.5f;
+            spC0 = (f64)f28 - (f32)gFramebufferHeight * 0.5;
 
             // @recomp Assign a unique matrix and group to each letter drawn if an ID is currently assigned.
             if (cur_drawn_text_transform_id != 0) {
@@ -343,18 +347,29 @@ RECOMP_PATCH void _printbuffer_draw_letter(char letter, f32 *xPtr, f32 *yPtr, f3
 
                 cur_drawn_text_transform_id++;
             }
-
+            
             gSPVertex((*gfx)++, *vtx, 4, 0);
             for (iy = 0.0f; iy < 2.0; iy += 1.0) {
                 for (ix = 0.0f; ix < 2.0; ix += 1.0) {
                     s32 s = (ix * temp_f24 * 64.0f);
-                    (*vtx)->v.ob[0] = (s16)(s32)((f64)(temp_f26 + (temp_f24 * arg3 * ix)) * 4.0);
+                    // @recomp Add one pixel to the right of the rectangle.
+                    //(*vtx)->v.ob[0] = (s16)(s32)((f64)(temp_f26 + (temp_f24 * arg3 * ix)) * 4.0);
+                    s32 x = (s32)((f64)(temp_f26 + (temp_f24 * arg3 * ix)) * 4.0) + (ix * 4);
+                    (*vtx)->v.ob[0] = (s16)(x);
+
                     {
                         s32 t = (iy * spD0 * 64.0f);
-                        (*vtx)->v.ob[1] = (s16)(s32)((f64)(spC0 + (spD0 * arg3 * iy)) * -4.0);
+                        // @recomp Add one pixel to the bottom of the rectangle.
+                        //(*vtx)->v.ob[1] = (s16)(s32)((f64)(spC0 + (spD0 * arg3 * iy)) * -4.0);
+                        s32 y = (s32)((f64)(spC0 + (spD0 * arg3 * iy)) * -4.0) - iy * 4;
+                        (*vtx)->v.ob[1] = (s16)(y);
                         (*vtx)->v.ob[2] = -0x14;
-                        (*vtx)->v.tc[0] = s;
-                        (*vtx)->v.tc[1] = t;
+                        
+                        // @recomp Add one pixel to the texture coordinates.
+                        //(*vtx)->v.tc[0] = s;
+                        //(*vtx)->v.tc[1] = t;
+                        (*vtx)->v.tc[0] = s + ix * 64;
+                        (*vtx)->v.tc[1] = t + iy * 64;
                     }
                     (*vtx)->v.cn[3] = (iy != 0.0f) ? print_sCurrentPtr->unk6 : print_sCurrentPtr->unk4;
 
