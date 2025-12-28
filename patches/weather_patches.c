@@ -10,6 +10,8 @@ extern struct3s *D_80381034;
 
 u32 weather_particle_spawn_count = 0;
 
+extern bool recomp_in_demo_playback_game_mode();
+
 u32 get_weather_particle_id(struct5s *p) {
     u8 *padding = p->pad35;
     u32 id = (padding[0] << 16) | (padding[1] << 8) | (padding[2] << 0);
@@ -45,17 +47,19 @@ RECOMP_PATCH void func_802F87B0(struct6s *this) {
     sp4C[1] = randf2(200.0f, 500.0f);
     sp4C[2] = -f20;
 
-    // @recomp Force particles to spawn 360 degrees around the player at all times.
-    ml_vec3f_yaw_rotate_copy(sp4C, sp4C, randf2(0.0f, 360.0f));
-
-#if 0
     if (LENGTH_VEC3F((&this->unkC)) < 5.0f) {
         ml_vec3f_yaw_rotate_copy(sp4C, sp4C, randf2(0.0f, 360.0f));
     }
     else {
         ml_vec3f_yaw_rotate_copy(sp4C, sp4C, camRot[1] + randf2(-70.0f, 70.0f));
     }//L802F88F0
-#endif
+
+    // @recomp Force particles to spawn 360 degrees around the player at all times.
+    // This behavior must be ignored while in demo mode to not alter the RNG, as it'll affect the
+    // demo's result.
+    if (!recomp_in_demo_playback_game_mode()) {
+        ml_vec3f_yaw_rotate_copy(sp4C, sp4C, randf2(0.0f, 360.0f));
+    }
 
     sp4C[0] += plyrPos[0];
     sp4C[1] += plyrPos[1];
@@ -95,17 +99,21 @@ RECOMP_PATCH void func_802F87B0(struct6s *this) {
     // Infinite recursion is prevented by keeping track of the current recursion depth. To control
     // the frequency of the spawn rate, an additional counter is used to spawn an extra particle
     // every N amount of frames.
-    const u32 spawn_rate_frequency = 2;
-    static u32 recursion_depth = 0;
-    if (recursion_depth == 0) {
-        static u32 spawn_rate_counter = 0;
-        spawn_rate_counter++;
+    // This behavior must be ignored while in demo mode to not alter the RNG, as it'll affect the
+    // demo's result.
+    if (!recomp_in_demo_playback_game_mode()) {
+        const u32 spawn_rate_frequency = 2;
+        static u32 recursion_depth = 0;
+        if (recursion_depth == 0) {
+            static u32 spawn_rate_counter = 0;
+            spawn_rate_counter++;
 
-        if (spawn_rate_counter == spawn_rate_frequency) {
-            recursion_depth++;
-            func_802F87B0(this);
-            recursion_depth--;
-            spawn_rate_counter = 0;
+            if (spawn_rate_counter == spawn_rate_frequency) {
+                recursion_depth++;
+                func_802F87B0(this);
+                recursion_depth--;
+                spawn_rate_counter = 0;
+            }
         }
     }
 }
@@ -134,8 +142,10 @@ RECOMP_PATCH void func_802F8A90(struct6s *this, Gfx **gdl, Mtx **mptr, Vtx **vpt
 RECOMP_PATCH struct6s *func_802F7C38(void) {
     if (D_80381030 == NULL) {
         // @recomp Increase capacity of the weather effect vector to accomodate for more particles on screen.
-        D_80381030 = func_802F8BE0(250);
+        // This behavior must be ignored while in demo mode to not alter the RNG, as it'll affect the
+        // demo's result.
         //D_80381030 = func_802F8BE0(50); //new CCW weather
+        D_80381030 = func_802F8BE0(recomp_in_demo_playback_game_mode() ? 50 : 250);
     }
     return D_80381030;
 }
@@ -178,17 +188,19 @@ RECOMP_PATCH void func_802F7EB0(struct3s *this) {
     sp4C[1] = randf2(200.0f, 300.0f);
     sp4C[2] = -tmpf;
 
-    // @recomp Force particles to spawn 360 degrees around the player at all times.
-    ml_vec3f_yaw_rotate_copy(sp4C, sp4C, randf2(0.0f, 360.0f));
-
-#if 0
     if (gu_sqrtf(this->unk10[0] * this->unk10[0] + this->unk10[1] * this->unk10[1] + this->unk10[2] * this->unk10[2]) < 5.0f) {
         ml_vec3f_yaw_rotate_copy(sp4C, sp4C, randf2(0.0f, 360.0f));
     }
     else {
         ml_vec3f_yaw_rotate_copy(sp4C, sp4C, camRot[1] + randf2(-70.0f, 70.0f));
     }
-#endif
+
+    // @recomp Force particles to spawn 360 degrees around the player at all times.
+    // This behavior must be ignored while in demo mode to not alter the RNG, as it'll affect the
+    // demo's result.
+    if (!recomp_in_demo_playback_game_mode()) {
+        ml_vec3f_yaw_rotate_copy(sp4C, sp4C, randf2(0.0f, 360.0f));
+    }
 
     sp4C[0] = plyrPos[0] + sp4C[0];
     sp4C[1] = plyrPos[1] + sp4C[1];
@@ -215,17 +227,21 @@ RECOMP_PATCH void func_802F7EB0(struct3s *this) {
     // Infinite recursion is prevented by keeping track of the current recursion depth. To control
     // the frequency of the spawn rate, an additional counter is used to spawn an extra particle
     // every N amount of frames.
-    const u32 spawn_rate_frequency = 2;
-    static u32 recursion_depth = 0;
-    if (recursion_depth == 0) {
-        static u32 spawn_rate_counter = 0;
-        spawn_rate_counter++;
+    // This behavior must be ignored while in demo mode to not alter the RNG, as it'll affect the
+    // demo's result.
+    if (!recomp_in_demo_playback_game_mode()) {
+        const u32 spawn_rate_frequency = 2;
+        static u32 recursion_depth = 0;
+        if (recursion_depth == 0) {
+            static u32 spawn_rate_counter = 0;
+            spawn_rate_counter++;
 
-        if (spawn_rate_counter == spawn_rate_frequency) {
-            recursion_depth++;
-            func_802F7EB0(this);
-            recursion_depth--;
-            spawn_rate_counter = 0;
+            if (spawn_rate_counter == spawn_rate_frequency) {
+                recursion_depth++;
+                func_802F7EB0(this);
+                recursion_depth--;
+                spawn_rate_counter = 0;
+            }
         }
     }
 }
@@ -257,8 +273,10 @@ RECOMP_PATCH void func_802F8110(struct3s *this, Gfx **gdl, Mtx **mptr, u32 arg3)
 RECOMP_PATCH struct3s *func_802F7C7C(void) {
     if (D_80381034 == NULL) {
         // @recomp Increase capacity of the rain particle vector to accomodate for more droplets on screen.
-        D_80381034 = func_802F8264(300);
+        // This behavior must be ignored while in demo mode to not alter the RNG, as it'll affect the
+        // demo's result.
         //D_80381034 = func_802F8264(30); //rain
+        D_80381034 = func_802F8264(recomp_in_demo_playback_game_mode() ? 30 : 300);
     }
     return D_80381034;
 }

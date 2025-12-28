@@ -26,13 +26,16 @@ extern void func_802F8FFC(void);
 extern void func_8033BD20(BKModelBin **arg0);
 extern s32 globalTimer_getTime(void);
 
-#define SNOW_PARTICLE_COUNT 256
+#define SNOW_PARTICLE_COUNT_ORIGINAL 100
+#define SNOW_PARTICLE_COUNT_EXPANDED 256
 #define SNOW_SKIP_INTERPOLATION_MASK 0x8000
 
-u16 snowIDArray[SNOW_PARTICLE_COUNT];
-u16 snowIDQueue[SNOW_PARTICLE_COUNT];
+u16 snowIDArray[SNOW_PARTICLE_COUNT_EXPANDED];
+u16 snowIDQueue[SNOW_PARTICLE_COUNT_EXPANDED];
 u16 snowIDQueueCount = 0;
-struct4Ds snowData[SNOW_PARTICLE_COUNT];
+struct4Ds snowData[SNOW_PARTICLE_COUNT_EXPANDED];
+
+extern bool recomp_in_demo_playback_game_mode();
 
 // @recomp Patched to initialize the ID queue for snow particles.
 RECOMP_PATCH void func_802F9054(void) {
@@ -46,7 +49,7 @@ RECOMP_PATCH void func_802F9054(void) {
     D_80369288 = assetcache_get(0x8a1); //2D_light
 
     // @recomp Initialize the snow ID queue.
-    while (snowIDQueueCount < SNOW_PARTICLE_COUNT) {
+    while (snowIDQueueCount < SNOW_PARTICLE_COUNT_EXPANDED) {
         snowIDQueue[snowIDQueueCount] = snowIDQueueCount;
         snowIDQueueCount++;
     }
@@ -132,8 +135,10 @@ RECOMP_PATCH void func_802F919C(void) {
         }
         if (D_80369280->unk18 == 1) {
             // @recomp Patched to use the count from the macro instead and spawn multiple snow particles at once.
-            u32 particlesToSpawn = 2;
-            while (D_80369284 < SNOW_PARTICLE_COUNT && particlesToSpawn > 0) {
+            // This behavior must be ignored while in demo mode to not alter the RNG, as it'll affect the demo's result.
+            u32 snowParticleLimit = recomp_in_demo_playback_game_mode() ? SNOW_PARTICLE_COUNT_ORIGINAL : SNOW_PARTICLE_COUNT_EXPANDED;
+            u32 particlesToSpawn = recomp_in_demo_playback_game_mode() ? 1 : 2;
+            while (D_80369284 < snowParticleLimit && particlesToSpawn > 0) {
                 sp40 = D_80369280->unk1C + D_80369284;
 
                 // @recomp Assign a new ID to this particle. Also mark it to skip interpolation.
@@ -153,7 +158,10 @@ RECOMP_PATCH void func_802F919C(void) {
                 }
 
                 // @recomp Use the full 360 degrees instead.
-                var_f20 = 180.0f;
+                // This behavior must be ignored while in demo mode to not alter the RNG, as it'll affect the demo's result.
+                if (!recomp_in_demo_playback_game_mode()) {
+                    var_f20 = 180.0f;
+                }
 
                 ml_vec3f_yaw_rotate_copy(sp4C, sp4C, viewport_getYaw() + randf2(-var_f20, var_f20));
                 sp4C[0] += D_80381040[0];
@@ -184,7 +192,9 @@ RECOMP_PATCH bool func_802F989C(Gfx **gfx, Mtx **mtx, f32 arg2[3]) {
         && (arg2[1] > -200.0f)
         && ((-17000.0f < D_80381070[2]) && (D_80381070[2] < 17000.0f))
         // @recomp Remove frustum check.
-        //&& viewport_func_8024DB50(arg2, D_8038108C, aspect_ratio_scale)
+        // This behavior must be ignored while in demo mode to not alter the RNG, as it'll affect the demo's result.
+        //&& viewport_func_8024DB50(arg2, D_8038108C)
+        && (!recomp_in_demo_playback_game_mode() || viewport_func_8024DB50(arg2, D_8038108C))
         ) {
         func_80251B5C(D_80381070[0], D_80381070[1], D_80381070[2]);
         mlMtxApply(*mtx);
