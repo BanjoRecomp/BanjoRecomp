@@ -5,7 +5,9 @@
 
 #define DYNAMIC_CAMERA_STATE_R_LOOK 0x13
 
+extern u8 D_8037C060;
 extern u8 D_8037C061;
+extern u8 D_8037C062;
 extern u8 D_8037DB40;
 extern f32 D_8037DBA4;
 extern f32 D_8037DBA8;
@@ -58,6 +60,7 @@ extern void ncDynamicCamera_setRotation(f32 arg0[3]);
 extern void ncDynamicCamera_getRotation(f32 arg0[3]);
 extern void ncDynamicCamera_setState(s32);
 extern int ncDynamicCamera_getState(void);
+extern void ncDynamicCamera_update(void);
 extern enum bsgroup_e player_movementGroup(void);
 extern int bainput_should_rotate_camera_left(void);
 extern int bainput_should_rotate_camera_right(void);
@@ -190,10 +193,26 @@ f32 zoom_value(f32 a, f32 b, f32 c) {
     return pa * x * x + pb * x + pc;
 }
 
+// @recomp
+bool recomp_analog_camera_r_look_inherit_mode() {
+    bool swimming_state = player_getWaterState() == BSWATERGROUP_2_UNDERWATER;
+    bool prev_camera_is_pole = D_8037C060 == 0x10;
+    return swimming_state || prev_camera_is_pole;
+}
+
+bool recomp_analog_camera_r_look_flight_mode() {
+    bool prev_camera_is_flying = D_8037C060 == 0x4;
+    return prev_camera_is_flying;
+}
+
 // @recomp Patched to return the smoothed X value of the current camera offset based on the zoom level.
 RECOMP_PATCH f32 func_802BD8D4(void) {
     if (recomp_analog_camera_enabled()) {
-        if (ncDynamicCamera_getState() == DYNAMIC_CAMERA_STATE_R_LOOK && (D_8037DB40 == 3 || D_8037DB40 == 4)) {
+        bool r_look_mode = ncDynamicCamera_getState() == DYNAMIC_CAMERA_STATE_R_LOOK;
+        if (r_look_mode && recomp_analog_camera_r_look_flight_mode()) {
+            return D_8037DB18 + 300.0f;
+        }
+        else if (r_look_mode && recomp_analog_camera_r_look_inherit_mode()) {
             return analog_inherited_distance;
         }
         else {
@@ -279,8 +298,13 @@ RECOMP_PATCH void ncDynamicCam13_init(void) {
 // @recomp Patched to adjust the target height of the R Look camera mode if it inherited a target mode from another camera mode.
 RECOMP_PATCH f32 func_802C0780(void) {
     // @recomp Adjust the target height of this mode based on the inherited target from a previous mode.
-    // On these other modes, just use the existing camera position as the target height.
-    if (D_8037DB40 == 1 || D_8037DB40 == 3 || D_8037DB40 == 4) {
+    // On these other modes, just use the current camera position as the target height.
+    if (recomp_analog_camera_r_look_flight_mode()) {
+        f32 player_pos[3];
+        player_getPosition(player_pos);
+        return player_pos[1] + 250.0f;
+    }
+    else if (recomp_analog_camera_r_look_inherit_mode()) {
         f32 camera_pos[3];
         ncDynamicCamera_getPosition(camera_pos);
         return camera_pos[1];
@@ -334,6 +358,20 @@ RECOMP_PATCH void func_80290F14(void) {
     }
 }
 
+// @recomp
+RECOMP_PATCH void func_80291108(void) {
+    if (!func_80290D48() && ncDynamicCamera_getState() == 0x10) {
+        func_80290F14();
+        func_8029105C(8);
+    }
+
+    // @recomp
+    if (!func_80290D48() && recomp_analog_camera_held() && ncDynamicCamera_getState() == 0x4) {
+        ncDynamicCamera_setState(DYNAMIC_CAMERA_STATE_R_LOOK);
+        func_80291488(0x4);
+    }
+}
+
 // @recomp Patched to add the target yaw initialization back on the cases where the camera state was changed when pressing the R button.
 // Also patched to switch the camera to the R look mode if the analog camera input is held.
 RECOMP_PATCH void func_80291154(void) {
@@ -360,8 +398,9 @@ RECOMP_PATCH void func_80291154(void) {
         else {
             tmp = func_8029105C(7);
             func_80290F14();
-            if (!tmp)
+            if (!tmp) {
                 ncDynamicCamera_setState(0xB);
+            }
         }
     }
 }
