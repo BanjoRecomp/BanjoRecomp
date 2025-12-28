@@ -60,6 +60,7 @@ void func_80344C2C(bool arg0);
 void func_80344720(BKSpriteDisplayData *arg0, s32 frame, bool mirrored, f32 position[3], f32 rotation[3], f32 scale[3], Gfx **gfx, Mtx **mtx);
 void func_80344424(BKSpriteDisplayData *arg0, s32 frame, bool mirrored, f32 position[3], f32 scale[3], f32 rotation, Gfx **gfx, Mtx **mtx);
 void func_8033687C(Gfx **);
+s32 func_8034E698(Struct73s *arg0);
 
 // @recomp Patched to tag particles as they're drawn.
 RECOMP_PATCH void __particleEmitter_drawOnPass(ParticleEmitter *this, Gfx **gfx, Mtx **mtx, Vtx **vtx, u32 draw_pass){
@@ -169,6 +170,16 @@ RECOMP_PATCH void __particleEmitter_initParticle(ParticleEmitter *this, Particle
     particle->position[0] = particle->position[0] + randf2(this->particleSpawnPositionRange_94_min_x, this->particleSpawnPositionRange_94_max_x);
     particle->position[1] = particle->position[1] + randf2(this->particleSpawnPositionRange_94_min_y, this->particleSpawnPositionRange_94_max_y);
     particle->position[2] = particle->position[2] + randf2(this->particleSpawnPositionRange_94_min_z, this->particleSpawnPositionRange_94_max_z);
+
+    // @recomp This bit of code was copied over from particleEmitter_update. Particles can be attached to entities that can move vertically,
+    // like water surfaces, and will teleport accordingly based on their movement. This can introduce interpolation issues the first time
+    // a particle is updated, as they'll teleport from the spawner's position to the amount that the entity has moved since.
+    // 
+    // Replicating the logic here fixes the teleporting ripple particles on levels that change the water level, like the water pyramid in
+    // Gobi's Valley after the jiggy is collected.
+    if (this->unk100) {
+        particle->position[1] = func_8034E698((Struct73s *)(this->unk100)) + this->unk104;
+    }
 
     particle->initialSize_34 = particle->scale = randf2(this->particleStartingScaleRange_AC_min, this->particleStartingScaleRange_AC_max);
     if(0.0f == this->particleFinalScaleRange_B4_min && 0.0f == this->particleFinalScaleRange_B4_max)
