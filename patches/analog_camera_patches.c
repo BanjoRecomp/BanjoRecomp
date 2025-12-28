@@ -147,6 +147,7 @@ void recomp_analog_camera_update() {
             if (ncDynamicCamera_getState() != DYNAMIC_CAMERA_STATE_R_LOOK) {
                 ncDynamicCamera_setState(DYNAMIC_CAMERA_STATE_R_LOOK);
                 func_80291488(0x4);
+                ncDynamicCamera_update();
             }
 
             D_8037DBA4 = mlNormalizeAngle(D_8037DBA4 + analog_yaw);
@@ -369,6 +370,7 @@ RECOMP_PATCH void func_80291108(void) {
     if (!func_80290D48() && recomp_analog_camera_held() && ncDynamicCamera_getState() == 0x4) {
         ncDynamicCamera_setState(DYNAMIC_CAMERA_STATE_R_LOOK);
         func_80291488(0x4);
+        ncDynamicCamera_update();
     }
 }
 
@@ -389,17 +391,26 @@ RECOMP_PATCH void func_80291154(void) {
             r_look_initialized_from_r_button = FALSE;
         }
         // @recomp Switch to the R Look mode if the analog camera input is held. Unlike the R BUtton input, this one will not initialize the
-        // target yaw to match the player's angle, but will rather use whatever current yaw is present.
+        // target yaw to match the player's angle, but will rather use whatever current yaw is present. Also runs an update to make the
+        // transition to the new mode smoother.
         else if (recomp_analog_camera_held()) {
             ncDynamicCamera_setState(DYNAMIC_CAMERA_STATE_R_LOOK);
             func_80291488(0x4);
             func_80290F14();
+            ncDynamicCamera_update();
         }
         else {
             tmp = func_8029105C(7);
             func_80290F14();
             if (!tmp) {
-                ncDynamicCamera_setState(0xB);
+                // @recomp Running the update again when changing the camera mode makes the transition significantly smoother.
+                //ncDynamicCamera_setState(0xB);
+                if (ncDynamicCamera_getState() != 0xB) {
+                    ncDynamicCamera_setState(0xB);
+                    if (recomp_analog_camera_enabled()) {
+                        ncDynamicCamera_update();
+                    }
+                }
             }
         }
     }
