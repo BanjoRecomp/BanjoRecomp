@@ -67,27 +67,20 @@ extern s32 bs_getState(void);
 extern s32 getGameMode(void);
 extern f32 player_getYaw(void);
 extern f32 player_getPitch(void);
+extern enum bswatergroup_e player_getWaterState(void);
+extern enum map_e map_get(void);
 
 f32 analog_zoom = 2.0f;
+f32 analog_inherited_distance = 100.0f;
+bool analog_swimming_look_started = FALSE;
+bool r_look_initialized_from_r_button = FALSE;
 
-// @recomp Check whether the game is currently on a mode that uses demo playback instead of the player's inputs.
-bool in_demo_playback_game_mode() {
-    switch (getGameMode()) {
-    case GAME_MODE_6_FILE_PLAYBACK:
-    case GAME_MODE_7_ATTRACT_DEMO:
-    case GAME_MODE_8_BOTTLES_BONUS:
-    case GAME_MODE_A_SNS_PICTURE:
-    case GAME_MODE_9_BANJO_AND_KAZOOIE:
-        return TRUE;
-    default:
-        return FALSE;
-    }
-}
+extern bool recomp_in_demo_playback_game_mode();
 
 // @recomp Check whether the analog camera was enabled by the user. Analog camera can have effects
 // over vanilla behavior, so we ignore the user setting while on demo playback modes.
 bool recomp_analog_camera_enabled() {
-    if (in_demo_playback_game_mode()) {
+    if (recomp_in_demo_playback_game_mode()) {
         return FALSE;
     }
     else {
@@ -131,7 +124,7 @@ f32 recomp_analog_camera_get_y() {
     return y;
 }
 
-// @recomp Check wehther the analog camera stick is currently held.
+// @recomp Check whether the analog camera stick is currently held.
 bool recomp_analog_camera_held() {
     if (recomp_analog_camera_enabled() && recomp_analog_camera_allowed()) {
         float input_x, input_y;
@@ -143,12 +136,8 @@ bool recomp_analog_camera_held() {
     }
 }
 
-// @recomp Updates the current yaw based on the analog camera's horizontal movement.
-RECOMP_PATCH int func_8029105C(s32 arg0) {
-    if (func_80298850())
-        return FALSE;
-
-    // @recomp If movement is allowed, update the current camera mode's yaw with the input.
+// @recomp If movement is allowed, update the current camera mode's yaw with the input.
+void recomp_analog_camera_update() {
     if (recomp_analog_camera_enabled() && recomp_analog_camera_allowed()) {
         f32 analog_yaw = recomp_analog_camera_get_x() * 120.0f * time_getDelta();
         if (mlAbsF(analog_yaw) > 1e-6f) {
@@ -161,6 +150,15 @@ RECOMP_PATCH int func_8029105C(s32 arg0) {
             D_8037DBA8 = mlNormalizeAngle(D_8037DBA8 + analog_yaw);
         }
     }
+}
+
+// @recomp Updates the current yaw based on the analog camera's horizontal movement.
+RECOMP_PATCH int func_8029105C(s32 arg0) {
+    if (func_80298850())
+        return FALSE;
+
+    // @recomp Update the analog camera input.
+    recomp_analog_camera_update();
 
     if (bainput_should_rotate_camera_left() && ncDynamicCamA_func_802C1DB0(-45.0f)) {
         func_80291488(arg0);
@@ -195,7 +193,12 @@ f32 zoom_value(f32 a, f32 b, f32 c) {
 // @recomp Patched to return the smoothed X value of the current camera offset based on the zoom level.
 RECOMP_PATCH f32 func_802BD8D4(void) {
     if (recomp_analog_camera_enabled()) {
-        return zoom_value(D_8037C064, D_8037C070, D_8037C07C);
+        if (ncDynamicCamera_getState() == DYNAMIC_CAMERA_STATE_R_LOOK && (D_8037DB40 == 3 || D_8037DB40 == 4)) {
+            return analog_inherited_distance;
+        }
+        else {
+            return zoom_value(D_8037C064, D_8037C070, D_8037C07C);
+        }
     }
     else {
         return D_8037D994;
@@ -222,183 +225,68 @@ RECOMP_PATCH f32 func_802BD8C8(void) {
     }
 }
 
-// @recomp Patched to reset the position and rotation velocity vectors when this camera mode initializes.
-RECOMP_PATCH void ncDynamicCamB_init(void) {
-    func_802BE244(5.0f, 10.0f);
-    func_802BE230(3.0f, 8.0f);
-    func_802C0150(2);
-    func_802C04B0();
-    
-    // @recomp A bug exists in the game where the velocity for both the position and rotation of this camera
-    // mode is not reset when it is initialized, carrying over the velocity from the last time it was used.
-    // This results in visible shifting of the camera when entering this mode. Since it seems like a bug
-    // and not intentional behavior, we only fix this if not playing pre-recorded inputs.
-    // 
-    // This fixes large discontinuities when going back from the analog camera mode and can be reproduced in
-    // vanilla by using the R button after moving for a while and standing still.
-    if (!in_demo_playback_game_mode()) {
-        ml_vec3f_clear(D_8037D9E0);
-        ml_vec3f_clear(D_8037D9C8);
-    }
-}
-
 // @recomp Patched to skip over initialization of the target yaw based on the player's angle if analog cam is enabled.
 RECOMP_PATCH void ncDynamicCam13_init(void) {
     func_802BE230(5.0f, 8.0f);
     func_802BE244(8.0f, 15.0f);
 
     // @recomp We don't change the target type in this initialization routine when the analog camera is enabled,
-    // unless the the R button is currently held.
+    // unless the the R button is currently held. We also compute the current camera distance to use it as the zoom
+    // level in the case the current mode does not support camera zoom.
     // func_802C0150(6);
-    if (!recomp_analog_camera_enabled() || bakey_held(BUTTON_R)) {
+    if (recomp_analog_camera_enabled() && !r_look_initialized_from_r_button) {
+        f32 camera_position[3];
+        f32 camera_target[3];
+        f32 camera_delta[3];
+        ncDynamicCamera_getPosition(camera_position);
+        func_802C02D4(camera_target);
+        ml_vec3f_diff_copy(camera_delta, camera_position, camera_target);
+        analog_inherited_distance = gu_sqrtf(camera_delta[0] * camera_delta[0] + camera_delta[2] * camera_delta[2]);
+    }
+    else {
         func_802C0150(6);
     }
 
     func_802C2264(0.5f);
     func_802C069C();
-
+    
     // @recomp We don't update the target yaw to match the player's angle if analog camera is enabled,
     // unless the the R button is currently held.
     // func_802C095C();
-    if (!recomp_analog_camera_enabled() || bakey_held(BUTTON_R)) {
+    if (!recomp_analog_camera_enabled() || r_look_initialized_from_r_button) {
         func_802C095C();
     }
     else {
         D_8037DBA4 = D_8037DBA8;
+    }
+
+    // @recomp A bug exists in the game where the velocity for both the position and rotation of the camera
+    // mode is not reset when another mode that doesn't use it is initialized, carrying over the velocity
+    // from the last time it was used.
+    // 
+    // This results in visible shifting of the camera when returning from this mode to another one that uses
+    // the velocity. Since it seems like a bug and not intentional behavior, we only fix this if not playing
+    // pre-recorded inputs.
+    // 
+    // This fixes large discontinuities when going back from the analog camera mode and can be reproduced in
+    // vanilla by using the R button after moving for a while and standing still.
+    if (!recomp_in_demo_playback_game_mode()) {
+        ml_vec3f_clear(D_8037D9E0);
+        ml_vec3f_clear(D_8037D9C8);
     }
 }
 
 // @recomp Patched to adjust the target height of the R Look camera mode if it inherited a target mode from another camera mode.
 RECOMP_PATCH f32 func_802C0780(void) {
     // @recomp Adjust the target height of this mode based on the inherited target from a previous mode.
-    if (D_8037DB40 == 1 || D_8037DB40 == 3) {
+    // On these other modes, just use the existing camera position as the target height.
+    if (D_8037DB40 == 1 || D_8037DB40 == 3 || D_8037DB40 == 4) {
         f32 camera_pos[3];
         ncDynamicCamera_getPosition(camera_pos);
         return camera_pos[1];
     }
 
     return func_802BD51C();
-}
-
-// @recomp Patched to add analogue controls to the swimming camera.
-RECOMP_PATCH void ncDynamicCam3_update(void) {
-    f32 sp7C[3];
-    f32 sp70[3];
-    f32 sp64[3];
-    f32 sp58[3];
-    f32 sp4C[3];
-    f32 sp40[3];
-    f32 sp3C;
-    f32 sp38;
-    f32 sp34;
-    f32 sp30;
-
-    // @recomp
-    f32 analogue_x = 0.0f;
-    f32 analogue_y = 0.0f;
-    if (recomp_analog_camera_enabled() && recomp_analog_camera_allowed()) {
-        recomp_analog_camera_get(&analogue_x, &analogue_y);
-    }
-
-    ncDynamicCamera_getPosition(sp64);
-    sp34 = D_8037DC10;
-    func_802C02D4(sp7C);
-    sp30 = time_getDelta();
-    if (sp30);
-    ml_vec3f_diff_copy(sp40, sp64, sp7C);
-    sp3C = gu_sqrtf(sp40[0] * sp40[0] + sp40[2] * sp40[2]);
-    sp3C += func_80259198(sp30 * (sp34 - sp3C) * 2, sp30 * 800.0f);
-    func_8025727C(sp7C[0], sp7C[1], sp7C[2], sp64[0], sp64[1], sp64[2], &sp4C[0], &sp4C[1]);
-
-    // @recomp 
-    //sp40[1] = sp30 * 0.77 * mlDiffDegF(mlNormalizeAngle(player_getYaw() + 180.0f), sp4C[1]);
-    sp40[1] = sp30 * 0.77 * mlDiffDegF(mlNormalizeAngle(player_getYaw() + 180.0f + analogue_x * 120.0f), sp4C[1]);
-
-    sp40[1] = func_80259198(sp40[1], sp30 * 300.0f);
-    sp4C[1] = mlNormalizeAngle(sp4C[1] + sp40[1]);
-    func_80256E24(&sp58, 0.0f, sp4C[1], 0.0f, 0.0f, sp3C);
-    sp70[0] = sp7C[0] + sp58[0];
-    sp70[1] = sp64[1];
-    sp70[2] = sp7C[2] + sp58[2];
-    sp40[1] = sp7C[1] - sp64[1];
-    if (mlAbsF(sp40[1]) > 200.0f) {
-        sp70[1] = sp64[1] - ((sp40[1] > 0.0f) ? sp30 * (200.0f - sp40[1]) * 2 : sp30 * (-200.0f - sp40[1]) * 2);
-    }
-    ncDynamicCamera_setPosition(sp70);
-    if (func_802BE60C()) {
-        func_802BC84C(0);
-    }
-    func_802BE6FC(sp4C, sp7C);
-    func_802BD720(sp4C);
-}
-
-
-// @recomp Patched to add analogue controls to the flying camera.
-RECOMP_PATCH void ncDynamicCam4_update(void) {
-    f32 sp84[3];
-    f32 sp78[3];
-    f32 sp6C[3];
-    f32 sp60[3];
-    f32 sp54[3];
-    f32 sp48[3];
-    f32 sp44;
-    f32 temp_f10;
-    f32 sp3C;
-    f32 sp38;
-    f32 sp34;
-
-    ncDynamicCamera_getPosition(sp6C);
-    func_802BD4C0(sp84);
-    sp84[1] += 40.0f;
-
-    // @recomp
-    f32 analogue_x = 0.0f;
-    f32 analogue_y = 0.0f;
-    if (recomp_analog_camera_enabled() && recomp_analog_camera_allowed()) {
-        recomp_analog_camera_get(&analogue_x, &analogue_y);
-    }
-
-    sp34 = player_getPitch();
-    if (sp34 > 180.0f) {
-        sp3C = ml_map_f(sp34, 300.0f, 360.0f, 900.0f, D_8037DB18);
-        sp84[1] += ml_map_f(sp34, 300.0f, 360.0f, -140.0f, 70.0f);
-    }
-    else {
-        sp3C = D_8037DB18;
-        sp84[1] += 70.0f;
-    }
-    sp38 = time_getDelta();
-    ml_vec3f_diff_copy(sp48, sp6C, sp84);
-    sp44 = gu_sqrtf(sp48[0] * sp48[0] + sp48[1] * sp48[1] + sp48[2] * sp48[2]);
-    temp_f10 = (sp3C - sp44) * sp38;
-    sp44 += func_80259198(temp_f10 * D_8037DB10, sp38 * D_8037DB14);
-    func_8025727C(sp84[0], sp84[1], sp84[2], sp6C[0], sp6C[1], sp6C[2], &sp54[0], &sp54[1]);
-    if ((sp34 > 180.0f) && (sp34 < 360.0f)) {
-        sp34 = ml_min_f(100.0f, (f32)((f64)(360.0f - sp34) * 1.4));
-    }
-    // @recomp
-    //sp48[0] = mlDiffDegF(mlNormalizeAngle(sp34), sp54[0]);
-    sp48[0] = mlDiffDegF(mlNormalizeAngle(sp34 + analogue_y * 120.0f), sp54[0]);
-    
-    // @recomp
-    //sp48[1] = mlDiffDegF(mlNormalizeAngle(player_getYaw() + 180.0f), sp54[1]);
-    sp48[1] = mlDiffDegF(mlNormalizeAngle(player_getYaw() + 180.0f + analogue_x * 120.0f), sp54[1]);
-
-    sp48[2] = 0.0f;
-    sp48[0] = (f32)((f64)sp48[0] * ((f64)sp38 * 0.8));
-    sp48[1] = sp48[1] * (sp38 * D_8037DB1C);
-    sp48[0] = func_80259198(sp48[0], sp38 * 40.0f);
-    sp48[1] = func_80259198(sp48[1], sp38 * D_8037DB20);
-    sp54[0] = mlNormalizeAngle(sp54[0] + sp48[0]);
-    sp54[1] = mlNormalizeAngle(sp54[1] + sp48[1]);
-
-    func_80256E24(sp60, -sp54[0], sp54[1], 0.0f, 0.0f, sp44);
-    ml_vec3f_add(sp78, sp84, sp60);
-    ncDynamicCamera_setPosition(sp78);
-    func_8025727C(sp84[0], sp84[1], sp84[2], sp78[0], sp78[1], sp78[2], &sp54[0], &sp54[1]);
-    sp54[0] = -sp54[0];
-    sp54[2] = 0.0f;
-    func_802BD720(sp54);
 }
 
 // @recomp Updates the current zoom level based on the analog camera's vertical movement.
@@ -452,9 +340,15 @@ RECOMP_PATCH void func_80291154(void) {
     int tmp;
     if (!func_80290D48() && !func_80290E8C()) {
         if (bakey_held(BUTTON_R)) {
-            ncDynamicCamera_setState(DYNAMIC_CAMERA_STATE_R_LOOK);
+            // @recomp Set a global flag to indicate the camera initialization was done by pressing the R button.
+            r_look_initialized_from_r_button = TRUE;
+
+            ncDynamicCamera_setState(0x13);
             func_80291488(0x4);
             func_80290F14();
+
+            // @recomp Clear the R button initialization flag.
+            r_look_initialized_from_r_button = FALSE;
         }
         // @recomp Switch to the R Look mode if the analog camera input is held. Unlike the R BUtton input, this one will not initialize the
         // target yaw to match the player's angle, but will rather use whatever current yaw is present.
@@ -490,9 +384,41 @@ RECOMP_PATCH void func_802911E0(void) {
     }
 }
 
-// @recomp
+// @recomp Patched to allow swimming to use the analog camera mode.
+RECOMP_PATCH int func_80290E8C(void) {
+    if (player_getWaterState() != BSWATERGROUP_2_UNDERWATER) {
+        // @recomp Clear the analog look flag when not underwater.
+        analog_swimming_look_started = FALSE;
+
+        return FALSE;
+    }
+
+    // @recomp Check whether the analog camera is active or if it was activated.
+    // Switching to a diving state will reset back to the regular camera.
+    //ncDynamicCamera_setState(3);
+    if (recomp_analog_camera_held() || analog_swimming_look_started) {
+        ncDynamicCamera_setState(DYNAMIC_CAMERA_STATE_R_LOOK);
+        recomp_analog_camera_update();
+        analog_swimming_look_started = recomp_analog_camera_held() || (bs_getState() != BS_2C_DIVE_B && bs_getState() != BS_39_DIVE_A); 
+    }
+    else {
+        ncDynamicCamera_setState(3);
+    }
+
+    func_80291488(0xB);
+
+    if (map_get() == MAP_B_CC_CLANKERS_CAVERN
+        && player_getYPosition() < 1201.0f
+        ) {
+        func_802C1B20(1100.0f);
+    }
+    return TRUE;
+}
+
+// @recomp Patched to supress right stick analog inputs on situations where the analog camera is allowed.
 RECOMP_PATCH void pfsManager_readData() {
-    // @recomp
+    // @recomp Supress right stick analog input if analog camera movement is allowed. This will prevent
+    // any bindings associated to the right analog stick from triggering.
     recomp_set_right_analog_suppressed(recomp_analog_camera_enabled() && recomp_analog_camera_allowed());
 
     func_8024F35C(0);
