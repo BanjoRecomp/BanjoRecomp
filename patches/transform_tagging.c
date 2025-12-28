@@ -6,6 +6,8 @@
 #include "core1/mlmtx.h"
 #include "functions.h"
 
+extern bool recomp_in_demo_playback_game_mode();
+
 bool skip_all_interpolation = FALSE;
 bool has_additional_model_scale = FALSE;
 f32 additional_model_scale_x;
@@ -32,6 +34,7 @@ s32 cur_drawn_model_transform_id = 0;
 s32 cur_drawn_model_transform_id_skip_interpolation = FALSE;
 s32 cur_model_transform_id_offset = 0;
 s32 cur_model_uses_bones = FALSE;
+s32 cur_model_would_have_been_culled_in_demo = FALSE;
 
 Mtx identity_fixed_mtx = {{
     {
@@ -598,16 +601,20 @@ RECOMP_PATCH BKModelBin *modelRender_draw(Gfx **gfx, Mtx **mtx, f32 position[3],
         return 0;
     }
 
-    // @recomp Disable frustum checks.
-    set_frustum_checks_enabled(FALSE);
-    
-    D_80370990 = (D_80383704) ? viewport_func_8024DB50(object_position, spD0*scale) : 1;
-    
-    // @recomp Re-enable frustum checks.
-    set_frustum_checks_enabled(TRUE);
+    // @recomp Record the frustum check result, but ignore it during this function to disable frustum culling.
+    // It will get set before this function returns. 
+    cur_model_would_have_been_culled_in_demo = !((D_80383704) ? viewport_func_8024DB50(object_position, spD0*scale) : 1);
+    D_80370990 = TRUE;
+
+    // @recomp Force the frustum check to be true if the game isn't in demo playback mode.
+    if (!recomp_in_demo_playback_game_mode()) {
+        cur_model_would_have_been_culled_in_demo = FALSE;
+    }
 
     if(D_80370990 == 0){
         modelRender_reset();
+        // @recomp Clear the flag indicating that the model would have been culled before returning.
+        cur_model_would_have_been_culled_in_demo = FALSE;
         return 0;
     }
 
@@ -841,5 +848,10 @@ RECOMP_PATCH BKModelBin *modelRender_draw(Gfx **gfx, Mtx **mtx, f32 position[3],
     }
 
     modelRender_reset();
+    
+    // @recomp Save the actual frustum culling result before returning.
+    D_80370990 = !cur_model_would_have_been_culled_in_demo;
+    // @recomp Clear the flag indicating that the model would have been culled before returning.
+    cur_model_would_have_been_culled_in_demo = FALSE;
     return model_bin;
 }
