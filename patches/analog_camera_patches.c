@@ -68,7 +68,6 @@ extern void ncDynamicCamera_setRotation(f32 arg0[3]);
 extern void ncDynamicCamera_getRotation(f32 arg0[3]);
 extern void ncDynamicCamera_setState(s32);
 extern int ncDynamicCamera_getState(void);
-extern void ncDynamicCamera_update(void);
 extern enum bsgroup_e player_movementGroup(void);
 extern int bainput_should_rotate_camera_left(void);
 extern int bainput_should_rotate_camera_right(void);
@@ -167,7 +166,6 @@ void recomp_analog_camera_update() {
             if (ncDynamicCamera_getState() != DYNAMIC_CAMERA_STATE_R_LOOK) {
                 ncDynamicCamera_setState(DYNAMIC_CAMERA_STATE_R_LOOK);
                 func_80291488(0x4);
-                ncDynamicCamera_update();
             }
 
             D_8037DBA4 = mlNormalizeAngle(D_8037DBA4 + analog_yaw);
@@ -463,7 +461,6 @@ RECOMP_PATCH void func_80291108(void) {
     if (!func_80290D48() && recomp_analog_camera_held() && ncDynamicCamera_getState() == 0x4) {
         ncDynamicCamera_setState(DYNAMIC_CAMERA_STATE_R_LOOK);
         func_80291488(0x4);
-        ncDynamicCamera_update();
     }
 }
 
@@ -495,14 +492,7 @@ RECOMP_PATCH void func_80291154(void) {
             tmp = func_8029105C(7);
             func_80290F14();
             if (!tmp) {
-                // @recomp Running the update again when changing the camera mode makes the transition significantly smoother.
-                //ncDynamicCamera_setState(0xB);
-                if (ncDynamicCamera_getState() != 0xB) {
-                    ncDynamicCamera_setState(0xB);
-                    if (recomp_analog_camera_enabled()) {
-                        ncDynamicCamera_update();
-                    }
-                }
+                ncDynamicCamera_setState(0xB);
             }
         }
     }
