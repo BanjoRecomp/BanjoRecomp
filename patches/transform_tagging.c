@@ -256,7 +256,8 @@ RECOMP_PATCH void func_80338904(Gfx **gfx, Mtx **mtx, void *arg2){
         pushed_matrix_group = set_model_matrix_group(gfx, arg2, FALSE);
 
         vptr = &modelRenderDisplayList->list[cmd->unk8];
-        gSPDisplayList((*gfx)++, osVirtualToPhysical(vptr));
+        // @recomp Remove unnecessary usage of osVirtualToPhysical to allow extended addresses.
+        gSPDisplayList((*gfx)++, /*osVirtualToPhysical*/(vptr));
         
         // @recomp Pop the matrix and pop the matrix group if one was created.
         gSPPopMatrix((*gfx)++, G_MTX_MODELVIEW);
@@ -651,8 +652,8 @@ RECOMP_PATCH BKModelBin *modelRender_draw(Gfx **gfx, Mtx **mtx, f32 position[3],
     }
 
     // Set up segments 1 and 2 to point to vertices and textures respectively
-    gSPSegment((*gfx)++, 0x01, osVirtualToPhysical(&modelRendervertexList->vtx_18));
-    gSPSegment((*gfx)++, 0x02, osVirtualToPhysical(&modelRenderTextureList->tex_8[modelRenderTextureList->cnt_4]));
+    gSPSegment((*gfx)++, 0x01, &modelRendervertexList->vtx_18);
+    gSPSegment((*gfx)++, 0x02, &modelRenderTextureList->tex_8[modelRenderTextureList->cnt_4]);
 
     //segments 11 to 15 contain animated textures
     if(modelRenderAnimatedTexturesCacheId){
@@ -660,8 +661,10 @@ RECOMP_PATCH BKModelBin *modelRender_draw(Gfx **gfx, Mtx **mtx, f32 position[3],
         s32 texture_offset;
         
         for(i_segment = 0; i_segment < 4; i_segment++){
-            if(AnimTextureListCache_tryGetTextureOffset(modelRenderAnimatedTexturesCacheId, i_segment, &texture_offset))
-                gSPSegment((*gfx)++, 15 - i_segment, osVirtualToPhysical((u8*)&modelRenderTextureList->tex_8[modelRenderTextureList->cnt_4] + texture_offset));
+            if(AnimTextureListCache_tryGetTextureOffset(modelRenderAnimatedTexturesCacheId, i_segment, &texture_offset)) {
+                // @recomp Remove unnecessary usage of osVirtualToPhysical to allow extended addresses.
+                gSPSegment((*gfx)++, 15 - i_segment, /*osVirtualToPhysical*/((u8*)&modelRenderTextureList->tex_8[modelRenderTextureList->cnt_4] + texture_offset));
+            }
         }
     }
 
@@ -769,7 +772,7 @@ RECOMP_PATCH BKModelBin *modelRender_draw(Gfx **gfx, Mtx **mtx, f32 position[3],
         // @recomp Do the skinning again on a high precision version of the vertex buffer. Force its usage for any subsequent display lists.
         f32 *skinned_pos = recomp_apply_cpu_skinning((u8 *)modelRenderModelBin + modelRenderModelBin->unk28, modelRendervertexList, D_8038371C);
         if (skinned_pos != NULL) {
-            gEXSetVertexSegment((*gfx)++, G_EX_VERTEX_POSITION, G_EX_ENABLED, osVirtualToPhysical(skinned_pos), osVirtualToPhysical(&modelRendervertexList->vtx_18));
+            gEXSetVertexSegment((*gfx)++, G_EX_VERTEX_POSITION, G_EX_ENABLED, skinned_pos, &modelRendervertexList->vtx_18);
             ex_vertex_components_used = TRUE;
         }
     }

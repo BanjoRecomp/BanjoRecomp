@@ -120,7 +120,8 @@ RECOMP_PATCH Actor *chBottlesBonus_draw(ActorMarker *marker, Gfx **gfx, Mtx **mt
     func_80253190(gfx);
 
     gDPSetTextureFilter((*gfx)++, G_TF_POINT);
-    gSPSegment((*gfx)++, 0x04, osVirtualToPhysical(sp50));
+    // @recomp Remove unnecessary usage of osVirtualToPhysical to allow extended addresses.
+    gSPSegment((*gfx)++, 0x04, /*osVirtualToPhysical*/(sp50));
     modelRender_preDraw((GenFunction_1)actor_predrawMethod, (s32)sp6C);
     modelRender_postDraw((GenFunction_1)actor_postdrawMethod, (s32)marker);
 
@@ -145,7 +146,8 @@ RECOMP_PATCH Actor *func_802DF160(Gfx **gfx, Mtx **mtx, Vtx **vtx) {
     sp38 = func_8030C704();
     modelRender_setDepthMode(MODEL_RENDER_DEPTH_FULL);
     gDPSetTextureFilter((*gfx)++, G_TF_POINT);
-    gSPSegment((*gfx)++, 0x04, osVirtualToPhysical(sp38));
+    // @recomp Remove unnecessary usage of osVirtualToPhysical to allow extended addresses.
+    gSPSegment((*gfx)++, 0x04, /*osVirtualToPhysical*/(sp38));
     modelRender_preDraw((GenFunction_1)actor_predrawMethod, (s32)this);
     modelRender_postDraw((GenFunction_1)actor_postdrawMethod, (s32)D_8037E000);
 
@@ -188,7 +190,8 @@ RECOMP_PATCH Actor *func_802DEC00(ActorMarker *marker, Gfx **gfx, Mtx **mtx, Vtx
     modelRender_draw(gfx, mtx, sp58, NULL, 1.0f, sp4C, D_8037DFE8);
     gDPSetColorDither((*gfx)++, G_CD_DISABLE);
     func_80253190(gfx);
-    gSPSegment((*gfx)++, 0x04, osVirtualToPhysical(sp48));
+    // @recomp Remove unnecessary usage of osVirtualToPhysical to allow extended addresses.
+    gSPSegment((*gfx)++, 0x04, /*osVirtualToPhysical*/(sp48));
     modelRender_preDraw((GenFunction_1)actor_predrawMethod, (s32)this);
     modelRender_postDraw((GenFunction_1)actor_postdrawMethod, (s32)marker);
 

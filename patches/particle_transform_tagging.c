@@ -315,7 +315,8 @@ RECOMP_PATCH void func_8033F7F0(u8 indx, Gfx **gfx, Mtx **mtx, Vtx **vtx){
         mlMtxRotatePYR(sp54->rotation[0], sp54->rotation[1], sp54->rotation[2]);
         func_80252330(sp30[0], sp30[1], sp30[2]);
         mlMtxApply(*mtx);
-        gSPMatrix((*gfx)++, OS_PHYSICAL_TO_K0((*mtx)++), G_MTX_PUSH | G_MTX_LOAD | G_MTX_MODELVIEW);
+        // @recomp Remove unnecessary usage of OS_PHYSICAL_TO_K0 (which should actually be OS_K0_TO_PHYSICAL) to allow extended addresses.
+        gSPMatrix((*gfx)++, /*OS_PHYSICAL_TO_K0*/((*mtx)++), G_MTX_PUSH | G_MTX_LOAD | G_MTX_MODELVIEW);
         func_803382E4(sp54->unk28_21);
         func_80338338(sp54->color[0], sp54->color[1],sp54->color[2]);
         func_803382FC(sp54->unk27);
