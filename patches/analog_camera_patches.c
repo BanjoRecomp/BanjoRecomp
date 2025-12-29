@@ -9,8 +9,10 @@ extern u8 D_8037C060;
 extern u8 D_8037C061;
 extern u8 D_8037C062;
 extern u8 D_8037DB40;
+extern f32 D_8037DBA0;
 extern f32 D_8037DBA4;
 extern f32 D_8037DBA8;
+extern f32 D_8037DBAC;
 extern f32 D_8037D994;
 extern f32 D_8037D998;
 extern f32 D_8037D99C;
@@ -45,13 +47,19 @@ extern s32 func_802BC84C(s32 arg0);
 extern void func_802BD4C0(f32 arg0[3]);
 extern f32 func_802BD51C(void);
 extern void func_802BD720(f32 arg0[3]);
+extern void func_802BDB30(f32 arg0, f32 *arg1, f32 *arg2, f32 arg3, f32 arg4, f32 arg5);
 extern int func_802BE60C(void);
 extern void func_802BE6FC(f32 arg0[3], f32 arg1[3]);
 extern void func_802C0150(s32 arg0);
+extern void func_802C019C(f32 arg0[3]);
+extern void func_802C01BC(f32 arg0[3]);
+extern void func_802C01DC(f32 arg0[3]);
+extern void func_802C0234(f32 arg0[3]);
+extern void func_802C026C(f32 arg0[3]);
+extern void func_802C02B4(f32 arg0[3]);
 extern void func_802C02D4(f32 arg0[3]);
 extern void func_802C04B0(void);
 extern bool func_802C0640(void);
-extern void func_802C069C(void);
 extern void func_802C095C(void);
 extern void func_802C2264(f32 duration);
 extern void ncDynamicCamera_setPosition(f32 arg0[3]);
@@ -73,12 +81,24 @@ extern f32 player_getPitch(void);
 extern enum bswatergroup_e player_getWaterState(void);
 extern enum map_e map_get(void);
 
+f32 dynamic_camera_targets[2][3];
+u32 dynamic_camera_target_frames[2];
+u32 dynamic_camera_target_frame;
 f32 analog_zoom = 2.0f;
 f32 analog_inherited_distance = 100.0f;
-bool analog_swimming_look_started = FALSE;
-bool r_look_initialized_from_r_button = FALSE;
+f32 r_look_initial_position_offset[3];
+f32 r_look_initial_target_offset[3];
+f32 r_look_initial_offset_weight;
+bool analog_swimming_look_started;
+bool r_look_initialized_from_r_button;
+bool r_look_get_target_from_previous_frame_fix;
 
 extern bool recomp_in_demo_playback_game_mode();
+
+// @recomp Advances the reference frame for storing camera targets.
+void recomp_advance_dynamic_camera_targets() {
+    dynamic_camera_target_frame++;
+}
 
 // @recomp Check whether the analog camera was enabled by the user. Analog camera can have effects
 // over vanilla behavior, so we ignore the user setting while on demo playback modes.
@@ -194,13 +214,14 @@ f32 zoom_value(f32 a, f32 b, f32 c) {
     return pa * x * x + pb * x + pc;
 }
 
-// @recomp
+// @recomp Check whether the camera is in a state that has inherited its target from a previous mode.
 bool recomp_analog_camera_r_look_inherit_mode() {
     bool swimming_state = player_getWaterState() == BSWATERGROUP_2_UNDERWATER;
     bool prev_camera_is_pole = D_8037C060 == 0x10;
     return swimming_state || prev_camera_is_pole;
 }
 
+// @recomp Check whether the camera is in flight mode by checking what the previous stored camera mode is.
 bool recomp_analog_camera_r_look_flight_mode() {
     bool prev_camera_is_flying = D_8037C060 == 0x4;
     return prev_camera_is_flying;
@@ -245,6 +266,68 @@ RECOMP_PATCH f32 func_802BD8C8(void) {
     }
 }
 
+// @recomp Patched to store the last retrieved camera target for the current frame.
+RECOMP_PATCH void func_802C02D4(f32 arg0[3]) {
+    switch (D_8037DB40) {
+    case 1:
+        func_802C019C(arg0);
+        break;
+
+    case 2:
+        func_802C01BC(arg0);
+        break;
+
+    case 3:
+        func_802C01DC(arg0);
+        break;
+
+    case 4:
+        func_802C0234(arg0);
+        break;
+
+    case 5:
+        func_802C026C(arg0);
+        break;
+
+    case 6:
+        func_802C02B4(arg0);
+        break;
+    }
+
+    // @recomp Store the camera target to be used in a future frame as well as the frame number that wrote it.
+    u32 index = dynamic_camera_target_frame & 1;
+    ml_vec3f_copy(dynamic_camera_targets[index], arg0);
+    dynamic_camera_target_frames[index] = dynamic_camera_target_frame;
+}
+
+// @recomp Patched to replace the camera target used for computing the yaw with a version that uses the previous
+// frame's camera target. The regular version of this function has a bug where the camera target is the one
+// determined by the current frame, so it is never able to compute the yaw properly by using the previous frame's
+// camera position and ends up causing a slight rotation of the resulting yaw.
+RECOMP_PATCH void func_802C069C(void) {
+    f32 sp34[3];
+    f32 sp28[3];
+    f32 sp1C[3];
+
+    ncDynamicCamera_getPosition(sp34);
+    
+    // @recomp If the camera target was written last frame and the bug fix is required, we use that value instead
+    // to compute the yaw. Otherwise, use the original function.
+    //func_802C02D4(sp1C);
+    u32 index = (dynamic_camera_target_frame & 1) ^ 1;
+    if (r_look_get_target_from_previous_frame_fix && recomp_analog_camera_enabled() && (dynamic_camera_target_frames[index] == (dynamic_camera_target_frame - 1))) {
+        ml_vec3f_copy(sp1C, dynamic_camera_targets[index]);
+    }
+    else {
+        func_802C02D4(sp1C);
+    }
+
+    ml_vec3f_diff_copy(sp28, sp34, sp1C);
+    D_8037DBA0 = gu_sqrtf(sp28[0] * sp28[0] + sp28[2] * sp28[2]);
+    func_8025801C(sp28, &D_8037DBA8);
+    D_8037DBAC = 0.0f;
+}
+
 // @recomp Patched to skip over initialization of the target yaw based on the player's angle if analog cam is enabled.
 RECOMP_PATCH void ncDynamicCam13_init(void) {
     func_802BE230(5.0f, 8.0f);
@@ -267,8 +350,18 @@ RECOMP_PATCH void ncDynamicCam13_init(void) {
         func_802C0150(6);
     }
 
-    func_802C2264(0.5f);
+    // @recomp Reduce the duration of the interpolation to this mode when the analog cam is enabled. Thanks to the
+    // bug fix to the target computation, this is less necessary than before.
+    //func_802C2264(0.5f);
+    func_802C2264(recomp_analog_camera_enabled() ? (7.0f / 30.0f) : 0.5f);
+
+    // @recomp Enable the global variable that controls whether the previous frame target fix is used.
+    r_look_get_target_from_previous_frame_fix = TRUE;
+
     func_802C069C();
+
+    // @recomp Clear the global variable.
+    r_look_get_target_from_previous_frame_fix = FALSE;
     
     // @recomp We don't update the target yaw to match the player's angle if analog camera is enabled,
     // unless the the R button is currently held.
@@ -359,14 +452,14 @@ RECOMP_PATCH void func_80290F14(void) {
     }
 }
 
-// @recomp
+// @recomp Patched to allow the flying camera to switch to analog look.
 RECOMP_PATCH void func_80291108(void) {
     if (!func_80290D48() && ncDynamicCamera_getState() == 0x10) {
         func_80290F14();
         func_8029105C(8);
     }
 
-    // @recomp
+    // @recomp Switch to the analog camera mode.
     if (!func_80290D48() && recomp_analog_camera_held() && ncDynamicCamera_getState() == 0x4) {
         ncDynamicCamera_setState(DYNAMIC_CAMERA_STATE_R_LOOK);
         func_80291488(0x4);
@@ -397,7 +490,6 @@ RECOMP_PATCH void func_80291154(void) {
             ncDynamicCamera_setState(DYNAMIC_CAMERA_STATE_R_LOOK);
             func_80291488(0x4);
             func_80290F14();
-            ncDynamicCamera_update();
         }
         else {
             tmp = func_8029105C(7);

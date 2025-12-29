@@ -40,8 +40,10 @@ extern Vtx *sVtxStack[2];
 extern s32 sStackSelector;
 extern s32 gTextureFilterPoint;
 extern u32 heap_occupiedBytes;
+extern u32 dynamic_camera_target_index;
 
 extern void recomp_reset_skinning_stack();
+extern void recomp_advance_dynamic_camera_targets();
 
 // @recomp Patched to not free anything.
 RECOMP_PATCH void graphicsCache_release(void) {
@@ -88,6 +90,9 @@ RECOMP_PATCH void game_draw(s32 arg0){
 
     // @recomp Reset the high precision position skinning stack.
     recomp_reset_skinning_stack();
+
+    // @recomp Advance the frame used as reference by the dynamic camera target changes for analog camera.
+    recomp_advance_dynamic_camera_targets();
 
     // @recomp Track the original values.
     Mtx* mtx_start = mtx;
