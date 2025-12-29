@@ -346,9 +346,14 @@ bool banjo::renderer::RT64Context::update_config(const ultramodern::renderer::Gr
 
     set_application_user_config(app.get(), new_config);
 
-    app->updateUserConfig(true);
+    // When updating the user configuration, only discard framebuffers if an option that affects their resolution changes.
+    bool resolution_changed = new_config.res_option != old_config.res_option;
+    bool aspect_ratio_changed = new_config.ar_option != old_config.ar_option;
+    bool downsampling_changed = new_config.ds_option != old_config.ds_option;
+    bool msaa_changed = new_config.msaa_option != old_config.msaa_option;
+    app->updateUserConfig(resolution_changed || aspect_ratio_changed || downsampling_changed || msaa_changed);
 
-    if (new_config.msaa_option != old_config.msaa_option) {
+    if (msaa_changed) {
         app->updateMultisampling();
     }
     return true;
