@@ -218,7 +218,8 @@ RECOMP_PATCH bool func_802F989C(Gfx **gfx, Mtx **mtx, f32 arg2[3]) {
         }
 
         gSPMatrix((*gfx)++, (*mtx)++, G_MTX_PUSH | G_MTX_LOAD | G_MTX_MODELVIEW);
-        gSPDisplayList((*gfx)++, osVirtualToPhysical(D_80381090));
+        // @recomp Remove unnecessary usage of osVirtualToPhysical to allow extended addresses.
+        gSPDisplayList((*gfx)++, /*osVirtualToPhysical*/(D_80381090));
         gSPPopMatrix((*gfx)++, G_MTX_MODELVIEW);
 
         // @recomp Clear the matrix group.

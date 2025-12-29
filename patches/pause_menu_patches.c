@@ -13,9 +13,9 @@ RECOMP_PATCH void func_80314BB0(Gfx **gfx, Mtx **mtx, Vtx **vtx, void *frame_buf
     gDPSetColorImage((*gfx)++, G_IM_FMT_RGBA, G_IM_SIZ_16b, gFramebufferWidth, OS_PHYSICAL_TO_K0(frame_buffer_1));
 
 #if 1
-    // @recomp New implementation that uses rows instead of tiles.
+    // @recomp New implementation that uses rows instead of tiles. Remove unnecessary usage of osVirtualToPhysical.
     for (y = 0; y < gFramebufferHeight / 7 + 1; y++) {
-        gDPLoadTextureTile((*gfx)++, osVirtualToPhysical(frame_buffer_2), G_IM_FMT_RGBA, G_IM_SIZ_16b, gFramebufferWidth, gFramebufferHeight,
+        gDPLoadTextureTile((*gfx)++, /*osVirtualToPhysical*/(frame_buffer_2), G_IM_FMT_RGBA, G_IM_SIZ_16b, gFramebufferWidth, gFramebufferHeight,
             0, y * 7, gFramebufferWidth - 1, MIN((y + 1) * 7, gFramebufferHeight) - 1,
             NULL, G_TX_CLAMP, G_TX_CLAMP, G_TX_NOMASK, G_TX_NOMASK, 0, 0
         );
