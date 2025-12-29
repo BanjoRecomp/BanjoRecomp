@@ -55,6 +55,7 @@ f32 time_getDelta(void);
 s32 item_adjustByDiffWithHud(enum item_e item, s32 diff);
 void func_802FACA4(enum item_e item_id);
 bool func_802FAFE8(enum item_e item_id);
+enum map_e map_get(void);
 
 s32 demo_frame_divisor = -1;
 
@@ -77,9 +78,27 @@ RECOMP_PATCH int demo_readInput(OSContPad* arg0, s32* arg1){
     // @recomp Lock the frame divisor to 3 (20 FPS) in Bottles' Bonus.
     // The game generally runs at 20 FPS during Bottles' Bonus on original hardware, which means the minigame timer should last a similar amount of time.
     // Return 2 (30 FPS) into arg1 so that the game doesn't compensate by making the timer run faster.
-    if (getGameMode() == GAME_MODE_8_BOTTLES_BONUS) {
+    s32 game_mode = getGameMode();
+    if (game_mode == GAME_MODE_8_BOTTLES_BONUS) {
         // *arg1 = 2;
         demo_frame_divisor = 3;
+    }
+    // @recomp Lock the frame divisor in the Mumbo SNS pictures based on the loaded map.
+    // This makes sure that the dialog doesn't get cut off because the scene runs too quickly.
+    if (game_mode == GAME_MODE_A_SNS_PICTURE) {
+        s32 cur_map = map_get();
+
+        switch (cur_map) {
+            // 20 FPS maps.
+            case MAP_7F_FP_WOZZAS_CAVE:
+            case MAP_92_GV_SNS_CHAMBER:
+                demo_frame_divisor = 3;
+                break;
+            // Remaining maps run at 30 FPS.
+            default:
+                demo_frame_divisor = 2;
+                break;
+        }
     }
 
     return not_eof;
