@@ -346,7 +346,7 @@ bool banjo::renderer::RT64Context::update_config(const ultramodern::renderer::Gr
 
     set_application_user_config(app.get(), new_config);
 
-    // When updating the user configuration, only discard framebuffers if an option that affects their resolution changes.
+    // When updating the user configuration, only discard framebuffers if an option was changed that affects the resolution.
     bool resolution_changed = new_config.res_option != old_config.res_option;
     bool aspect_ratio_changed = new_config.ar_option != old_config.ar_option;
     bool downsampling_changed = new_config.ds_option != old_config.ds_option;
