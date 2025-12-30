@@ -62,6 +62,8 @@ PropExtensionId note_saving_prop_extension_id;
 
 u32 spawned_static_note_count = 0;
 
+bool recomp_in_demo_playback_game_mode();
+
 void init_note_saving() {
     note_saving_prop_extension_id = bkrecomp_extend_prop_all(sizeof(NoteSavingPropExtensionData));
 
@@ -286,11 +288,13 @@ Cube *find_cube_for_prop(Prop *p) {
 
 // @recomp Patched to track collected notes.
 RECOMP_PATCH void __baMarker_resolveMusicNoteCollision(Prop *arg0) {
-    // @recomp Set that the note was collected.
-    Cube *prop_cube = find_cube_for_prop(arg0);
-    if (prop_cube != NULL) {
-        NoteSavingPropExtensionData* note_data = (NoteSavingPropExtensionData*)bkrecomp_get_extended_prop_data(prop_cube, arg0, note_saving_prop_extension_id);
-        set_note_collected(map_get(), level_get(), note_data->static_note_index, FALSE);
+    // @recomp Set that the note was collected if this isn't demo playback.
+    if (!recomp_in_demo_playback_game_mode()) {
+        Cube *prop_cube = find_cube_for_prop(arg0);
+        if (prop_cube != NULL) {
+            NoteSavingPropExtensionData* note_data = (NoteSavingPropExtensionData*)bkrecomp_get_extended_prop_data(prop_cube, arg0, note_saving_prop_extension_id);
+            set_note_collected(map_get(), level_get(), note_data->static_note_index, FALSE);
+        }
     }
 
     if (!func_802FADD4(ITEM_1B_VILE_VILE_SCORE)) {
