@@ -1,9 +1,6 @@
 [submodule "lib/N64ModernRuntime"]
 	path = lib/N64ModernRuntime
 	url = https://github.com/N64Recomp/N64ModernRuntime
-[submodule "lib/freetype-windows-binaries"]
-	path = lib/freetype-windows-binaries
-	url = https://github.com/ubawurinna/freetype-windows-binaries/
 [submodule "lib/rt64"]
 	path = lib/rt64
 	url = https://github.com/rt64/rt64
