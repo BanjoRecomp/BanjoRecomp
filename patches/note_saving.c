@@ -64,7 +64,6 @@ u32 spawned_static_note_count = 0;
 
 void init_note_saving() {
     note_saving_prop_extension_id = bkrecomp_extend_prop_all(sizeof(NoteSavingPropExtensionData));
-    recomp_printf("asadasdawddsd: %08X\n", note_saving_prop_extension_id);
 
     // Collected from map data.
     map_note_data[MAP_2_MM_MUMBOS_MOUNTAIN].static_note_count = 85;
@@ -243,8 +242,6 @@ void note_saving_reset_spawned_static_note_count() {
     spawned_static_note_count = 0;
 }
 
-void note_saving_handle_static_note(Cube *c, Prop *p) {
-    recomp_printf("Note %d: <%d %d %d>\n", spawned_static_note_count, p->spriteProp.unk4[0], p->spriteProp.unk4[1], p->spriteProp.unk4[2]);
 
     // If note saving is enabled, check if this note has been collected and remove it if so.
     if (note_saving_enabled()) {
@@ -293,7 +290,6 @@ RECOMP_PATCH void __baMarker_resolveMusicNoteCollision(Prop *arg0) {
     Cube *prop_cube = find_cube_for_prop(arg0);
     if (prop_cube != NULL) {
         NoteSavingPropExtensionData* note_data = (NoteSavingPropExtensionData*)bkrecomp_get_extended_prop_data(prop_cube, arg0, note_saving_prop_extension_id);
-        recomp_printf("Collected static note %d\n", note_data->static_note_index);
         set_note_collected(map_get(), level_get(), note_data->static_note_index, FALSE);
     }
 

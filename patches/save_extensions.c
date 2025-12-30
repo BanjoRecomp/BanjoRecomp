@@ -82,6 +82,9 @@ RECOMP_PATCH s32 gameFile_8033CFD4(s32 gamenum){
     next = gameFile_GameIdToFileIdMap[gamenum];
     gameFile_GameIdToFileIdMap[gamenum] = D_80383F04;
     bcopy(&gameFile_saveData[next], &gameFile_saveData[filenum], 0xF*8);
+    // @recomp Also copy the extension data from the next slot.
+    bcopy(&save_file_extension_data[next], &save_file_extension_data[filenum], sizeof(save_file_extension_data[0]));
+
     save_data = gameFile_saveData + filenum;
     
     // @recomp Get a pointer to the extension data for this file number.
