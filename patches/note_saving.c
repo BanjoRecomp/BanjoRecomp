@@ -60,6 +60,11 @@ typedef struct {
 
 PropExtensionId note_saving_prop_extension_id;
 
+// Note saving can only savely be changed while in the lair, so this value is only updated when in the lair.
+bool note_saving_enabled_cached = FALSE;
+// Override for allowing mods to disable note saving.
+bool note_saving_override_disabled = FALSE;
+
 u32 spawned_static_note_count = 0;
 
 bool recomp_in_demo_playback_game_mode();
@@ -143,6 +148,10 @@ RECOMP_EXPORT void bkrecomp_notesaving_set_map_dynamic_note_count(u32 map_id, u1
         recomp_error("Mod error: Attempted to set dynamic note count of an invalid map ID\n");
     }
     map_note_data[map_id].dynamic_note_count = dynamic_note_count;
+}
+
+RECOMP_EXPORT void bkrecomp_notesaving_force_disabled(bool disabled) {
+    note_saving_override_disabled = disabled;
 }
 
 void calculate_map_start_note_indices() {
@@ -240,13 +249,32 @@ void set_note_collected(enum map_e map_id, enum level_e level_id, u8 note_index,
     loaded_file_extension_data.level_notes[level_array_index].bytes[byte_index] |= (1 << bit_index);
 }
 
-void note_saving_reset_spawned_static_note_count() {
+void note_saving_on_map_load() {
     spawned_static_note_count = 0;
+
+    // Prevent the note score passed dialog from running if note saving is enabled.
+    if (note_saving_enabled_cached) {
+        // This flag controls whether Bottles will tell you when you pass your note score.
+        levelSpecificFlags_set(LEVEL_FLAG_34_UNKNOWN, TRUE);
+    }
 }
 
+void note_saving_update() {
+    // When in the lair or file select, update the cached note saving enabled state.
+    if (level_get() == LEVEL_6_LAIR || map_get() == MAP_91_FILE_SELECT) {
+        if (note_saving_override_disabled) {
+            note_saving_enabled_cached = FALSE;
+        }
+        else {
+            note_saving_enabled();
+        }
+    }
+}
+
+void note_saving_handle_static_note(Cube *c, Prop *p) {
 
     // If note saving is enabled, check if this note has been collected and remove it if so.
-    if (note_saving_enabled()) {
+    if (note_saving_enabled_cached) {
         if (is_note_collected(map_get(), level_get(), spawned_static_note_count, FALSE)) {
             // Clear the note's alive bit.
             p->spriteProp.unk8_4 = FALSE;
@@ -348,8 +376,8 @@ RECOMP_PATCH void itemscore_levelReset(enum level_e level){
     itemPrint_reset();
     D_80385FE8 = 1;
 
-    // @recomp If note saving is enabled, set load the note count for the current level.
-    if (note_saving_enabled()) {
+    // @recomp If note saving is currently enabled, set load the note count for the current level.
+    if (note_saving_enabled_cached) {
         D_80385F30[ITEM_C_NOTE] = get_collected_note_count(level);
     }
 }

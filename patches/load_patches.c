@@ -125,6 +125,6 @@ RECOMP_PATCH void func_803329AC(void){
     recomp_clear_all_object_data(EXTENSION_TYPE_MARKER);
     set_all_interpolation_skipped(TRUE);
 
-    // @recomp Reset the spawned static note count.
-    note_saving_reset_spawned_static_note_count();
+    // @recomp Run note saving map load code.
+    note_saving_on_map_load();
 }
