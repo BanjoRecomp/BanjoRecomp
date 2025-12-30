@@ -7,7 +7,7 @@
 #include "librecomp/helpers.hpp"
 #include "librecomp/addresses.hpp"
 #include "ultramodern/error_handling.hpp"
-#include "recomp_ui.h"
+#include "recompui/recompui.h"
 #include "recomp_data.h"
 #include "../patches/object_extension_funcs.h"
 

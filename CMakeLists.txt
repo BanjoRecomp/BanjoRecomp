@@ -159,6 +159,9 @@ set (SOURCES
     ${CMAKE_SOURCE_DIR}/src/game/rom_decompression.cpp
 
     ${CMAKE_SOURCE_DIR}/rsp/n_aspMain.cpp
+
+    # TODO This should be delegated to recompui to do once the SDL2 autodetection is added back in.
+    ${CMAKE_SOURCE_DIR}/lib/RecompFrontend/recompui/lib/RmlUi/Backends/RmlUi_Platform_SDL.cpp
 )
 
 target_include_directories(BanjoRecompiled PRIVATE
