@@ -157,7 +157,7 @@ set (SOURCES
     ${CMAKE_SOURCE_DIR}/src/game/config.cpp
     ${CMAKE_SOURCE_DIR}/src/game/debug.cpp
     ${CMAKE_SOURCE_DIR}/src/game/recomp_api.cpp
-    ${CMAKE_SOURCE_DIR}/src/game/recomp_actor_api.cpp
+    ${CMAKE_SOURCE_DIR}/src/game/recomp_extension_api.cpp
     ${CMAKE_SOURCE_DIR}/src/game/recomp_data_api.cpp
     ${CMAKE_SOURCE_DIR}/src/game/rom_decompression.cpp
 
@@ -184,7 +184,7 @@ target_include_directories(BanjoRecompiled PRIVATE
     ${CMAKE_SOURCE_DIR}/lib/RecompFrontend/recompui/src
     ${CMAKE_SOURCE_DIR}/lib/freetype-windows-binaries/include
     ${CMAKE_SOURCE_DIR}/lib/rt64/src/contrib/nativefiledialog-extended/src/include
-    ${CMAKE_SOURCE_DIR}/lib/slot_map/slot_map
+    ${CMAKE_SOURCE_DIR}/lib/SlotMap
     ${CMAKE_BINARY_DIR}/shaders
     ${CMAKE_CURRENT_BINARY_DIR}
 )
@@ -253,7 +253,7 @@ if (WIN32)
     )
 
     # target_sources(BanjoRecompiled PRIVATE ${CMAKE_SOURCE_DIR}/icons/app.rc)
-    target_link_libraries(BanjoRecompiled PRIVATE SDL2)
+    target_link_libraries(BanjoRecompiled PRIVATE SDL2 Winmm.lib)
 endif()
 
 if (APPLE)
@@ -273,6 +273,7 @@ if (CMAKE_SYSTEM_NAME MATCHES "Linux")
     find_package(SDL2 REQUIRED)
     find_package(X11 REQUIRED)
 
+    add_compile_definitions("PLUME_SDL_VULKAN_ENABLED")
     add_compile_definitions("RT64_SDL_WINDOW_VULKAN")
 
     # Generate icon_bytes.c from the app icon PNG.

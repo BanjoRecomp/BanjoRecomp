@@ -17,3 +17,12 @@ RECOMP_EXPORT int recomp_printf(const char* fmt, ...) {
 
     return ret;
 }
+
+void rmonPrintf_recomp(const char* fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+
+    int ret = _Printf(&proutPrintf, NULL, fmt, args);
+
+    va_end(args);
+}

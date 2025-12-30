@@ -1,3 +1,6 @@
+#pragma GCC diagnostic ignored "-Wpointer-sign"
+#pragma GCC diagnostic ignored "-Wunused-value"
+
 #include "patches.h"
 #include "string.h"
 #include "stdarg.h"

@@ -1,3 +1,6 @@
+#pragma GCC diagnostic ignored "-Wpointer-sign"
+#pragma GCC diagnostic ignored "-Wlogical-op-parentheses"
+
 #include "patches.h"
 #include "string.h"
 #include "xstdio.h"
@@ -55,7 +58,7 @@ static const ldouble pows[] = {10e0L, 10e1L, 10e3L, 10e7L, 10e15L, 10e31L, 10e63
 #define _D2 2
 #define _D3 3
 
-#define ALIGN(s, align) (((unsigned int)(s) + ((align)-1)) & ~((align)-1))
+// #define ALIGN(s, align) (((unsigned int)(s) + ((align)-1)) & ~((align)-1))
 
 void _Ldtob(_Pft* px, char code) {
     char buff[BUFF_LEN];

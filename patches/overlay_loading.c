@@ -54,37 +54,8 @@ MAKE_OVERLAYS()
 #define OVERLAY_END(ovl) boot_##ovl##_rzip_ROM_END
 
 // @recomp Patched to load overlays, prefixed with boot_ to account for the decomp build system.
-RECOMP_PATCH void boot_overlay_table_init(void) {
-    gOverlayTable[ 0].start = OVERLAY_START(core2);
-    gOverlayTable[ 0].end   = OVERLAY_END(core2);
-    gOverlayTable[ 1].start = OVERLAY_START(emptyLvl);
-    gOverlayTable[ 1].end   = OVERLAY_END(emptyLvl);
-    gOverlayTable[ 2].start = OVERLAY_START(CC);
-    gOverlayTable[ 2].end   = OVERLAY_END(CC);
-    gOverlayTable[ 3].start = OVERLAY_START(MMM);
-    gOverlayTable[ 3].end   = OVERLAY_END(MMM);
-    gOverlayTable[ 4].start = OVERLAY_START(GV);
-    gOverlayTable[ 4].end   = OVERLAY_END(GV);
-    gOverlayTable[ 5].start = OVERLAY_START(TTC);
-    gOverlayTable[ 5].end   = OVERLAY_END(TTC);
-    gOverlayTable[ 6].start = OVERLAY_START(MM);
-    gOverlayTable[ 6].end   = OVERLAY_END(MM);
-    gOverlayTable[ 7].start = OVERLAY_START(BGS);
-    gOverlayTable[ 7].end   = OVERLAY_END(BGS);
-    gOverlayTable[ 8].start = OVERLAY_START(RBB);
-    gOverlayTable[ 8].end   = OVERLAY_END(RBB);
-    gOverlayTable[ 9].start = OVERLAY_START(FP);
-    gOverlayTable[ 9].end   = OVERLAY_END(FP);
-    gOverlayTable[10].start = OVERLAY_START(CCW);
-    gOverlayTable[10].end   = OVERLAY_END(CCW);
-    gOverlayTable[11].start = OVERLAY_START(SM);
-    gOverlayTable[11].end   = OVERLAY_END(SM);
-    gOverlayTable[12].start = OVERLAY_START(cutscenes);
-    gOverlayTable[12].end   = OVERLAY_END(cutscenes);
-    gOverlayTable[13].start = OVERLAY_START(lair);
-    gOverlayTable[13].end   = OVERLAY_END(lair);
-    gOverlayTable[14].start = OVERLAY_START(fight);
-    gOverlayTable[14].end   = OVERLAY_END(fight);
+RECOMP_PATCH void boot___osInitialize_common(void) {
+    // Nothing of the original function needs to happen, so the body can be empty besides the overlay load.
 
     // @recomp Load core1.
     recomp_load_overlays_by_rom((u32)core1_ROM_START, core1_VRAM, core1_ROM_END - core1_ROM_START);
@@ -113,7 +84,7 @@ RECOMP_PATCH void overlay_load(
     u32 uncompressed_rom_start = rom_start;
     u32 uncompressed_rom_size = rom_end - rom_start;
     u32 overlay_vram_start = ram_start;
-    void* sp34;
+    u8* sp34;
     u32 sp30;
     u32 sp2C;
     u32 *tmp;
@@ -137,10 +108,10 @@ RECOMP_PATCH void overlay_load(
         sp34 = &D_8002D500;
     }
     piMgr_read(sp34, rom_start, rom_end - rom_start);
-    rarezip_uncompress(&sp34, &ram_start);
+    rarezip_uncompress(&sp34, (u8**)&ram_start);
     sp2C = D_8027BF2C;
     sp30 = D_8027BF30;
-    rarezip_uncompress(&sp34, &ram_start);
+    rarezip_uncompress(&sp34, (u8**)&ram_start);
 
     if(bss_start){
         bzero((void*)bss_start, bss_end - bss_start);

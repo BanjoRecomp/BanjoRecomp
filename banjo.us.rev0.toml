@@ -4,23 +4,40 @@
 entrypoint = 0x80000400
 # Paths are relative to the location of this config file.
 output_func_path = "RecompiledFuncs"
-symbols_file_path = "BanjoRecompSyms/bk.us.rev0.syms.toml"
 rom_file_path = "banjo.us.v10.decompressed.z64"
+symbols_file_path = "BanjoRecompSyms/bk.us.rev0.syms.toml"
 # elf_path = "banjo.us.v10.elf"
+# use_mdebug = true
+# trace_mode = true
+bss_section_suffix = "_bss"
 
 manual_funcs = [
-    { name = "__n_CSPVoiceHandler", section = ".core1", vram = 0x8025E438, size = 0x684 },
+    { name = "boot___osLeoAbnormalResume", section = ".boot_bk_boot", vram = 0x800037E4, size = 0xE8 },
+    { name = "boot___osLeoResume", section = ".boot_bk_boot", vram = 0x800038CC, size = 0xEC },
+]
+
+mdebug_file_mappings = [
+    { filename = "src/TTC/ch/clam.c", input_section = ".text", output_section = ".TTC" },
+    { filename = "src/TTC/ch/blubber.c", input_section = ".text", output_section = ".TTC" },
+    { filename = "src/TTC/ch/lockup.c", input_section = ".text", output_section = ".TTC" },
+    { filename = "src/TTC/ch/treasure.c", input_section = ".text", output_section = ".TTC" },
+    { filename = "src/SM/ch/attacktutorial.c", input_section = ".text", output_section = ".SM" },
+    { filename = "src/SM/ch/vegetables.c", input_section = ".text", output_section = ".SM" },
 ]
 
 [patches]
-stubs = [
+
+ignored = [
+    "boot_n_aspMainTextStart",
+    "boot_gSPF3DEX_fifoTextStart",
+    "boot_gSPL3DEX_fifoTextStart",
 ]
 
 renamed = [
     "wmemcpy"
 ]
 
-ignored = [
+stubs = [
     # Boot segment libultra duplicates
     "boot___ll_div",
     "boot___ll_lshift",
@@ -32,7 +49,6 @@ ignored = [
     "boot___ull_divremi",
     "boot___ull_rem",
     "boot___ull_rshift",
-    "boot___osInitialize_common",
     "boot_osPiRawStartDma",
     "boot_osPiGetStatus",
     "boot___osSetSR",

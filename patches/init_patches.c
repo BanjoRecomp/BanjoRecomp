@@ -1,4 +1,5 @@
 #include "patches.h"
+#include "transform_ids.h"
 #include "bk_api.h"
 #include "misc_funcs.h"
 
@@ -16,6 +17,8 @@ RECOMP_PATCH void mainThread_entry(void *arg) {
     sns_write_payload_over_heap();
 
     while (1) {
+        // @recomp Reset the tracked projection IDs.
+        reset_projection_ids();
         mainLoop();
     }
 }

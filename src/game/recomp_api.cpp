@@ -15,6 +15,7 @@
 #include "../patches/sound.h"
 #include "ultramodern/ultramodern.hpp"
 #include "ultramodern/config.hpp"
+#include "../lib/N64ModernRuntime/thirdparty/xxHash/xxh3.h"
 
 extern "C" void recomp_update_inputs(uint8_t* rdram, recomp_context* ctx) {
     recompinput::poll_inputs();
@@ -183,21 +184,6 @@ extern "C" void recomp_set_right_analog_suppressed(uint8_t* rdram, recomp_contex
     recompinput::set_right_analog_suppressed(suppressed);
 }
 
-// Function with typo in decomp
-extern "C" void osWriteBackDCacheAll(uint8_t* rdram, recomp_context* ctx) {}
-
-extern "C" void boot_osPiRawStartDma(uint8_t* rdram, recomp_context* ctx) {
-	uint32_t direction = ctx->r4;
-	uint32_t device_address = ctx->r5;
-	gpr rdram_address = ctx->r6;
-	uint32_t size = ctx->r7;
-
-	assert(direction == 0); // Only reads
-
-	// Complete the DMA synchronously (the game immediately waits until it's done anyways)
-	recomp::do_rom_read(rdram, rdram_address, device_address + recomp::rom_base, size);
-}
-
 constexpr uint32_t k1_to_phys(uint32_t addr) {
     return addr & 0x1FFFFFFF;
 }
@@ -218,33 +204,8 @@ extern "C" void osPiReadIo_recomp(RDRAM_ARG recomp_context * ctx) {
     ctx->r2 = 0;
 }
 
-extern "C" void boot___osInitialize_common(uint8_t* rdram, recomp_context* ctx) {}
-
-extern "C" void boot_osPiGetStatus(uint8_t* rdram, recomp_context* ctx) {
-	// PI not busy
-	ctx->r2 = 0;
-}
-
 extern "C" void osPfsInit_recomp(uint8_t * rdram, recomp_context* ctx) {
     ctx->r2 = 11; // PFS_ERR_DEVICE
-}
-
-extern "C" void __ll_lshift_recomp(uint8_t * rdram, recomp_context * ctx) {
-    uint64_t a = (ctx->r4 << 32) | ((ctx->r5 << 0) & 0xFFFFFFFFu);
-    uint64_t b = (ctx->r6 << 32) | ((ctx->r7 << 0) & 0xFFFFFFFFu);
-    uint64_t ret = a << b;
-
-    ctx->r2 = (int32_t)(ret >> 32);
-    ctx->r3 = (int32_t)(ret >> 0);
-}
-
-extern "C" void __ull_rshift_recomp(uint8_t * rdram, recomp_context * ctx) {
-    uint64_t a = (ctx->r4 << 32) | ((ctx->r5 << 0) & 0xFFFFFFFFu);
-    uint64_t b = (ctx->r6 << 32) | ((ctx->r7 << 0) & 0xFFFFFFFFu);
-    uint64_t ret = a >> b;
-
-    ctx->r2 = (int32_t)(ret >> 32);
-    ctx->r3 = (int32_t)(ret >> 0);
 }
 
 // u32 rom_addr, void *ram_addr, u32 size
@@ -254,4 +215,28 @@ extern "C" void recomp_load_overlays_by_rom(uint8_t* rdram, recomp_context* ctx)
     u32 size = _arg<2, u32>(rdram, ctx);
 
     load_overlays(rom_addr, ram_addr, size);
+}
+
+extern "C" void recomp_abort(uint8_t* rdram, recomp_context* ctx) {
+    std::string msg = _arg_string<0>(rdram, ctx);
+    recompui::message_box(msg.c_str());
+    assert(false);
+    ultramodern::error_handling::quick_exit(__FILE__, __LINE__, __FUNCTION__);
+}
+
+extern "C" void recomp_xxh3(uint8_t* rdram, recomp_context* ctx) {
+    PTR(void) data = _arg<0, PTR(void)>(rdram, ctx);
+    u32 size = _arg<1, u32>(rdram, ctx);
+    XXH3_state_t xxh3;
+    XXH3_64bits_reset(&xxh3);
+
+    // Hash 1 byte at a time to account for byteswapping.
+    for (size_t i = 0; i < size; i++) {
+        XXH3_64bits_update(&xxh3, TO_PTR(u8, data + i), 1);
+    }
+
+    uint64_t ret = XXH3_64bits_digest(&xxh3);
+    
+    ctx->r2 = (int32_t)(ret >> 32);
+    ctx->r3 = (int32_t)(ret >> 0);
 }
