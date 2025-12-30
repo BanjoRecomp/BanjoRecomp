@@ -54,6 +54,11 @@ add_subdirectory(${CMAKE_SOURCE_DIR}/lib/rt64 ${CMAKE_BINARY_DIR}/rt64)
 set(BUILD_SHARED_LIBS OFF)
 
 add_subdirectory(${CMAKE_SOURCE_DIR}/lib/N64ModernRuntime)
+
+set(RECOMP_FRONTEND_N64MODERNRUNTIME_PATH ${CMAKE_SOURCE_DIR}/lib/N64ModernRuntime)
+set(RECOMP_FRONTEND_RT64_PATH ${CMAKE_SOURCE_DIR}/lib/rt64)
+set(RECOMP_FRONTEND_SDL2_PATH ${CMAKE_SOURCE_DIR}/lib/rt64/src/contrib/mupen64plus-win32-deps/SDL2-2.26.3) # TODO: Should pull this from the package find procedure instead
+
 add_subdirectory(${CMAKE_SOURCE_DIR}/lib/RecompFrontend)
 
 target_include_directories(rt64 PRIVATE ${CMAKE_BINARY_DIR}/rt64/src)
@@ -160,7 +165,6 @@ target_include_directories(BanjoRecompiled PRIVATE
     ${CMAKE_SOURCE_DIR}/include
     ${CMAKE_SOURCE_DIR}/lib/N64ModernRuntime/N64Recomp/include
     ${CMAKE_SOURCE_DIR}/lib/concurrentqueue
-    ${CMAKE_SOURCE_DIR}/lib/GamepadMotionHelpers
     ${CMAKE_SOURCE_DIR}/lib/rt64/src/contrib
     ${CMAKE_SOURCE_DIR}/lib/rt64/src/contrib/hlslpp/include
     ${CMAKE_SOURCE_DIR}/lib/rt64/src/contrib/dxc/inc
