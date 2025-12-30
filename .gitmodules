@@ -19,3 +19,6 @@
 [submodule "BanjoRecompSyms"]
 	path = BanjoRecompSyms
 	url = https://github.com/BanjoRecomp/BanjoRecompSyms
+[submodule "lib/RecompFrontend"]
+	path = lib/RecompFrontend
+	url = https://github.com/N64Recomp/RecompFrontend
