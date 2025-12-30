@@ -14,6 +14,13 @@ typedef struct map_info{
     s16 level_id;
     char* name;
 }MapInfo;
+
+extern struct {
+    s32 unk0;
+    s32 unk4;
+    u8 unk8[0x25];
+} gFileProgressFlags;
+
 MapInfo * func_8030AD00(enum map_e map_id);
 enum map_e map_get(void);
 enum level_e level_get(void);
@@ -25,6 +32,7 @@ bool func_802FADD4(enum item_e item_id);
 s32 item_getCount(enum item_e item);
 s32 jiggyscore_leveltotal(s32 lvl);
 void itemPrint_reset(void);
+s32 bitfield_get_bit(u8 *array, s32 index);
 
 extern s32 D_80385F30[0x2C];
 extern s32 D_80385FE8;
@@ -266,7 +274,7 @@ void note_saving_update() {
             note_saving_enabled_cached = FALSE;
         }
         else {
-            note_saving_enabled();
+            note_saving_enabled_cached = note_saving_enabled();
         }
     }
 }
@@ -380,4 +388,14 @@ RECOMP_PATCH void itemscore_levelReset(enum level_e level){
     if (note_saving_enabled_cached) {
         D_80385F30[ITEM_C_NOTE] = get_collected_note_count(level);
     }
+}
+
+// @recomp Patched to return true for FILEPROG_99_PAST_50_NOTE_DOOR_TEXT if note saving is enabled.
+// That flag controls whether to show the "Grunty's magic stops you from taking the notes..." dialog.
+RECOMP_PATCH bool fileProgressFlag_get(enum file_progress_e index) {
+    if (note_saving_enabled_cached && index == FILEPROG_99_PAST_50_NOTE_DOOR_TEXT) {
+        return TRUE;
+    }
+    
+    return bitfield_get_bit(gFileProgressFlags.unk8, index);
 }
