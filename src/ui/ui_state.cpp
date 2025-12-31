@@ -216,10 +216,6 @@ public:
                 bool fallback_face;
             };
             FontFace font_faces[] = {
-                {"LatoLatin-Regular.ttf", false},
-                {"LatoLatin-Italic.ttf", false},
-                {"LatoLatin-Bold.ttf", false},
-                {"LatoLatin-BoldItalic.ttf", false},
                 {"Suplexmentary Comic NC.ttf", false},
                 {"NotoEmoji-Regular.ttf", true},
                 {"promptfont/promptfont.ttf", false},
