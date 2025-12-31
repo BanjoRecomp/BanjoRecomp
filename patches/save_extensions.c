@@ -17,6 +17,15 @@ void savedata_update_crc(void *buffer, u32 size);
 void saveData_load(SaveData *savedata);
 void saveData_create(SaveData *savedata);
 
+void bsStoredState_clear(void);
+void func_8031FFAC(void);
+void item_setItemsStartCounts(void);
+void jiggyscore_clearAll(void);
+void honeycombscore_clear(void);
+void mumboscore_clear(void);
+void volatileFlag_clear(void);
+void func_802D6344(void);
+
 
 // New declarations.
 
@@ -142,4 +151,19 @@ RECOMP_PATCH void gameFile_save(s32 gamenum){
 
     // @recomp Save the extended file data for this file number.
     memcpy(&save_file_extension_data[filenum], &loaded_file_extension_data, sizeof(SaveFileExtensionData));
+}
+
+// @recomp Patched to clear the current loaded extended file data. 
+RECOMP_PATCH void clearScoreStates(void) {
+    bsStoredState_clear();
+    func_8031FFAC();
+    item_setItemsStartCounts();
+    jiggyscore_clearAll();
+    honeycombscore_clear();
+    mumboscore_clear();
+    volatileFlag_clear();
+    func_802D6344();
+
+    // @recomp Clear the current loaded extended file data.
+    bzero(&loaded_file_extension_data, sizeof(loaded_file_extension_data));
 }
