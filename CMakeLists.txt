@@ -55,12 +55,6 @@ set(BUILD_SHARED_LIBS OFF)
 
 add_subdirectory(${CMAKE_SOURCE_DIR}/lib/N64ModernRuntime)
 
-set(RECOMP_FRONTEND_N64MODERNRUNTIME_PATH ${CMAKE_SOURCE_DIR}/lib/N64ModernRuntime)
-set(RECOMP_FRONTEND_RT64_PATH ${CMAKE_SOURCE_DIR}/lib/rt64)
-set(RECOMP_FRONTEND_SDL2_PATH ${CMAKE_SOURCE_DIR}/lib/rt64/src/contrib/mupen64plus-win32-deps/SDL2-2.26.3) # TODO: Should pull this from the package find procedure instead
-
-add_subdirectory(${CMAKE_SOURCE_DIR}/lib/RecompFrontend)
-
 target_include_directories(rt64 PRIVATE ${CMAKE_BINARY_DIR}/rt64/src)
 
 # RecompiledFuncs - Library containing the primary recompiler output
@@ -159,9 +153,6 @@ set (SOURCES
     ${CMAKE_SOURCE_DIR}/src/game/rom_decompression.cpp
 
     ${CMAKE_SOURCE_DIR}/rsp/n_aspMain.cpp
-
-    # TODO This should be delegated to recompui to do once the SDL2 autodetection is added back in.
-    ${CMAKE_SOURCE_DIR}/lib/RecompFrontend/recompui/lib/RmlUi/Backends/RmlUi_Platform_SDL.cpp
 )
 
 target_include_directories(BanjoRecompiled PRIVATE
@@ -306,6 +297,11 @@ if (CMAKE_SYSTEM_NAME MATCHES "Linux")
 
     target_link_libraries(BanjoRecompiled PRIVATE "-latomic -static-libstdc++" ${CMAKE_DL_LIBS} Threads::Threads)
 endif()
+
+set(RECOMP_FRONTEND_N64MODERNRUNTIME_PATH ${CMAKE_SOURCE_DIR}/lib/N64ModernRuntime)
+set(RECOMP_FRONTEND_RT64_PATH ${CMAKE_SOURCE_DIR}/lib/rt64)
+
+add_subdirectory(${CMAKE_SOURCE_DIR}/lib/RecompFrontend)
 
 target_link_libraries(BanjoRecompiled PRIVATE
     PatchesLib
