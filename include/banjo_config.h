@@ -59,6 +59,20 @@ namespace banjo {
     AnalogCamMode get_analog_cam_mode();
     void set_analog_cam_mode(AnalogCamMode mode);
 
+    enum class NoteSavingMode {
+        On,
+        Off,
+        OptionCount
+    };
+
+    NLOHMANN_JSON_SERIALIZE_ENUM(banjo::NoteSavingMode, {
+        {banjo::NoteSavingMode::On, "On"},
+        {banjo::NoteSavingMode::Off, "Off"}
+    });
+
+    NoteSavingMode get_note_saving_mode();
+    void set_note_saving_mode(NoteSavingMode mode);
+
     void open_quit_game_prompt();
 };
 

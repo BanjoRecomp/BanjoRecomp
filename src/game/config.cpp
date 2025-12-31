@@ -239,6 +239,7 @@ bool save_general_config(const std::filesystem::path& path) {
     config_json["camera_invert_mode"] = banjo::get_camera_invert_mode();
     config_json["analog_cam_mode"] = banjo::get_analog_cam_mode();
     config_json["analog_camera_invert_mode"] = banjo::get_analog_camera_invert_mode();
+    config_json["note_saving_mode"] = banjo::get_note_saving_mode();
     config_json["debug_mode"] = banjo::get_debug_mode_enabled();
 
     return save_json_with_backups(path, config_json);
@@ -253,6 +254,7 @@ void set_general_settings_from_json(const nlohmann::json& config_json) {
     banjo::set_camera_invert_mode(from_or_default(config_json, "camera_invert_mode", banjo::CameraInvertMode::InvertY));
     banjo::set_analog_cam_mode(from_or_default(config_json, "analog_cam_mode", banjo::AnalogCamMode::Off));
     banjo::set_analog_camera_invert_mode(from_or_default(config_json, "analog_camera_invert_mode", banjo::CameraInvertMode::InvertNone));
+    banjo::set_note_saving_mode(from_or_default(config_json, "note_saving_mode", banjo::NoteSavingMode::On));
     banjo::set_debug_mode_enabled(from_or_default(config_json, "debug_mode", false));
 }
 

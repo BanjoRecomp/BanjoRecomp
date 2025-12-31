@@ -238,6 +238,7 @@ struct ControlOptionsContext {
     banjo::CameraInvertMode camera_invert_mode;
     banjo::AnalogCamMode analog_cam_mode;
     banjo::CameraInvertMode analog_camera_invert_mode;
+    banjo::NoteSavingMode note_saving_mode;
 };
 
 ControlOptionsContext control_options_context;
@@ -322,6 +323,17 @@ void banjo::set_analog_cam_mode(banjo::AnalogCamMode mode) {
     control_options_context.analog_cam_mode = mode;
     if (general_model_handle) {
         general_model_handle.DirtyVariable("analog_cam_mode");
+    }
+}
+
+banjo::NoteSavingMode banjo::get_note_saving_mode() {
+    return control_options_context.note_saving_mode;
+}
+
+void banjo::set_note_saving_mode(banjo::NoteSavingMode mode) {
+    control_options_context.note_saving_mode = mode;
+    if (general_model_handle) {
+        general_model_handle.DirtyVariable("note_saving_mode");
     }
 }
 
@@ -830,6 +842,7 @@ public:
         bind_option(constructor, "camera_invert_mode", &control_options_context.camera_invert_mode);
         bind_option(constructor, "analog_cam_mode", &control_options_context.analog_cam_mode);
         bind_option(constructor, "analog_camera_invert_mode", &control_options_context.analog_camera_invert_mode);
+        bind_option(constructor, "note_saving_mode", &control_options_context.note_saving_mode);
 
         general_model_handle = constructor.GetModelHandle();
     }

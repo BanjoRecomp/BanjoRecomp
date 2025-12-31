@@ -208,7 +208,7 @@
                                 data-checked="analog_camera_invert_mode"
                                 value="InvertNone"
                                 id="analog_camera_inversion_none"
-                                style="nav-up: #analog_cam_enabled;"
+                                style="nav-up: #analog_cam_enabled; nav-down: #note_saving_enabled"
                             />
                             <label class="config-option__tab-label" for="analog_camera_inversion_none">None</label>
 
@@ -220,7 +220,7 @@
                                 data-checked="analog_camera_invert_mode"
                                 value="InvertX"
                                 id="analog_camera_inversion_x"
-                                style="nav-up: #analog_cam_disabled;"
+                                style="nav-up: #analog_cam_disabled; nav-down: #note_saving_disabled"
                             />
                             <label class="config-option__tab-label" for="analog_camera_inversion_x">Invert X</label>
 
@@ -232,7 +232,7 @@
                                 data-checked="analog_camera_invert_mode"
                                 value="InvertY"
                                 id="analog_camera_inversion_y"
-                                style="nav-up: #analog_cam_disabled;"
+                                style="nav-up: #analog_cam_disabled; nav-down: #note_saving_disabled"
                             />
                             <label class="config-option__tab-label" for="analog_camera_inversion_y">Invert Y</label>
 
@@ -244,9 +244,39 @@
                                 data-checked="analog_camera_invert_mode"
                                 value="InvertBoth"
                                 id="analog_camera_inversion_both"
-                                style="nav-up: #analog_cam_disabled;"
+                                style="nav-up: #analog_cam_disabled; nav-down: #note_saving_disabled"
                             />
                             <label class="config-option__tab-label" for="analog_camera_inversion_both">Invert Both</label>
+                        </div>
+                    </div>
+                    
+                    <!-- note saving -->
+                    <div class="config-option" data-event-mouseover="set_cur_config_index(10)">
+                        <label class="config-option__title">Note Saving</label>
+                        <div class="config-option__list">
+                            <input
+                                type="radio"
+                                data-event-blur="set_cur_config_index(-1)"
+                                data-event-focus="set_cur_config_index(10)"
+                                name="note_saving_mode"
+                                data-checked="note_saving_mode"
+                                value="On"
+                                id="note_saving_enabled"
+                                style="nav-up: #camera_inversion_none"
+                            />
+                            <label class="config-option__tab-label" for="note_saving_enabled">On</label>
+
+                            <input
+                                type="radio"
+                                data-event-blur="set_cur_config_index(-1)"
+                                data-event-focus="set_cur_config_index(10)"
+                                name="note_saving_mode"
+                                data-checked="note_saving_mode"
+                                value="Off"
+                                id="note_saving_disabled"
+                                style="nav-up: #camera_inversion_x"
+                            />
+                            <label class="config-option__tab-label" for="note_saving_disabled">Off</label>
                         </div>
                     </div>
                 </div>
@@ -289,6 +319,9 @@
                     </p>
                     <p data-if="cur_config_index == 9">
                         Inverts the camera controls for the analog camera if it's enabled. <b>None</b> is the default.
+                    </p>
+                    <p data-if="cur_config_index == 10">
+                        Note saving DESCRIPTION TODO.
                     </p>
                 </div>
             </div>

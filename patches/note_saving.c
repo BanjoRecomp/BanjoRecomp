@@ -166,6 +166,11 @@ RECOMP_EXPORT void bkrecomp_notesaving_force_disabled(bool disabled) {
     note_saving_override_disabled = disabled;
 }
 
+// Notes are always saved, but this function controls whether to use the saved data to prevent notes from spawning and adjust the note score. 
+RECOMP_EXPORT s32 bkrecomp_note_saving_enabled() {
+    return recomp_get_note_saving_enabled();
+}
+
 void calculate_map_start_note_indices() {
     for (u32 map_id = 0; map_id < ARRLEN(map_note_data); map_id++) {
         MapNoteData* note_data = &map_note_data[map_id];
@@ -204,11 +209,6 @@ s32 level_id_to_level_array_index(enum level_e level_id) {
         default:
             return -1;
     }
-}
-
-// Notes are always saved, but this function controls whether to use the saved data to prevent notes from spawning and adjust the note score. 
-bool note_saving_enabled() {
-    return TRUE;
 }
 
 bool is_note_collected(enum map_e map_id, enum level_e level_id, u8 note_index) {
@@ -301,7 +301,7 @@ void note_saving_update() {
             note_saving_enabled_cached = FALSE;
         }
         else {
-            note_saving_enabled_cached = note_saving_enabled();
+            note_saving_enabled_cached = bkrecomp_note_saving_enabled();
         }
     }
 }
