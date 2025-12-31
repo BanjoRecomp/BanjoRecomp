@@ -12,5 +12,6 @@ bool note_saving_enabled();
 void note_saving_on_map_load();
 void note_saving_update();
 void note_saving_handle_static_note(Cube *c, Prop *p);
+void note_saving_handle_dynamic_note(Actor *actor, ActorMarker *marker);
 
 #endif

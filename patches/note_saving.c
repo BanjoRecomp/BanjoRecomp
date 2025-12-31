@@ -63,8 +63,8 @@ MapNoteData map_note_data[512]; // One entry per map, with room for extras in ca
 u16 level_note_counts[256]; // One entry per level, with room for extras in case any mods add additional levels.
 
 typedef struct {
-    u32 static_note_index;
-} NoteSavingPropExtensionData;
+    u32 note_index;
+} NoteSavingExtensionData;
 
 PropExtensionId note_saving_prop_extension_id;
 
@@ -75,10 +75,14 @@ bool note_saving_override_disabled = FALSE;
 
 u32 spawned_static_note_count = 0;
 
+// Per-map values containing the number of dynamic notes to despawn for the current session.
+// This is calculated when a new level is entered for every map in the level.
+u8 map_dynamic_note_despawn_counts[512];
+
 bool recomp_in_demo_playback_game_mode();
 
 void init_note_saving() {
-    note_saving_prop_extension_id = bkrecomp_extend_prop_all(sizeof(NoteSavingPropExtensionData));
+    note_saving_prop_extension_id = bkrecomp_extend_prop_all(sizeof(NoteSavingExtensionData));
 
     // Collected from map data.
     map_note_data[MAP_2_MM_MUMBOS_MOUNTAIN].static_note_count = 85;
@@ -207,7 +211,7 @@ bool note_saving_enabled() {
     return TRUE;
 }
 
-bool is_note_collected(enum map_e map_id, enum level_e level_id, u8 note_index, bool dynamic_note) {
+bool is_note_collected(enum map_e map_id, enum level_e level_id, u8 note_index) {
     if (map_id >= ARRLEN(map_note_data)) {
         return FALSE;
     }
@@ -219,12 +223,6 @@ bool is_note_collected(enum map_e map_id, enum level_e level_id, u8 note_index, 
 
     MapNoteData *note_data = &map_note_data[map_id];
     note_index += note_data->start_note_index;
-
-    // Add the static note count for this map to the note index if this is a dynamic note. 
-    // This is because dynamic note indices come after static ones.
-    if (dynamic_note) {
-        note_index += note_data->static_note_count;
-    }
 
     u32 byte_index = note_index / 8;
     u32 bit_index = note_index % 8;
@@ -232,7 +230,7 @@ bool is_note_collected(enum map_e map_id, enum level_e level_id, u8 note_index, 
     return (loaded_file_extension_data.level_notes[level_array_index].bytes[byte_index] & (1 << bit_index)) != 0;
 }
 
-void set_note_collected(enum map_e map_id, enum level_e level_id, u8 note_index, bool dynamic_note) {
+void set_note_collected(enum map_e map_id, enum level_e level_id, u8 note_index) {
     if (map_id >= ARRLEN(map_note_data)) {
         return;
     }
@@ -245,16 +243,45 @@ void set_note_collected(enum map_e map_id, enum level_e level_id, u8 note_index,
     MapNoteData *note_data = &map_note_data[map_id];
     note_index += note_data->start_note_index;
 
-    // Add the static note count for this map to the note index if this is a dynamic note. 
-    // This is because dynamic note indices come after static ones.
-    if (dynamic_note) {
-        note_index += note_data->static_note_count;
-    }
-
     u32 byte_index = note_index / 8;
     u32 bit_index = note_index % 8;
 
     loaded_file_extension_data.level_notes[level_array_index].bytes[byte_index] |= (1 << bit_index);
+}
+
+void collect_dynamic_note(enum map_e map_id, enum level_e level_id) {
+    if (map_id < ARRLEN(map_note_data)) {
+        MapNoteData *map_data = &map_note_data[map_id];
+        s32 start_note_index = map_data->static_note_count + map_data->start_note_index;
+        s32 map_dynamic_note_count = map_data->dynamic_note_count;
+
+        // Set the first unset dynamic note bit for this map.
+        for (s32 i = 0; i < map_dynamic_note_count; i++) {
+            s32 note_index = start_note_index + i;
+            if (!is_note_collected(map_id, level_id, note_index)) {
+                set_note_collected(map_id, level_id, note_index);
+                break;
+            }
+        }
+    }
+}
+
+s32 dynamic_note_collected_count(enum map_e map_id) {
+    s32 ret = 0;
+    if (map_id < ARRLEN(map_note_data)) {
+        MapNoteData *map_data = &map_note_data[map_id];
+        s32 start_note_index = map_data->static_note_count + map_data->start_note_index;
+        s32 map_dynamic_note_count = map_data->dynamic_note_count;
+
+        // Check the dynamic note bits for this map.
+        for (s32 i = 0; i < map_dynamic_note_count; i++) {
+            s32 note_index = start_note_index + i;
+            if (is_note_collected(map_id, map_data->level_id, note_index)) {
+                ret++;
+            }
+        }
+    }
+    return ret;
 }
 
 void note_saving_on_map_load() {
@@ -283,16 +310,31 @@ void note_saving_handle_static_note(Cube *c, Prop *p) {
 
     // If note saving is enabled, check if this note has been collected and remove it if so.
     if (note_saving_enabled_cached) {
-        if (is_note_collected(map_get(), level_get(), spawned_static_note_count, FALSE)) {
+        if (is_note_collected(map_get(), level_get(), spawned_static_note_count)) {
             // Clear the note's alive bit.
             p->spriteProp.unk8_4 = FALSE;
         }
     }
 
-    NoteSavingPropExtensionData* note_data = (NoteSavingPropExtensionData*)bkrecomp_get_extended_prop_data(c, p, note_saving_prop_extension_id);
-    note_data->static_note_index = spawned_static_note_count;
+    NoteSavingExtensionData* note_data = (NoteSavingExtensionData*)bkrecomp_get_extended_prop_data(c, p, note_saving_prop_extension_id);
+    note_data->note_index = spawned_static_note_count;
 
     spawned_static_note_count++;
+}
+
+void note_saving_handle_dynamic_note(Actor *actor, ActorMarker *marker) {
+    if (note_saving_enabled_cached) {
+        s32 map_id = map_get();
+        if (map_id < ARRLEN(map_dynamic_note_despawn_counts)) {
+            if (map_dynamic_note_despawn_counts[map_id] > 0) {
+                map_dynamic_note_despawn_counts[map_id]--;
+                // Clear the note's alive bit so it doesn't draw for good measure.
+                marker->propPtr->unk8_4 = FALSE;
+                // Set the actor as despawned.
+                actor->despawn_flag = TRUE;
+            }
+        }
+    }
 }
 
 bool prop_in_cube(Cube *c, Prop *p) {
@@ -326,10 +368,17 @@ Cube *find_cube_for_prop(Prop *p) {
 RECOMP_PATCH void __baMarker_resolveMusicNoteCollision(Prop *arg0) {
     // @recomp Set that the note was collected if this isn't demo playback.
     if (!recomp_in_demo_playback_game_mode()) {
-        Cube *prop_cube = find_cube_for_prop(arg0);
-        if (prop_cube != NULL) {
-            NoteSavingPropExtensionData* note_data = (NoteSavingPropExtensionData*)bkrecomp_get_extended_prop_data(prop_cube, arg0, note_saving_prop_extension_id);
-            set_note_collected(map_get(), level_get(), note_data->static_note_index, FALSE);
+        // Check if this is an actor prop and collect a dynamic note if so.
+        if (arg0->is_actor) {
+            collect_dynamic_note(map_get(), level_get());
+        }
+        // Otherwise, make sure this is a sprite prop and use the prop data.
+        else if (!arg0->is_3d) {
+            Cube *prop_cube = find_cube_for_prop(arg0);
+            if (prop_cube != NULL) {
+                NoteSavingExtensionData* note_data = (NoteSavingExtensionData*)bkrecomp_get_extended_prop_data(prop_cube, arg0, note_saving_prop_extension_id);
+                set_note_collected(map_get(), level_get(), note_data->note_index);
+            }
         }
     }
 
@@ -360,6 +409,7 @@ s32 get_collected_note_count(enum level_e level) {
     return count;
 }
 
+// @recomp Patched to restore the saved note count when entering a level and reset the per-map collected dynamic note counts.
 RECOMP_PATCH void itemscore_levelReset(enum level_e level){
     int i;
     
@@ -387,6 +437,17 @@ RECOMP_PATCH void itemscore_levelReset(enum level_e level){
     // @recomp If note saving is currently enabled, set load the note count for the current level.
     if (note_saving_enabled_cached) {
         D_80385F30[ITEM_C_NOTE] = get_collected_note_count(level);
+    }
+
+    // @recomp Set the number of dynamic notes to respawn for each map in the level.
+    for (s32 map_id = 0; map_id < ARRLEN(map_note_data); map_id++) {
+        MapNoteData *map_data = &map_note_data[map_id];
+        if (map_data->level_id == level) {
+            map_dynamic_note_despawn_counts[map_id] = dynamic_note_collected_count(map_id);
+        }
+        else {
+            map_dynamic_note_despawn_counts[map_id] = 0;
+        }
     }
 }
 

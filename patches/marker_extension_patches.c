@@ -4,6 +4,7 @@
 #include "functions.h"
 #include "object_extension_funcs.h"
 #include "bk_api.h"
+#include "note_saving.h"
 
 // Array of handles for ActorMarker instances.
 // Normally the game only has at most 0xE0 ActorMarker instances, but this is larger to account for mods increasing
@@ -14,6 +15,8 @@ extern ActorMarker *D_8036E7C8;
 extern u8 D_80383428[0x1C];
 void func_8032F3D4(s32 arg0[3], ActorMarker *marker, s32 arg2);
 ActorMarker * func_80332A60(void);
+
+extern Actor *suLastBaddie;
 
 // @recomp Patched to create extension data for the marker.
 RECOMP_PATCH ActorMarker * marker_init(s32 *pos, MarkerDrawFunc draw_func, int arg2, int marker_id, int arg4){
@@ -64,6 +67,11 @@ RECOMP_PATCH ActorMarker * marker_init(s32 *pos, MarkerDrawFunc draw_func, int a
     // @recomp Set the marker's handle.
     u32 index = marker - D_8036E7C8;
     marker_handles[index] = recomp_create_object_data(EXTENSION_TYPE_MARKER, marker_id);
+    
+    // @recomp If this is a note marker, initialize it. Make sure that this marker belongs to suLastBaddie.
+    if (marker->id == MARKER_5F_MUSIC_NOTE && suLastBaddie && suLastBaddie->actor_info->markerId == marker_id) {
+        note_saving_handle_dynamic_note(suLastBaddie, marker);
+    }
 
     return marker;
 }
