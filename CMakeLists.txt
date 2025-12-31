@@ -289,7 +289,7 @@ if (WIN32)
             LINK_FLAGS_MINSIZEREL "/SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup"
     )
 
-    # target_sources(BanjoRecompiled PRIVATE ${CMAKE_SOURCE_DIR}/icons/app.rc)
+    target_sources(BanjoRecompiled PRIVATE ${CMAKE_SOURCE_DIR}/icons/app.rc)
     target_link_libraries(BanjoRecompiled PRIVATE SDL2 Winmm.lib)
 endif()
 
