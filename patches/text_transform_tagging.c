@@ -427,7 +427,7 @@ RECOMP_PATCH void printbuffer_draw(Gfx **gfx, Mtx **mtx, Vtx **vtx) {
             cur_drawn_text_transform_skip_interpolation = print_sPrintBufferSkipInterpolationFlags[bufferIndex];
             if (curOrigin != print_sPrintBufferOrigins[bufferIndex]) {
                 curOrigin = print_sPrintBufferOrigins[bufferIndex];
-                s32 viewportOffset = (gScissorBoxTop * curOrigin * -4) / G_EX_ORIGIN_RIGHT;
+                s32 viewportOffset = curOrigin < G_EX_ORIGIN_NONE ? (gScissorBoxTop * curOrigin * -4) / G_EX_ORIGIN_RIGHT : 0;
                 gEXSetViewportAlign((*gfx)++, curOrigin, viewportOffset, 0);
                 gEXSetRectAlign((*gfx)++, curOrigin, curOrigin, viewportOffset, 0, viewportOffset, 0);
                 viewport_setRenderViewportAndOrthoMatrix(gfx, mtx);
