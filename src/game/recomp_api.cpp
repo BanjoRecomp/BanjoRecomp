@@ -101,6 +101,11 @@ extern "C" void recomp_get_target_aspect_ratio(uint8_t* rdram, recomp_context* c
     }
 }
 
+extern "C" void recomp_get_cutscene_aspect_ratio(uint8_t *rdram, recomp_context *ctx) {
+    float ar = 16.0f / 9.0f;
+    _return(ctx, ar);
+}
+
 extern "C" void recomp_get_bgm_volume(uint8_t* rdram, recomp_context* ctx) {
     _return(ctx, banjo::get_bgm_volume() / 100.0f);
 }
