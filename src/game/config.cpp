@@ -103,7 +103,12 @@ void banjo::init_config() {
         std::filesystem::create_directories(recomp_dir);
     }
 
-    auto &general_config = recompui::config::create_general_tab();
+    recompui::config::GeneralTabOptions general_options{};
+    general_options.has_rumble_strength = true;
+    general_options.has_gyro_sensitivity = false;
+    general_options.has_mouse_sensitivity = false;
+
+    auto &general_config = recompui::config::create_general_tab(general_options);
     add_general_options(general_config);
 
     auto &graphics_config = recompui::config::create_graphics_tab();
