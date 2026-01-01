@@ -306,11 +306,11 @@ add_subdirectory(${CMAKE_SOURCE_DIR}/lib/RecompFrontend)
 target_link_libraries(BanjoRecompiled PRIVATE
     PatchesLib
     RecompiledFuncs
+    recompui
+    recompinput
     librecomp
     ultramodern
     rt64
-    recompinput
-    recompui
     nfd
 )
 
