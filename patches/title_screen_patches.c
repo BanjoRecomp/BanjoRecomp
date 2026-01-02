@@ -23,18 +23,18 @@ int map_get(void);
 
 
 // @recomp Patched to always allow skipping the intro sequence.
-u8 frameCounter = 0;
+u8 introFrameCounter = 0;
 RECOMP_PATCH void func_80322490(void) {
     Struct_core2_9B180_0 *i_ptr;
-    frameCounter++;
+    introFrameCounter++;
 
     if (D_80383330 != 0) {
         for(i_ptr = D_8036DE00; i_ptr != &D_8036DE00[6]; i_ptr++){
             // @recomp Always allow skipping thex intro sequence, with a delay of 1 second to prevent
             // issues with accidentally skipping the intro when navigating the launcher with a controller.
-            if((i_ptr->unk4 != 0 || (i_ptr->unkC == func_80322318 && map_get() == MAP_1F_CS_START_RAREWARE && frameCounter > 30)) 
+            if((i_ptr->unk4 != 0 || (i_ptr->unkC == func_80322318 && map_get() == MAP_1F_CS_START_RAREWARE && introFrameCounter > 30)) 
             && i_ptr->unkC != NULL){
-                frameCounter = 0;
+                introFrameCounter = 0;
                 i_ptr->unkC(i_ptr);
             }
         }
