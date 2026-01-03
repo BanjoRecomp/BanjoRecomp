@@ -20,6 +20,7 @@
 #define osCreateMesgQueue osCreateMesgQueue_recomp
 void osWriteBackDCacheAll(void);
 #define bzero bzero_recomp
+#define bcopy bcopy_recomp
 #define osDpSetStatus osDpSetStatus_recomp
 #define malloc malloc_recomp
 #define free free_recomp
@@ -39,6 +40,10 @@ void osWriteBackDCacheAll(void);
 #include "structs.h"
 #pragma GCC diagnostic pop
 #include "rt64_extended_gbi.h"
+
+#ifndef ARRLEN
+#   define ARRLEN(x) ((s32)(sizeof(x) / sizeof(x[0])))
+#endif
 
 #ifndef gEXFillRectangle
 #define gEXFillRectangle(cmd, lorigin, rorigin, ulx, uly, lrx, lry) \

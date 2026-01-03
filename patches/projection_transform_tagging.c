@@ -85,6 +85,7 @@ extern void printbuffer_draw(Gfx **gfx, Mtx **mtx, Vtx **vtx);
 
 extern u32 cur_pushed_text_transform_id;
 extern u32 cur_pushed_text_transform_origin;
+extern void pillarbox_draw(Gfx **gdl, Mtx **mptr, Vtx **vptr);
 
 // @recomp Patched to set the projection transform ID for the main projection.
 RECOMP_PATCH void func_802E39D0(Gfx **gdl, Mtx **mptr, Vtx **vptr, s32 framebuffer_idx, s32 arg4) {
@@ -173,6 +174,10 @@ RECOMP_PATCH void func_802E39D0(Gfx **gdl, Mtx **mptr, Vtx **vptr, s32 framebuff
         ) {
         gctransition_draw(gdl, mptr, vptr);
     }
+
+    // @recomp Draw a pillarbox over the current scene to hide the extended widescreen area if active (e.g. cutscenes).
+    pillarbox_draw(gdl, mptr, vptr);
+
     finishFrame(gdl);
     osWritebackDCache(m_start, sizeof(Mtx) * (*mptr - m_start));
     osWritebackDCache(v_start, sizeof(Vtx) * (*vptr - v_start));

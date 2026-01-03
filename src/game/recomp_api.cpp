@@ -103,6 +103,11 @@ extern "C" void recomp_get_target_aspect_ratio(uint8_t* rdram, recomp_context* c
     }
 }
 
+extern "C" void recomp_get_cutscene_aspect_ratio(uint8_t *rdram, recomp_context *ctx) {
+    float ar = 16.0f / 9.0f;
+    _return(ctx, ar);
+}
+
 extern "C" void recomp_get_bgm_volume(uint8_t* rdram, recomp_context* ctx) {
     _return(ctx, banjo::get_bgm_volume() / 100.0f);
 }
@@ -148,7 +153,11 @@ extern "C" void recomp_get_analog_inverted_axes(uint8_t* rdram, recomp_context* 
 }
 
 extern "C" void recomp_get_analog_cam_enabled(uint8_t* rdram, recomp_context* ctx) {
-    _return<s32>(ctx, banjo::get_analog_cam_mode());
+    _return<s32>(ctx, banjo::get_analog_cam_mode() == banjo::AnalogCamMode::On);
+}
+
+extern "C" void recomp_get_note_saving_enabled(uint8_t* rdram, recomp_context* ctx) {
+    _return<s32>(ctx, banjo::get_note_saving_mode() == banjo::NoteSavingMode::On);
 }
 
 extern "C" void recomp_get_camera_inputs(uint8_t* rdram, recomp_context* ctx) {

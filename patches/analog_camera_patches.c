@@ -444,10 +444,15 @@ RECOMP_PATCH void func_80290F14(void) {
             break;
         }
         batimer_set(0x7, 0.4f);
-
-        // @recomp Update the analog zoom level to match.
-        analog_zoom = (f32)D_8037C061;
     }
+}
+
+// @recomp Patched to update the analog zoom level every time the original one is modified.
+RECOMP_PATCH void func_80290B60(s32 arg0) {
+    D_8037C061 = arg0;
+
+    // @recomp Update the analog zoom level.
+    analog_zoom = (f32)arg0;
 }
 
 // @recomp Patched to allow the flying camera to switch to analog look.

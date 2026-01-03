@@ -61,7 +61,7 @@
 
 #include "../../lib/rt64/src/contrib/stb/stb_image.h"
 
-const std::string version_string = "0.1.0";
+const std::string version_string = "0.9.0";
 
 template<typename... Ts>
 void exit_error(const char* str, Ts ...args) {
@@ -355,7 +355,8 @@ std::vector<recomp::GameEntry> supported_games = {
         .internal_name = "Banjo-Kazooie",
         .game_id = u8"bk.n64.us.1.0",
         .mod_game_id = "bk",
-        .save_type = recomp::SaveType::Eep4k,
+        // Eep16k instead of Eep4k to have room for extra save file data.
+        .save_type = recomp::SaveType::Eep16k,
         .is_enabled = false,
         .decompression_routine = banjo::decompress_bk,
         .has_compressed_code = true,
@@ -650,6 +651,7 @@ int main(int argc, char** argv) {
     REGISTER_FUNC(recomp_get_window_resolution);
     REGISTER_FUNC(recomp_get_target_aspect_ratio);
     REGISTER_FUNC(recomp_get_target_framerate);
+    REGISTER_FUNC(recomp_get_cutscene_aspect_ratio);
     REGISTER_FUNC(recomp_get_analog_cam_enabled);
     REGISTER_FUNC(recomp_get_camera_inputs);
     REGISTER_FUNC(recomp_get_bgm_volume);

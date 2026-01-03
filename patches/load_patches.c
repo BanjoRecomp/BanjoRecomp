@@ -3,6 +3,7 @@
 #include "functions.h"
 #include "bk_api.h"
 #include "object_extension_funcs.h"
+#include "note_saving.h"
 
 extern ActorMarker *D_8036E7C8;
 extern u8 D_80383428[0x1C];
@@ -96,6 +97,7 @@ void hotpatch_intro_opa_map_model(BKModelBin* model_bin) {
 // This includes:
 //   * Resetting all extended marker data and skip interpolation for the next frame.
 //   * Hotpatching the map model for the title cutscene to fix ultrawide effects. 
+//   * Resetting the spawned static note count.
 RECOMP_PATCH void func_803329AC(void){
     s32 i;
     
@@ -122,4 +124,7 @@ RECOMP_PATCH void func_803329AC(void){
     // as the marker ID tracking gets reset here.
     recomp_clear_all_object_data(EXTENSION_TYPE_MARKER);
     set_all_interpolation_skipped(TRUE);
+
+    // @recomp Run note saving map load code.
+    note_saving_on_map_load();
 }

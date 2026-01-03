@@ -25,6 +25,18 @@
 static void add_general_options(recomp::config::Config &config) {
     using EnumOptionVector = const std::vector<recomp::config::ConfigOptionEnumOption>;
 
+    static EnumOptionVector note_saving_mode_options = {
+        {banjo::NoteSavingMode::Off, "Off", "Off"},
+        {banjo::NoteSavingMode::On, "On", "On"},
+    };
+    config.add_enum_option(
+        banjo::configkeys::general::note_saving_mode,
+        "Note Saving",
+        "Saves collected notes so that you don't need to collect them again when revisiting a level. <recomp-color primary>On</recomp-color> is the default, while <recomp-color primary>off</recomp-color> matches the original game.",
+        note_saving_mode_options,
+        banjo::NoteSavingMode::On
+    );
+
     static EnumOptionVector camera_invert_mode_options = {
         {banjo::CameraInvertMode::InvertNone, "InvertNone", "None"},
         {banjo::CameraInvertMode::InvertX, "InvertX", "Invert X"},
@@ -33,23 +45,28 @@ static void add_general_options(recomp::config::Config &config) {
     };
     config.add_enum_option(
         banjo::configkeys::general::camera_invert_mode,
-        "Aiming Camera Mode",
+        "Aiming Camera Inverting",
         // TODO: Update for banjo
         "Inverts the camera controls. <recomp-color primary>Invert Y</recomp-color> is the default and matches the original game.",
         camera_invert_mode_options,
         banjo::CameraInvertMode::InvertY
     );
 
-    config.add_bool_option(
+    static EnumOptionVector analog_cam_mode_options = {
+        {banjo::AnalogCamMode::Off, "Off", "Off"},
+        {banjo::AnalogCamMode::On, "On", "On"},
+    };
+    config.add_enum_option(
         banjo::configkeys::general::analog_cam_mode,
         "Analog Camera",
         // TODO: Update for banjo
         "Enables the analog camera.",
-        false
+        analog_cam_mode_options,
+        banjo::AnalogCamMode::Off
     );
     config.add_enum_option(
         banjo::configkeys::general::analog_camera_invert_mode,
-        "Analog Camera Mode",
+        "Analog Camera Inverting",
         // TODO: Update for banjo
         "Inverts the camera controls for the analog camera if it's enabled. <recomp-color primary>None</recomp-color> is the default.",
         camera_invert_mode_options,
@@ -58,13 +75,17 @@ static void add_general_options(recomp::config::Config &config) {
     config.add_option_disable_dependency(
         banjo::configkeys::general::analog_camera_invert_mode,
         banjo::configkeys::general::analog_cam_mode,
-        false
+        banjo::AnalogCamMode::Off
     );
 }
 
 template <typename T = uint32_t>
 T get_general_config_enum_value(const std::string& option_id) {
     return static_cast<T>(std::get<uint32_t>(recompui::config::get_general_config().get_option_value(option_id)));
+}
+
+banjo::NoteSavingMode banjo::get_note_saving_mode() {
+    return get_general_config_enum_value<banjo::NoteSavingMode>(banjo::configkeys::general::note_saving_mode);
 }
 
 banjo::CameraInvertMode banjo::get_camera_invert_mode() {
@@ -75,8 +96,8 @@ banjo::CameraInvertMode banjo::get_analog_camera_invert_mode() {
     return get_general_config_enum_value<banjo::CameraInvertMode>(banjo::configkeys::general::analog_camera_invert_mode);
 }
 
-bool banjo::get_analog_cam_mode() {
-    return std::get<bool>(recompui::config::get_general_config().get_option_value(banjo::configkeys::general::analog_cam_mode));
+banjo::AnalogCamMode banjo::get_analog_cam_mode() {
+    return get_general_config_enum_value<banjo::AnalogCamMode>(banjo::configkeys::general::analog_cam_mode);
 }
 
 static void add_sound_options(recomp::config::Config &config) {
