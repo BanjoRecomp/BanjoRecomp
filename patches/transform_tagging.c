@@ -31,7 +31,7 @@ void set_additional_model_scale(f32 x, f32 y, f32 z) {
 
 s32 cur_drawn_model_is_map = FALSE;
 s32 cur_drawn_model_transform_id = 0;
-s32 cur_drawn_model_transform_id_skip_interpolation = FALSE;
+s32 cur_drawn_model_skip_interpolation = FALSE;
 s32 cur_model_transform_id_offset = 0;
 s32 cur_model_uses_bones = FALSE;
 s32 cur_model_would_have_been_culled_in_demo = FALSE;
@@ -207,7 +207,7 @@ bool set_model_matrix_group(Gfx **gfx, void *geo_list, bool skip_rotation) {
             group_id = cur_drawn_model_transform_id + cur_model_transform_id_offset;
         }
 
-        if (skip_all_interpolation || cur_drawn_model_transform_id_skip_interpolation) {
+        if (skip_all_interpolation || cur_drawn_model_skip_interpolation) {
             // Skip interpolation if all interpolation is currently skipped or the transform was specified to be skipped.
             gEXMatrixGroupSkipAll((*gfx)++, group_id, G_EX_PUSH, G_MTX_MODELVIEW, G_EX_EDIT_NONE);
         }
@@ -800,7 +800,7 @@ RECOMP_PATCH BKModelBin *modelRender_draw(Gfx **gfx, Mtx **mtx, f32 position[3],
     gSPMatrix((*gfx)++, (*mtx)++, G_MTX_PUSH | G_MTX_LOAD | G_MTX_MODELVIEW);
     
     // @recomp Create a matrix group if a transform id is set.
-    if (skip_all_interpolation || cur_drawn_model_transform_id_skip_interpolation) {
+    if (skip_all_interpolation || cur_drawn_model_skip_interpolation) {
         // @recomp Skip interpolation if all interpolation is currently skipped or the transform was specified to be skipped.
         gEXMatrixGroupSkipAll((*gfx)++, cur_drawn_model_transform_id, G_EX_PUSH, G_MTX_MODELVIEW, G_EX_EDIT_NONE);
     }
