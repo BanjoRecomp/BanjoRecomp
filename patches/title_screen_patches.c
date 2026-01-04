@@ -22,9 +22,10 @@ void func_80322318(Struct_core2_9B180_0*);
 int map_get(void);
 
 // @recomp Patched to always allow skipping the intro sequence.
-u8 introFrameCounter = 0;
 RECOMP_PATCH void func_80322490(void) {
     Struct_core2_9B180_0 *i_ptr;
+    static int introFrameCounter = 0;
+
     introFrameCounter++;
 
     if (D_80383330 != 0) {
@@ -33,7 +34,6 @@ RECOMP_PATCH void func_80322490(void) {
             // issues with accidentally skipping the intro when navigating the launcher with a controller.
             if((i_ptr->unk4 != 0 || (i_ptr->unkC == func_80322318 && map_get() == MAP_1F_CS_START_RAREWARE && introFrameCounter > 30)) 
             && i_ptr->unkC != NULL){
-                introFrameCounter = 0;
                 i_ptr->unkC(i_ptr);
             }
         }
