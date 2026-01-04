@@ -716,7 +716,7 @@ RECOMP_PATCH void bsDroneLook_update(void) {
     if (ncFirstPersonCamera_getState() == FIRSTPERSON_STATE_2_IDLE) {
         //camera is in "idle" state
         ncFirstPersonCamera_getZoomedInRotation(eye_rotation);
-        // @recomp Apply the axis inversion setting
+        // @recomp: Apply the axis inversion setting
         eye_rotation[0] -= y * 90.0f * dt;
         eye_rotation[1] -= x * 90.0f * dt;
         eye_rotation[2] = 0.0f;
