@@ -1,1 +1,2 @@
-1 ICON DISCARDABLE "app.ico"
+APP_ICON_B ICON "appb.ico"
+APP_ICON_K ICON "appk.ico"
