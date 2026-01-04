@@ -191,7 +191,7 @@ s32 recomp_get_flying_and_swimming_inverted_y() {
 s32 recomp_get_first_person_inverted_x() {
     s32 inverted_x, inverted_y;
     if (recomp_in_demo_playback_game_mode()) {
-        inverted_x = FALSE;
+        inverted_x = TRUE;
     } else {
         recomp_get_first_person_inverted_axes(&inverted_x, &inverted_y);
     }
