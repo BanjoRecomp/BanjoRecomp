@@ -146,6 +146,69 @@ f32 recomp_analog_camera_get_y() {
     return y;
 }
 
+s32 recomp_get_third_person_inverted_x() {
+    s32 inverted_x, inverted_y;
+    if (recomp_in_demo_playback_game_mode()) {
+        inverted_x = TRUE;
+    } else {
+        recomp_get_analog_inverted_axes(&inverted_x, &inverted_y);
+    }
+    
+    return inverted_x;
+}
+
+s32 recomp_get_third_person_inverted_y() {
+    s32 inverted_x, inverted_y;
+    if (recomp_in_demo_playback_game_mode()) {
+        inverted_y = FALSE;
+    } else {
+        recomp_get_analog_inverted_axes(&inverted_x, &inverted_y);
+    }
+    
+    return inverted_y;
+}
+
+s32 recomp_get_flying_and_swimming_inverted_x() {
+    s32 inverted_x, inverted_y;
+    if (recomp_in_demo_playback_game_mode()) {
+        inverted_x = FALSE;
+    } else {
+        recomp_get_flying_and_swimming_inverted_axes(&inverted_x, &inverted_y);
+    }
+    return inverted_x;
+}
+
+s32 recomp_get_flying_and_swimming_inverted_y() {
+    s32 inverted_x, inverted_y;
+    if (recomp_in_demo_playback_game_mode()) {
+        inverted_y = TRUE;
+    } else {
+        recomp_get_flying_and_swimming_inverted_axes(&inverted_x, &inverted_y);
+    }
+    return inverted_y;
+}
+
+s32 recomp_get_first_person_inverted_x() {
+    s32 inverted_x, inverted_y;
+    if (recomp_in_demo_playback_game_mode()) {
+        inverted_x = FALSE;
+    } else {
+        recomp_get_first_person_inverted_axes(&inverted_x, &inverted_y);
+    }
+    return inverted_x;
+}
+
+s32 recomp_get_first_person_inverted_y() {
+    s32 inverted_x, inverted_y;
+    if (recomp_in_demo_playback_game_mode()) {
+        inverted_y = FALSE;
+    } else {
+        recomp_get_first_person_inverted_axes(&inverted_x, &inverted_y);
+    }
+    return inverted_y;
+}
+
+
 // @recomp Check whether the analog camera stick is currently held.
 bool recomp_analog_camera_held() {
     if (recomp_analog_camera_enabled() && recomp_analog_camera_allowed()) {
@@ -181,9 +244,8 @@ RECOMP_PATCH int func_8029105C(s32 arg0) {
         return FALSE;
 
     // @recomp: Allow camera axis inversion on the vanilla camera
-    f32 axisInversionModifier = -1;
-    s32 inverted_x, inverted_y;
-    recomp_get_analog_inverted_axes(&inverted_x, &inverted_y);
+    float axisInversionModifier = -1;
+    bool inverted_x = recomp_get_third_person_inverted_x();
     if (inverted_x) {
         axisInversionModifier = 1;
     }
@@ -579,8 +641,7 @@ extern f32 bastick_getY(void);
 // @recomp Patched to allow configuring Y axis inversion when flying
 RECOMP_PATCH void func_802A3648(void){
     // @recomp Get the axis inversion setting
-    s32 inverted_x, inverted_y;
-    recomp_get_flying_and_swimming_inverted_axes(&inverted_x, &inverted_y);
+    s32 inverted_y = recomp_get_flying_and_swimming_inverted_y();
 
     // @recomp Apply axis inversion setting
     f32 tmp_f0 = inverted_y ? bastick_getY() : -bastick_getY();
@@ -598,8 +659,7 @@ RECOMP_PATCH void func_802A354C(void){
     f32 sp2C; 
 
     // @recomp Get the axis inversion setting
-    s32 inverted_x, inverted_y;
-    recomp_get_flying_and_swimming_inverted_axes(&inverted_x, &inverted_y);
+    s32 inverted_x = recomp_get_flying_and_swimming_inverted_x();
 
     // @recomp Apply axis inversion setting
     sp2C = inverted_x ? -bastick_getX() : bastick_getX();
@@ -623,8 +683,7 @@ RECOMP_PATCH void func_802A7304() {
     f32 temp_f0;
 
     // @recomp Get the axis inversion setting
-    s32 inverted_x, inverted_y;
-    recomp_get_flying_and_swimming_inverted_axes(&inverted_x, &inverted_y);
+    s32 inverted_y = recomp_get_flying_and_swimming_inverted_y();
 
     pitch_setAngVel(ml_interpolate_f(func_802A716C(), 70.0f, 30.0f), 0.9f);
 
@@ -645,8 +704,7 @@ RECOMP_PATCH void func_802A71D8(void) {
     f32 sp30;
     
     // @recomp Get the axis inversion setting
-    s32 inverted_x, inverted_y;
-    recomp_get_flying_and_swimming_inverted_axes(&inverted_x, &inverted_y);
+    s32 inverted_x = recomp_get_flying_and_swimming_inverted_x();
 
     // @recomp Apply axis inversion setting
     sp30 = inverted_x ? -bastick_getX() : bastick_getX();
@@ -681,12 +739,10 @@ RECOMP_PATCH void bsDroneLook_update(void) {
     s32 exit_first_person;
 
     // @recomp: Get the axis inversion setting
-    s32 inverted_x, inverted_y;
-    f32 x;
-    f32 y;
-    recomp_get_first_person_inverted_axes(&inverted_x, &inverted_y);
-    x = inverted_x ? -bastick_getX() : bastick_getX();
-    y = inverted_y ? bastick_getY() : -bastick_getY();
+    s32 inverted_x = recomp_get_first_person_inverted_x();
+    s32 inverted_y = recomp_get_first_person_inverted_y();
+    float x = inverted_x ? -bastick_getX() : bastick_getX();
+    float y = inverted_y ? bastick_getY() : -bastick_getY();
 
     next_state = 0;
     dt = time_getDelta();
