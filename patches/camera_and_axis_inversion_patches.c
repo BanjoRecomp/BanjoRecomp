@@ -180,7 +180,7 @@ RECOMP_PATCH int func_8029105C(s32 arg0) {
     if (func_80298850())
         return FALSE;
 
-    // @recomp: Allow c-button silencing to work with the camera axis inverted
+    // @recomp: Allow camera axis inversion on the vanilla camera
     f32 axisInversionModifier = -1;
     s32 inverted_x, inverted_y;
     recomp_get_analog_inverted_axes(&inverted_x, &inverted_y);
