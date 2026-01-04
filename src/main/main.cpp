@@ -152,11 +152,6 @@ ultramodern::renderer::WindowHandle create_window(ultramodern::gfx_callbacks_t::
     window = SDL_CreateWindow("Banjo: Recompiled", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1600, 960,  flags);
 #if defined(__linux__)
     SetImageAsIcon("icons/512.png",window);
-    if (ultramodern::renderer::get_graphics_config().wm_option == ultramodern::renderer::WindowMode::Fullscreen) { // TODO: Remove once RT64 gets native fullscreen support on Linux
-        SDL_SetWindowFullscreen(window,SDL_WINDOW_FULLSCREEN_DESKTOP);
-    } else {
-        SDL_SetWindowFullscreen(window,0);
-    }
 #endif
 
     if (window == nullptr) {
