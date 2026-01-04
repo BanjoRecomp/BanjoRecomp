@@ -48,3 +48,5 @@ osContGetReadData_recomp = 0x8F0000AC;
 bcopy_recomp = 0x8F0000B0;
 recomp_get_note_saving_enabled = 0x8F0000B4;
 recomp_get_cutscene_aspect_ratio = 0x8F0000B8;
+recomp_get_flying_and_swimming_inverted_axes = 0x8F0000BC;
+recomp_get_first_person_inverted_axes = 0x8F0000C0;

@@ -174,6 +174,32 @@ void recomp_analog_camera_update() {
     }
 }
 
+extern int bainput_isEnabled(s32 arg0);
+
+// @recomp: Patched to allow configuring axis inversion for the vanilla camera
+RECOMP_PATCH int bainput_should_rotate_camera_left(void) {
+    s32 inverted_x, inverted_y;
+    recomp_get_analog_inverted_axes(&inverted_x, &inverted_y);
+
+    if (inverted_x) {
+        return bakey_pressed(BUTTON_C_LEFT) && bainput_isEnabled(0);
+    } else {
+        return bakey_pressed(BUTTON_C_RIGHT) && bainput_isEnabled(0);
+    }
+}
+
+RECOMP_PATCH int bainput_should_rotate_camera_right(void){
+    s32 inverted_x, inverted_y;
+    recomp_get_analog_inverted_axes(&inverted_x, &inverted_y);
+
+    if (inverted_x) {
+        return bakey_pressed(BUTTON_C_RIGHT) && bainput_isEnabled(1);
+    } else {
+        return bakey_pressed(BUTTON_C_LEFT) && bainput_isEnabled(1);
+    }
+    
+};
+
 // @recomp Updates the current yaw based on the analog camera's horizontal movement.
 RECOMP_PATCH int func_8029105C(s32 arg0) {
     if (func_80298850())
@@ -560,4 +586,162 @@ RECOMP_PATCH void pfsManager_readData() {
     func_8024F35C(0);
     if (!pfsManagerContStatus.errno)
         osContGetReadData(pfsManagerContPadData);
+}
+
+RECOMP_PATCH enum map_e getDefaultBootMap(void) {
+    // return MAP_69_GL_MM_LOBBY;
+    return MAP_7_TTC_TREASURE_TROVE_COVE;
+}
+RECOMP_PATCH int ability_hasLearned(enum ability_e ability) {
+    return TRUE;
+}
+
+extern f32 bastick_getX(void);
+extern f32 bastick_getY(void);
+
+// @recomp Patched to allow configuring Y axis inversion when flying
+RECOMP_PATCH void func_802A3648(void){
+    // @recomp Get the axis inversion setting
+    s32 inverted_x, inverted_y;
+    recomp_get_flying_and_swimming_inverted_axes(&inverted_x, &inverted_y);
+
+    // @recomp Apply axis inversion setting
+    f32 tmp_f0 = inverted_y ? bastick_getY() : -bastick_getY();
+
+    if(tmp_f0 < 0.0f)
+        pitch_setIdeal(ml_map_f(tmp_f0, -1.0f, 0.0f, 300.0f, 360.0f));
+    else
+        pitch_setIdeal(ml_map_f(tmp_f0, 0.0f, 1.0f, 0.0f, 80.0f));
+}
+
+// @recomp Patched to allow configuring X axis inversion when flying
+RECOMP_PATCH void func_802A354C(void){
+    f32 yaw_range;
+    f32 roll_range;
+    f32 sp2C; 
+
+    // @recomp Get the axis inversion setting
+    s32 inverted_x, inverted_y;
+    recomp_get_flying_and_swimming_inverted_axes(&inverted_x, &inverted_y);
+
+    // @recomp Apply axis inversion setting
+    sp2C = inverted_x ? -bastick_getX() : bastick_getX();
+    if(bakey_held(BUTTON_R)){
+        yaw_setVelocityBounded(500.0f, 30.0f);
+        yaw_range = 6.0f;
+        roll_range = 85.0f;
+    }
+    else{
+        yaw_setVelocityBounded(500.0f, 2.0f);
+        yaw_range = 3.0f;
+        roll_range = 75.0f;
+    }
+    roll_setIdeal(ml_map_f(sp2C, -1.0f, 1.0f, -roll_range, roll_range));
+    yaw_setIdeal(mlNormalizeAngle(yaw_getIdeal() + ml_map_f(sp2C, -1.0f, 1.0f, yaw_range, -yaw_range)));
+}
+
+// @recomp Patched to allow configuring Y axis inversion when swimming
+f32 func_802A716C();
+RECOMP_PATCH void func_802A7304() {
+    f32 temp_f0;
+
+    // @recomp Get the axis inversion setting
+    s32 inverted_x, inverted_y;
+    recomp_get_flying_and_swimming_inverted_axes(&inverted_x, &inverted_y);
+
+    pitch_setAngVel(ml_interpolate_f(func_802A716C(), 70.0f, 30.0f), 0.9f);
+
+    // @recomp Apply axis inversion setting
+    temp_f0 = inverted_y ? bastick_getY() : -bastick_getY();
+    if (temp_f0 < 0.0f) {
+        pitch_setIdeal(ml_map_f(temp_f0, -1.0f, 0.0f, 275.0f, 360.0f));
+        return;
+    }
+    pitch_setIdeal(ml_map_f(temp_f0, 0.0f, 1.0f, 0.0f, 85.0f));
+}
+
+// @recomp Patched to allow configuring X axis inversion when swimming
+RECOMP_PATCH void func_802A71D8(void) {
+    f32 yaw_range;
+    f32 sp38;
+    f32 roll_range;
+    f32 sp30;
+    
+    // @recomp Get the axis inversion setting
+    s32 inverted_x, inverted_y;
+    recomp_get_flying_and_swimming_inverted_axes(&inverted_x, &inverted_y);
+
+    // @recomp Apply axis inversion setting
+    sp30 = inverted_x ? -bastick_getX() : bastick_getX();
+    sp38 = func_802A716C();
+    if (bakey_held(BUTTON_R)) {
+        roll_range = 45.0f;
+        yaw_range = 4.3f;
+        yaw_setVelocityBounded(250.0f, 20.0f);
+    } else {
+        roll_range = 35.0f;
+        yaw_range = ml_interpolate_f(sp38, 3.1f, 2.4f);
+        yaw_setVelocityBounded(90.0f, ml_interpolate_f(sp38, 3.8f, 2.2f));
+    }
+    roll_setIdeal(ml_map_f(sp30, -1.0f, 1.0f, -roll_range, roll_range));
+    yaw_setIdeal(mlNormalizeAngle(yaw_getIdeal() + ml_map_f(sp30, -1.0f, 1.0f, yaw_range, -yaw_range)));
+}
+
+extern s32 ncFirstPersonCamera_getState(void);
+extern void ncFirstPersonCamera_getZoomedInRotation(f32 *);
+extern void ncFirstPersonCamera_setZoomedOutRotation(f32 src[3]);
+extern bool func_8028B254(s32 arg0);
+extern void __bsDroneLook_getEyePos(f32 arg0[3]);
+extern enum bs_e func_8029BDBC(void);
+extern void ncFirstPersonCamera_setZoomedOutPosition(f32 src[3]);
+
+// @recomp: Patched to allow inverting the first person camera
+RECOMP_PATCH void bsDroneLook_update(void) {
+    s32 next_state;
+    f32 eye_rotation[3];
+    f32 eye_position[3];
+    f32 dt;
+    s32 exit_first_person;
+
+    // @recomp: Get the axis inversion setting
+    s32 inverted_x, inverted_y;
+    f32 x;
+    f32 y;
+    recomp_get_first_person_inverted_axes(&inverted_x, &inverted_y);
+    x = inverted_x ? -bastick_getX() : bastick_getX();
+    y = inverted_y ? bastick_getY() : -bastick_getY();
+
+    next_state = 0;
+    dt = time_getDelta();
+    if (ncFirstPersonCamera_getState() == FIRSTPERSON_STATE_2_IDLE) {
+        //camera is in "idle" state
+        ncFirstPersonCamera_getZoomedInRotation(eye_rotation);
+        // @recomp Apply the axis inversion setting
+        eye_rotation[0] -= y * 90.0f * dt;
+        eye_rotation[1] -= x * 90.0f * dt;
+        eye_rotation[2] = 0.0f;
+        eye_rotation[0] = (eye_rotation[0] > 180.0f) ? ml_max_f(305.0f, eye_rotation[0]) : ml_min_f(70.0f, eye_rotation[0]);
+        ncFirstPersonCamera_setZoomedOutRotation(eye_rotation);
+        yaw_setIdeal(eye_rotation[1] + 180.0f);
+
+        exit_first_person = FALSE;
+        // 1st person cancelled via input
+        if (bakey_pressed(BUTTON_B) || bakey_pressed(BUTTON_A) || bakey_pressed(BUTTON_C_UP)) {
+            exit_first_person = TRUE;
+        }
+        // 1st person cancelled via entering water
+        if (player_inWater()) {
+            if (player_getTransformation() == TRANSFORM_1_BANJO && player_getWaterState() == BSWATERGROUP_0_NONE) {
+                exit_first_person += TRUE;
+            }
+        } else if (func_8028B254(25) == 0) {
+            exit_first_person += TRUE;
+        }
+        if (exit_first_person) {
+            next_state = func_8029BDBC();
+        }
+    }
+    __bsDroneLook_getEyePos(eye_position);
+    ncFirstPersonCamera_setZoomedOutPosition(eye_position);
+    bs_setState(next_state);
 }
