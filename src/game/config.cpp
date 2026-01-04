@@ -36,21 +36,6 @@ static void add_general_options(recomp::config::Config &config) {
         note_saving_mode_options,
         banjo::NoteSavingMode::On
     );
-
-    static EnumOptionVector first_person_invert_mode_options = {
-        {banjo::CameraInvertMode::InvertNone, "InvertNone", "None"},
-        {banjo::CameraInvertMode::InvertX, "InvertX", "Invert X"},
-        {banjo::CameraInvertMode::InvertY, "InvertY", "Invert Y"},
-        {banjo::CameraInvertMode::InvertBoth, "InvertBoth", "Invert Both"}
-    };
-    config.add_enum_option(
-        banjo::configkeys::general::first_person_invert_mode,
-        "Invert First Person View",
-        "Inverts the camera controls in first person view. <recomp-color primary>Invert Y</recomp-color> is the default and matches the original game.",
-        first_person_invert_mode_options,
-        banjo::CameraInvertMode::InvertY
-    );
-
     static EnumOptionVector analog_cam_mode_options = {
         {banjo::AnalogCamMode::Off, "Off", "Off"},
         {banjo::AnalogCamMode::On, "On", "On"},
@@ -74,6 +59,19 @@ static void add_general_options(recomp::config::Config &config) {
         "Inverts the camera controls for the third person camera if it's enabled. <recomp-color primary>Invert X</recomp-color> is the default and matches the original game.<br /><br />If analog camera is off, only the <recomp-color primary>Invert X</recomp-color> setting will take effect.",
         camera_invert_mode_options,
         banjo::CameraInvertMode::InvertX
+    );
+    static EnumOptionVector first_person_invert_mode_options = {
+        {banjo::CameraInvertMode::InvertNone, "InvertNone", "None"},
+        {banjo::CameraInvertMode::InvertX, "InvertX", "Invert X"},
+        {banjo::CameraInvertMode::InvertY, "InvertY", "Invert Y"},
+        {banjo::CameraInvertMode::InvertBoth, "InvertBoth", "Invert Both"}
+    };
+    config.add_enum_option(
+        banjo::configkeys::general::first_person_invert_mode,
+        "Invert First Person View",
+        "Inverts the camera controls in first person view. <recomp-color primary>Invert Y</recomp-color> is the default and matches the original game.",
+        first_person_invert_mode_options,
+        banjo::CameraInvertMode::InvertY
     );
     static EnumOptionVector flying_and_swimming_invert_options = {
         {banjo::CameraInvertMode::InvertNone, "InvertNone", "None"},
