@@ -45,7 +45,7 @@ static void add_general_options(recomp::config::Config &config) {
     };
     config.add_enum_option(
         banjo::configkeys::general::first_person_invert_mode,
-        "First Person Camera Inverting",
+        "Invert First Person View",
         "Inverts the camera controls in first person view. <recomp-color primary>Invert Y</recomp-color> is the default and matches the original game.",
         first_person_invert_mode_options,
         banjo::CameraInvertMode::InvertY
@@ -70,7 +70,7 @@ static void add_general_options(recomp::config::Config &config) {
     };
     config.add_enum_option(
         banjo::configkeys::general::third_person_camera_invert_mode,
-        "Third Person Camera Inverting",
+        "Invert Camera",
         "Inverts the camera controls for the third person camera if it's enabled. <recomp-color primary>Invert X</recomp-color> is the default and matches the original game.<br /><br />If analog camera is off, only the <recomp-color primary>Invert X</recomp-color> setting will take effect.",
         camera_invert_mode_options,
         banjo::CameraInvertMode::InvertX
@@ -83,7 +83,7 @@ static void add_general_options(recomp::config::Config &config) {
     };
     config.add_enum_option(
         banjo::configkeys::general::flying_and_swimming_invert_mode,
-        "Flying & Swimming Control Inverting",
+        "Invert Flying & Swimming",
         "Inverts the controls for swimming and flying. <recomp-color primary>Invert Y</recomp-color> is the default and matches the original game.",
         flying_and_swimming_invert_options,
         banjo::CameraInvertMode::InvertY
