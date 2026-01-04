@@ -588,14 +588,6 @@ RECOMP_PATCH void pfsManager_readData() {
         osContGetReadData(pfsManagerContPadData);
 }
 
-RECOMP_PATCH enum map_e getDefaultBootMap(void) {
-    // return MAP_69_GL_MM_LOBBY;
-    return MAP_7_TTC_TREASURE_TROVE_COVE;
-}
-RECOMP_PATCH int ability_hasLearned(enum ability_e ability) {
-    return TRUE;
-}
-
 extern f32 bastick_getX(void);
 extern f32 bastick_getY(void);
 
