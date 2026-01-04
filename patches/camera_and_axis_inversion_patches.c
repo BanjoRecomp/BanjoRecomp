@@ -174,47 +174,30 @@ void recomp_analog_camera_update() {
     }
 }
 
-extern int bainput_isEnabled(s32 arg0);
-
-// @recomp: Patched to allow configuring axis inversion for the vanilla camera
-RECOMP_PATCH int bainput_should_rotate_camera_left(void) {
-    s32 inverted_x, inverted_y;
-    recomp_get_analog_inverted_axes(&inverted_x, &inverted_y);
-
-    if (inverted_x) {
-        return bakey_pressed(BUTTON_C_LEFT) && bainput_isEnabled(0);
-    } else {
-        return bakey_pressed(BUTTON_C_RIGHT) && bainput_isEnabled(0);
-    }
-}
-
-RECOMP_PATCH int bainput_should_rotate_camera_right(void){
-    s32 inverted_x, inverted_y;
-    recomp_get_analog_inverted_axes(&inverted_x, &inverted_y);
-
-    if (inverted_x) {
-        return bakey_pressed(BUTTON_C_RIGHT) && bainput_isEnabled(1);
-    } else {
-        return bakey_pressed(BUTTON_C_LEFT) && bainput_isEnabled(1);
-    }
-    
-};
-
 // @recomp Updates the current yaw based on the analog camera's horizontal movement.
+// Also allows axis inversion for vanilla (non-analog) camera.
 RECOMP_PATCH int func_8029105C(s32 arg0) {
     if (func_80298850())
         return FALSE;
 
+    // @recomp: Allow c-button silencing to work with the camera axis inverted
+    f32 axisInversionModifier = -1;
+    s32 inverted_x, inverted_y;
+    recomp_get_analog_inverted_axes(&inverted_x, &inverted_y);
+    if (inverted_x) {
+        axisInversionModifier = 1;
+    }
+
     // @recomp Update the analog camera input.
     recomp_analog_camera_update();
 
-    if (bainput_should_rotate_camera_left() && ncDynamicCamA_func_802C1DB0(-45.0f)) {
+    if (bainput_should_rotate_camera_left() && ncDynamicCamA_func_802C1DB0(-45.0f * axisInversionModifier)) {
         func_80291488(arg0);
         func_8029103C();
         return TRUE;
     }
 
-    if (bainput_should_rotate_camera_right() && ncDynamicCamA_func_802C1DB0(45.0f)) {
+    if (bainput_should_rotate_camera_right() && ncDynamicCamA_func_802C1DB0(45.0f * axisInversionModifier)) {
         func_80291488(arg0);
         func_8029103C();
         return TRUE;
