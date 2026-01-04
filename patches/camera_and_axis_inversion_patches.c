@@ -191,12 +191,14 @@ RECOMP_PATCH int func_8029105C(s32 arg0) {
     // @recomp Update the analog camera input.
     recomp_analog_camera_update();
 
+    // @recomp Account for axis inversion
     if (bainput_should_rotate_camera_left() && ncDynamicCamA_func_802C1DB0(-45.0f * axisInversionModifier)) {
         func_80291488(arg0);
         func_8029103C();
         return TRUE;
     }
 
+    // @recomp Account for axis inversion
     if (bainput_should_rotate_camera_right() && ncDynamicCamA_func_802C1DB0(45.0f * axisInversionModifier)) {
         func_80291488(arg0);
         func_8029103C();
