@@ -69,7 +69,7 @@ static void add_general_options(recomp::config::Config &config) {
         {banjo::CameraInvertMode::InvertBoth, "InvertBoth", "Invert Both"}
     };
     config.add_enum_option(
-        banjo::configkeys::general::analog_camera_invert_mode,
+        banjo::configkeys::general::third_person_camera_invert_mode,
         "Third Person Camera Inverting",
         "Inverts the camera controls for the third person camera if it's enabled. <recomp-color primary>Invert X</recomp-color> is the default and matches the original game.<br /><br />If analog camera is off, only the <recomp-color primary>Invert X</recomp-color> setting will take effect.",
         camera_invert_mode_options,
@@ -103,8 +103,8 @@ banjo::CameraInvertMode banjo::get_camera_invert_mode() {
     return get_general_config_enum_value<banjo::CameraInvertMode>(banjo::configkeys::general::camera_invert_mode);
 }
 
-banjo::CameraInvertMode banjo::get_analog_camera_invert_mode() {
-    return get_general_config_enum_value<banjo::CameraInvertMode>(banjo::configkeys::general::analog_camera_invert_mode);
+banjo::CameraInvertMode banjo::get_third_person_camera_mode() {
+    return get_general_config_enum_value<banjo::CameraInvertMode>(banjo::configkeys::general::third_person_camera_invert_mode);
 }
 
 banjo::CameraInvertMode banjo::get_flying_and_swimming_invert_mode() {

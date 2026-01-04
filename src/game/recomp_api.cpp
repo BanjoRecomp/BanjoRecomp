@@ -146,7 +146,7 @@ extern "C" void recomp_get_analog_inverted_axes(uint8_t* rdram, recomp_context* 
     s32* x_out = _arg<0, s32*>(rdram, ctx);
     s32* y_out = _arg<1, s32*>(rdram, ctx);
 
-    banjo::CameraInvertMode mode = banjo::get_analog_camera_invert_mode();
+    banjo::CameraInvertMode mode = banjo::get_third_person_camera_mode();
 
     *x_out = (mode == banjo::CameraInvertMode::InvertX || mode == banjo::CameraInvertMode::InvertBoth);
     *y_out = (mode == banjo::CameraInvertMode::InvertY || mode == banjo::CameraInvertMode::InvertBoth);
