@@ -151,7 +151,7 @@ ultramodern::renderer::WindowHandle create_window(ultramodern::gfx_callbacks_t::
 
     window = SDL_CreateWindow("Banjo: Recompiled", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1600, 960,  flags);
 #if defined(__linux__)
-    SetImageAsIcon("icons/512.png",window);
+    SetImageAsIcon("icons/app.png", window);
 #endif
 
     if (window == nullptr) {
