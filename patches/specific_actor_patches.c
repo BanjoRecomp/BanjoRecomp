@@ -76,3 +76,33 @@ RECOMP_PATCH Actor *chBeeSwarm_draw(ActorMarker *marker, Gfx **gfx, Mtx **mtx, V
     }
     return this;
 }
+
+extern f32 D_8036E580[3];
+extern void actor_postdrawMethod(ActorMarker *);
+extern void actor_predrawMethod(Actor *);
+extern BKModelBin *func_803257B4(ActorMarker *marker);
+
+// @recomo Patch to skip interpolation on the Christmas while the lights
+// turn on to prevent visual glitches.
+RECOMP_PATCH Actor *actor_draw(ActorMarker *marker, Gfx **gfx, Mtx **mtx, Vtx **vtx) {
+    f32 sp3C[3];
+    Actor *this;
+
+    this = marker_getActorAndRotation(marker, sp3C);
+
+    // @recomp Check for the xmas tree model
+    if (marker->modelId == ASSET_488_MODEL_XMAS_TREE) {
+        // @recomp Check that the lights are currently turning on / flickering
+        if (this->state == 2 || this->state == 3) {
+            // @recomp Skip interpolation
+            cur_drawn_model_skip_interpolation = TRUE;
+        }
+    }
+
+    modelRender_preDraw((GenFunction_1)actor_predrawMethod, (s32)this);
+    modelRender_postDraw((GenFunction_1)actor_postdrawMethod, (s32)marker);
+    modelRender_draw(gfx, mtx, this->position, sp3C, this->scale, (this->unk104 != NULL) ? D_8036E580 : NULL, func_803257B4(marker));
+    // @recomp Re-enable interpolation
+    cur_drawn_model_skip_interpolation = FALSE;
+    return this;
+}
