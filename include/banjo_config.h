@@ -24,6 +24,10 @@ namespace banjo {
         namespace sound {
             inline const std::string bgm_volume = "bgm_volume";
         }
+
+        namespace graphics {
+            inline const std::string cutscene_aspect_ratio_mode = "cutscene_aspect_ratio_mode";
+        }
     }
 
     // TODO: Move loading configs to the runtime once we have a way to allow per-project customization.
@@ -69,6 +73,15 @@ namespace banjo {
     });
 
     NoteSavingMode get_note_saving_mode();
+
+    enum class CutsceneAspectRatioMode {
+        Original,
+        Clamp16x9,
+        Full,
+        OptionCount
+    };
+
+    CutsceneAspectRatioMode get_cutscene_aspect_ratio_mode();
 
     void open_quit_game_prompt();
 };

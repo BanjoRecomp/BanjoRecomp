@@ -117,6 +117,11 @@ banjo::AnalogCamMode banjo::get_analog_cam_mode() {
     return get_general_config_enum_value<banjo::AnalogCamMode>(banjo::configkeys::general::analog_cam_mode);
 }
 
+template <typename T = uint32_t>
+T get_graphics_config_enum_value(const std::string& option_id) {
+    return static_cast<T>(std::get<uint32_t>(recompui::config::get_graphics_config().get_option_value(option_id)));
+}
+
 static void add_sound_options(recomp::config::Config &config) {
     config.add_percent_number_option(
         banjo::configkeys::sound::bgm_volume,
@@ -134,6 +139,26 @@ int banjo::get_bgm_volume() {
     return get_sound_config_number_value<int>(banjo::configkeys::sound::bgm_volume);
 }
 
+static void add_graphics_options(recomp::config::Config &config) {
+    using EnumOptionVector = const std::vector<recomp::config::ConfigOptionEnumOption>;
+    static EnumOptionVector cutscene_aspect_ratio_mode_options = {
+        {banjo::CutsceneAspectRatioMode::Original, "Original", "Original"},
+        {banjo::CutsceneAspectRatioMode::Clamp16x9, "Clamp16x9", "16:9"},
+        {banjo::CutsceneAspectRatioMode::Full, "Expand", "Expand"},
+    };
+    config.add_enum_option(
+        banjo::configkeys::graphics::cutscene_aspect_ratio_mode,
+        "Cutscene Aspect Ratio",
+        "Sets the aspect ratio limit for cutscenes. Cutscenes have been adjusted to work in <recomp-color primary>16:9</recomp-color>, which is the default option. Wider aspect ratios may show details that weren't meant to be on-screen.",
+        cutscene_aspect_ratio_mode_options,
+        banjo::CutsceneAspectRatioMode::Clamp16x9
+    );    
+}
+
+    banjo::CutsceneAspectRatioMode banjo::get_cutscene_aspect_ratio_mode() {
+        return get_graphics_config_enum_value<banjo::CutsceneAspectRatioMode>(banjo::configkeys::graphics::cutscene_aspect_ratio_mode);
+    }
+
 void banjo::init_config() {
     std::filesystem::path recomp_dir = recompui::file::get_app_folder_path();
 
@@ -150,6 +175,7 @@ void banjo::init_config() {
     add_general_options(general_config);
 
     auto &graphics_config = recompui::config::create_graphics_tab();
+    add_graphics_options(graphics_config);
 
     recompui::config::create_controls_tab();
 
