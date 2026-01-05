@@ -13,6 +13,7 @@ RecompiledPatches/
 
 # Linux build output
 build/
+build-cmake/
 *.o
 
 # Windows build output
