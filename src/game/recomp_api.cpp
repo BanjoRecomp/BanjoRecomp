@@ -104,8 +104,22 @@ extern "C" void recomp_get_target_aspect_ratio(uint8_t* rdram, recomp_context* c
 }
 
 extern "C" void recomp_get_cutscene_aspect_ratio(uint8_t *rdram, recomp_context *ctx) {
-    float ar = 16.0f / 9.0f;
-    _return(ctx, ar);
+    float original = _arg<0, float>(rdram, ctx);
+    int width, height;
+    recompui::get_window_size(width, height);
+
+    switch (banjo::get_cutscene_aspect_ratio_mode()) {
+        case banjo::CutsceneAspectRatioMode::Original:
+            _return(ctx, original);
+            return;
+        case banjo::CutsceneAspectRatioMode::Clamp16x9:
+        default:
+            _return(ctx, 16.0f / 9.0f);
+            return;
+        case banjo::CutsceneAspectRatioMode::Full:
+            _return(ctx, std::max(static_cast<float>(width) / height, original));
+            return;
+    }
 }
 
 extern "C" void recomp_get_bgm_volume(uint8_t* rdram, recomp_context* ctx) {
