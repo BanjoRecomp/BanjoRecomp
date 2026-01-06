@@ -11,6 +11,7 @@ void animMtxList_setBoned(AnimMtxList **this_ptr, BKAnimationList *anim_list, Bo
 
 extern s32 cur_model_would_have_been_culled_in_demo;
 bool recomp_in_demo_playback_game_mode();
+void recomp_setup_marker_skinning(ActorMarker *marker);
 
 int frustum_checks_enabled = TRUE;
 void set_frustum_checks_enabled(int enabled) {
@@ -188,6 +189,9 @@ RECOMP_PATCH void actor_predrawMethod(Actor *this){
     }
 
     if(this->unkF4_30){
+        // @recomp Set up skinning data for this actor.
+        recomp_setup_marker_skinning(this->marker);
+
         sp40 = func_80330C74(this);
         if(this->unk138_29){
             sp34[0] = this->pitch;
