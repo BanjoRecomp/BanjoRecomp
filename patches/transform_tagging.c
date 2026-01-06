@@ -450,7 +450,7 @@ typedef struct {
     u32 frameCount;
     u32 modelId;
     u32 floatStart;
-} MarkerSkinningData;
+} ModelSkinningData;
 
 // @recomp Applies CPU skinning and saves the result to a higher precision vertex buffer.
 #define SKINNING_POSITIONS_MAX 65536
@@ -460,8 +460,20 @@ f32 sSkinningVelFloats[SKINNING_POSITIONS_MAX] __attribute__((aligned(8)));
 u32 sSkinningFloatCount;
 u32 sSkinningFloatFrame;
 MarkerExtensionId sMarkerSkinningExtensionId;
-MarkerSkinningData *sCurMarkerSkinningData;
+ModelSkinningData *sCurModelSkinningData;
 u32 sCurModelId;
+
+ModelSkinningData sOverlaySkinningData;
+
+void recomp_setup_overlay_skinning(int overlay_id) {
+    sCurModelSkinningData = &sOverlaySkinningData;
+    sCurModelId = overlay_id; // Using the overlay ID as the model ID since there's no easy way to get the model ID for overlay draws.
+}
+
+void recomp_clear_overlay_skinning() {
+    sCurModelSkinningData = NULL;
+    sCurModelId = 0;
+}
 
 void recomp_reset_skinning_stack() {
     sSkinningFloatCount = 0;
@@ -469,11 +481,11 @@ void recomp_reset_skinning_stack() {
 }
 
 void recomp_init_vertex_skinning() {
-    sMarkerSkinningExtensionId = bkrecomp_extend_marker_all(sizeof(MarkerSkinningData));
+    sMarkerSkinningExtensionId = bkrecomp_extend_marker_all(sizeof(ModelSkinningData));
 }
 
 void recomp_setup_marker_skinning(ActorMarker *marker) {
-    sCurMarkerSkinningData = bkrecomp_get_extended_marker_data(marker, sMarkerSkinningExtensionId);
+    sCurModelSkinningData = bkrecomp_get_extended_marker_data(marker, sMarkerSkinningExtensionId);
     sCurModelId = marker->modelId;
 }
 
@@ -481,15 +493,15 @@ bool recomp_apply_cpu_skinning(BKModelUnk28List *arg0, BKVertexList *arg1, AnimM
     *pos = NULL;
     *vel = NULL;
 
-    MarkerSkinningData prev_skinning_data = {0};
+    ModelSkinningData prev_skinning_data = {0};
     u32 cur_model_id = sCurModelId;
-    if (sCurMarkerSkinningData != NULL) {
-        prev_skinning_data = *sCurMarkerSkinningData;
-        sCurMarkerSkinningData->frameCount = sSkinningFloatFrame;
-        sCurMarkerSkinningData->modelId = cur_model_id;
-        sCurMarkerSkinningData->floatStart = sSkinningFloatCount;
+    if (sCurModelSkinningData != NULL) {
+        prev_skinning_data = *sCurModelSkinningData;
+        sCurModelSkinningData->frameCount = sSkinningFloatFrame;
+        sCurModelSkinningData->modelId = cur_model_id;
+        sCurModelSkinningData->floatStart = sSkinningFloatCount;
     }
-    sCurMarkerSkinningData = NULL;
+    sCurModelSkinningData = NULL;
     sCurModelId = 0;
 
     if (sSkinningFloatCount + (arg1->count * 3) > SKINNING_POSITIONS_MAX) {
