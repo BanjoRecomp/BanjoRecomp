@@ -16,6 +16,9 @@ build/
 build-cmake/
 *.o
 
+# Flatpak build process
+repo/
+
 # Windows build output
 *.exe
 *.dll

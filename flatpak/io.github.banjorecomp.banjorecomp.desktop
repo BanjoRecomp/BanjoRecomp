@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=Banjo: Recompiled
+Exec=/app/bin/BanjoRecompiled
+Type=Application
+Icon=io.github.banjorecomp.banjorecomp
+Categories=Game;
+Comment=Static recompilation of Banjo-Kazooie for PC.
+MimeType=x-scheme-handler/banjorecomp
