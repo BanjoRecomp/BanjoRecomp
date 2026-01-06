@@ -57,6 +57,8 @@
 #include <Windows.h>
 #include <timeapi.h>
 #include "SDL_syswm.h"
+#define APP_ICON_B 1
+#define APP_ICON_K 2
 #endif
 
 #include "../../lib/rt64/src/contrib/stb/stb_image.h"
@@ -150,9 +152,6 @@ ultramodern::renderer::WindowHandle create_window(ultramodern::gfx_callbacks_t::
 #endif
 
     window = SDL_CreateWindow("Banjo: Recompiled", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1600, 960,  flags);
-#if defined(__linux__)
-    SetImageAsIcon("icons/app.png", window);
-#endif
 
     if (window == nullptr) {
         exit_error("Failed to create window: %s\n", SDL_GetError());
@@ -161,6 +160,15 @@ ultramodern::renderer::WindowHandle create_window(ultramodern::gfx_callbacks_t::
     SDL_SysWMinfo wmInfo;
     SDL_VERSION(&wmInfo.version);
     SDL_GetWindowWMInfo(window, &wmInfo);
+
+#if defined(_WIN32)
+    // There's a 50/50 chance to choose the icon where the smallest variant is either Banjo or Kazooie alone.
+    bool choose_kazooie_icon = (rand() % 2 == 0);
+    HICON new_icon = LoadIcon(GetModuleHandle(NULL), choose_kazooie_icon ? MAKEINTRESOURCE(APP_ICON_K) : MAKEINTRESOURCE(APP_ICON_B));
+    SendMessage(wmInfo.info.win.window, WM_SETICON, ICON_SMALL2, (LPARAM)(new_icon));
+#elif defined(__linux__)
+    SetImageAsIcon("icons/app.png", window);
+#endif
 
 #if defined(_WIN32)
     return ultramodern::renderer::WindowHandle{ wmInfo.info.win.window, GetCurrentThreadId() };
@@ -572,6 +580,9 @@ int main(int argc, char** argv) {
     if (!preloaded) {
         fprintf(stderr, "Failed to preload executable!\n");
     }
+
+    // Initialize random seed for icon easter egg.
+    std::srand(std::time(nullptr));
 
 #ifdef _WIN32
     // Set up high resolution timing period.
