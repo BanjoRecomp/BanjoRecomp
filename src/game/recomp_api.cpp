@@ -198,7 +198,7 @@ extern "C" void recomp_get_right_analog_inputs(uint8_t* rdram, recomp_context* c
     float* x_out = _arg<0, float*>(rdram, ctx);
     float* y_out = _arg<1, float*>(rdram, ctx);
 
-    // Don't return camera inputs while game input is disabled.
+    // Don't return right analog inputs while game input is disabled.
     if (recompinput::game_input_disabled()) {
         *x_out = 0.0f;
         *y_out = 0.0f;
