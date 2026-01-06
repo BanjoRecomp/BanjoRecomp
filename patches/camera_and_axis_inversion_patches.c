@@ -128,7 +128,7 @@ bool recomp_analog_camera_allowed() {
 void recomp_analog_camera_get(f32 *x, f32 *y) {
     float input_x, input_y;
     s32 inverted_x, inverted_y;
-    recomp_get_camera_inputs(&input_x, &input_y);
+    recomp_get_right_analog_inputs(&input_x, &input_y);
     recomp_get_analog_inverted_axes(&inverted_x, &inverted_y);
     *x = input_x * (inverted_x ? 1.0f : -1.0f);
     *y = input_y * (inverted_y ? -1.0f : 1.0f);

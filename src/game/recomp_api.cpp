@@ -194,9 +194,16 @@ extern "C" void recomp_get_note_saving_enabled(uint8_t* rdram, recomp_context* c
     _return<s32>(ctx, banjo::get_note_saving_mode() == banjo::NoteSavingMode::On);
 }
 
-extern "C" void recomp_get_camera_inputs(uint8_t* rdram, recomp_context* ctx) {
+extern "C" void recomp_get_right_analog_inputs(uint8_t* rdram, recomp_context* ctx) {
     float* x_out = _arg<0, float*>(rdram, ctx);
     float* y_out = _arg<1, float*>(rdram, ctx);
+
+    // Don't return camera inputs while game input is disabled.
+    if (recompinput::game_input_disabled()) {
+        *x_out = 0.0f;
+        *y_out = 0.0f;
+        return;
+    }
 
     // TODO expose this in the menu
     constexpr float radial_deadzone = 0.05f;
