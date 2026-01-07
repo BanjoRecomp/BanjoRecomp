@@ -315,7 +315,7 @@ RECOMP_PATCH void mapModel_xlu_draw(Gfx **gfx, Mtx **mtx, Vtx **vtx) {
             struct1Ds *endPtr = vector_getEnd(D_80386140.unk4);
             for (iPtr = vector_getBegin(D_80386140.unk4); iPtr < endPtr; iPtr++) {
                 if (D_80372030[iPtr->xform_id].unk4 == 0x8034E8E4) {
-                    recomp_setup_map_skinning(MAP_MODEL_XLU_TRANSFORM_ID_START, map_model_xlu_pos_floats); // TODO: Asset ID?
+                    recomp_setup_map_skinning(mapModel.description->xlu_model_id, map_model_xlu_pos_floats);
                     break;
                 }
             }
