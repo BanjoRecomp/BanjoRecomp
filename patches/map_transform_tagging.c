@@ -247,44 +247,47 @@ RECOMP_PATCH void func_8034E8E4(Struct73s *arg0, BKModel *arg1, s32 arg2) {
     sp28 += sp2C;
     arg0->dy = (sp28 >= 0.0) ? sp28 + 0.5 : sp28 - 0.5;
     BKModel_transformMesh(arg1, arg2, func_8034E660, (s32)arg0);
-    
-    // @recomp Make sure to copy all the vertices from the model to the higher precision floats at least once per frame.
-    s32 i, j = 0;
-    if (map_model_xlu_pos_floats_count < arg1->vtxList_4->count) {
-        Vtx *vtx = vtxList_getVertices(arg1->vtxList_4);
-        for (i = 0; i < arg1->vtxList_4->count; i++) {
-            map_model_xlu_pos_floats[j++] = vtx->v.ob[0];
-            map_model_xlu_pos_floats[j++] = vtx->v.ob[1];
-            map_model_xlu_pos_floats[j++] = vtx->v.ob[2];
-            vtx++;
-        }
 
-        map_model_xlu_pos_floats_count = arg1->vtxList_4->count;
-    }
-
-    // @recomp Run the logic of BKModel_transformMesh again with only the modification of the Y component as seen in func_8034E660.
-    // The result is stored in the higher precision floats instead of the model binary itself. The original value of dy is used
-    // before it's rounded to make the animation smoother.
-    BKMesh *iMesh = (BKMesh *)(arg1 + 1);
-    BKVtxRef *iVtx;
-    BKVtxRef *start_vtx_ref;
-    BKVtxRef *end_vtx_ref;
-    for (i = 0; i < arg1->meshList_0->meshCount_0; i++) {
-        if (arg2 == iMesh->uid_0) {
-            start_vtx_ref = (BKVtxRef *)(iMesh + 1);
-            end_vtx_ref = start_vtx_ref + iMesh->vtxCount_2;
-            for (iVtx = start_vtx_ref; iVtx < end_vtx_ref; iVtx++) {
-                j = iVtx->unk10 * 3;
-                map_model_xlu_pos_floats[j + 0] = iVtx->v.v.ob[0];
-                map_model_xlu_pos_floats[j + 1] = iVtx->v.v.ob[1] + sp28;
-                map_model_xlu_pos_floats[j + 2] = iVtx->v.v.ob[2];
+    // @recomp Don't use high precision floats if the model exceeds the bounds of the floats array, in case the model was modified.
+    if (arg1->vtxList_4->count <= MAP_MODEL_XLU_VERTEX_COUNT_MAX) {
+        // @recomp Make sure to copy all the vertices from the model to the higher precision floats at least once per frame.
+        s32 i, j = 0;
+        if (map_model_xlu_pos_floats_count < arg1->vtxList_4->count) {
+            Vtx *vtx = vtxList_getVertices(arg1->vtxList_4);
+            for (i = 0; i < arg1->vtxList_4->count; i++) {
+                map_model_xlu_pos_floats[j++] = vtx->v.ob[0];
+                map_model_xlu_pos_floats[j++] = vtx->v.ob[1];
+                map_model_xlu_pos_floats[j++] = vtx->v.ob[2];
+                vtx++;
             }
 
-            break;
+            map_model_xlu_pos_floats_count = arg1->vtxList_4->count;
         }
 
-        iMesh = (BKMesh *)(((BKVtxRef *)(iMesh + 1)) + iMesh->vtxCount_2);
-    };
+        // @recomp Run the logic of BKModel_transformMesh again with only the modification of the Y component as seen in func_8034E660.
+        // The result is stored in the higher precision floats instead of the model binary itself. The original value of dy is used
+        // before it's rounded to make the animation smoother.
+        BKMesh *iMesh = (BKMesh *)(arg1 + 1);
+        BKVtxRef *iVtx;
+        BKVtxRef *start_vtx_ref;
+        BKVtxRef *end_vtx_ref;
+        for (i = 0; i < arg1->meshList_0->meshCount_0; i++) {
+            if (arg2 == iMesh->uid_0) {
+                start_vtx_ref = (BKVtxRef *)(iMesh + 1);
+                end_vtx_ref = start_vtx_ref + iMesh->vtxCount_2;
+                for (iVtx = start_vtx_ref; iVtx < end_vtx_ref; iVtx++) {
+                    j = iVtx->unk10 * 3;
+                    map_model_xlu_pos_floats[j + 0] = iVtx->v.v.ob[0];
+                    map_model_xlu_pos_floats[j + 1] = iVtx->v.v.ob[1] + sp28;
+                    map_model_xlu_pos_floats[j + 2] = iVtx->v.v.ob[2];
+                }
+
+                break;
+            }
+
+            iMesh = (BKMesh *)(((BKVtxRef *)(iMesh + 1)) + iMesh->vtxCount_2);
+        };
+    }
 }
 
 // @recomp Patched to set the transform ID when drawing the map's translucent model.
@@ -310,7 +313,7 @@ RECOMP_PATCH void mapModel_xlu_draw(Gfx **gfx, Mtx **mtx, Vtx **vtx) {
         // the vertex modification function that was patched. The address must be hardcoded as it's not possible to retrieve
         // the right function address inside a recompiled patch by referencing func_8034E8E4 instead.
         BKVertexList *vtxList = (BKVertexList *)((s32)mapModel.model_bin_xlu + mapModel.model_bin_xlu->vtx_list_offset_10);
-        if (vtxList->count < MAP_MODEL_XLU_VERTEX_COUNT_MAX) {
+        if (vtxList->count <= MAP_MODEL_XLU_VERTEX_COUNT_MAX) {
             struct1Ds *iPtr;
             struct1Ds *endPtr = vector_getEnd(D_80386140.unk4);
             for (iPtr = vector_getBegin(D_80386140.unk4); iPtr < endPtr; iPtr++) {
