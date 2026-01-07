@@ -44,6 +44,7 @@ extern u32 heap_occupiedBytes;
 extern u32 dynamic_camera_target_index;
 
 extern void recomp_reset_skinning_stack();
+extern void recomp_reset_map_model_skinning();
 extern void recomp_advance_dynamic_camera_targets();
 
 // @recomp Patched to not free anything.
@@ -89,8 +90,9 @@ RECOMP_PATCH void game_draw(s32 arg0){
         getGraphicsStacks(&gfx, &mtx, &vtx);
     }
 
-    // @recomp Reset the high precision position skinning stack.
+    // @recomp Reset the high precision position skinning stacks.
     recomp_reset_skinning_stack();
+    recomp_reset_map_model_skinning();
 
     // @recomp Advance the frame used as reference by the dynamic camera target changes for analog camera.
     recomp_advance_dynamic_camera_targets();
