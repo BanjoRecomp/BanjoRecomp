@@ -249,13 +249,13 @@ RECOMP_PATCH void func_8034E8E4(Struct73s *arg0, BKModel *arg1, s32 arg2) {
     BKModel_transformMesh(arg1, arg2, func_8034E660, (s32)arg0);
     
     // @recomp Make sure to copy all the vertices from the model to the higher precision floats at least once per frame.
-    s32 i, j, k;
+    s32 i, j = 0;
     if (map_model_xlu_pos_floats_count < arg1->vtxList_4->count) {
         Vtx *vtx = vtxList_getVertices(arg1->vtxList_4);
         for (i = 0; i < arg1->vtxList_4->count; i++) {
-            map_model_xlu_pos_floats[k++] = vtx->v.ob[0];
-            map_model_xlu_pos_floats[k++] = vtx->v.ob[1];
-            map_model_xlu_pos_floats[k++] = vtx->v.ob[2];
+            map_model_xlu_pos_floats[j++] = vtx->v.ob[0];
+            map_model_xlu_pos_floats[j++] = vtx->v.ob[1];
+            map_model_xlu_pos_floats[j++] = vtx->v.ob[2];
             vtx++;
         }
 
@@ -274,10 +274,10 @@ RECOMP_PATCH void func_8034E8E4(Struct73s *arg0, BKModel *arg1, s32 arg2) {
             start_vtx_ref = (BKVtxRef *)(iMesh + 1);
             end_vtx_ref = start_vtx_ref + iMesh->vtxCount_2;
             for (iVtx = start_vtx_ref; iVtx < end_vtx_ref; iVtx++) {
-                k = iVtx->unk10 * 3;
-                map_model_xlu_pos_floats[k + 0] = iVtx->v.v.ob[0];
-                map_model_xlu_pos_floats[k + 1] = iVtx->v.v.ob[1] + sp28;
-                map_model_xlu_pos_floats[k + 2] = iVtx->v.v.ob[2];
+                j = iVtx->unk10 * 3;
+                map_model_xlu_pos_floats[j + 0] = iVtx->v.v.ob[0];
+                map_model_xlu_pos_floats[j + 1] = iVtx->v.v.ob[1] + sp28;
+                map_model_xlu_pos_floats[j + 2] = iVtx->v.v.ob[2];
             }
 
             break;
