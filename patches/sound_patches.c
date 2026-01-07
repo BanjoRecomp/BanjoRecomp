@@ -5,7 +5,7 @@
 #include "../lib/bk-decomp/src/core1/musicplayer.h"
 #include "sound.h"
 
-// @recomp: The music player is often used to play sound effects. Therefore, check if track_id is actually music.
+// @recomp The music player is often used to play sound effects. Therefore, check if track_id is actually music.
 bool isMusic(s16 trackId) {
     switch (trackId) {
         case COMUSIC_2_MM:
