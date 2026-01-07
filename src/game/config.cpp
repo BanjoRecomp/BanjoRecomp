@@ -32,7 +32,7 @@ static void add_general_options(recomp::config::Config &config) {
     config.add_enum_option(
         banjo::configkeys::general::note_saving_mode,
         "Note Saving",
-        "Saves collected notes so that you don't need to collect them again when revisiting a level. <recomp-color primary>On</recomp-color> is the default, while <recomp-color primary>off</recomp-color> matches the original game.",
+        "Saves collected notes so that you don't need to collect them again when revisiting a level. <recomp-color primary>On </recomp-color> is the default, while <recomp-color primary>off</recomp-color> matches the original game.",
         note_saving_mode_options,
         banjo::NoteSavingMode::On
     );

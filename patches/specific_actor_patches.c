@@ -82,7 +82,7 @@ extern void actor_postdrawMethod(ActorMarker *);
 extern void actor_predrawMethod(Actor *);
 extern BKModelBin *func_803257B4(ActorMarker *marker);
 
-// @recomo Patch to skip interpolation on the Christmas while the lights
+// @recomp Patch to skip interpolation on the Christmas tree while the lights
 // turn on to prevent visual glitches.
 RECOMP_PATCH Actor *actor_draw(ActorMarker *marker, Gfx **gfx, Mtx **mtx, Vtx **vtx) {
     f32 sp3C[3];
