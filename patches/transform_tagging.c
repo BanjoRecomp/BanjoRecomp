@@ -217,7 +217,7 @@ bool set_model_matrix_group(Gfx **gfx, void *geo_list, bool skip_rotation) {
             // Use decomposed matrix interpolation on any other model.
             u8 interpolation_mode = cur_model_uses_bones ? G_EX_INTERPOLATE_SIMPLE : G_EX_INTERPOLATE_DECOMPOSE;
             u8 rotation_mode = skip_rotation ? G_EX_COMPONENT_SKIP : G_EX_COMPONENT_INTERPOLATE;
-            u8 vertex_interpolation_mode = cur_drawn_model_is_map ? G_EX_COMPONENT_INTERPOLATE : G_EX_COMPONENT_SKIP;
+            u8 vertex_interpolation_mode = cur_drawn_model_is_map && !cur_model_uses_ex_vertex ? G_EX_COMPONENT_INTERPOLATE : G_EX_COMPONENT_SKIP;
             u8 texcoord_interpolation_mode = cur_drawn_model_is_map ? G_EX_COMPONENT_INTERPOLATE : G_EX_COMPONENT_SKIP;
             gEXMatrixGroup((*gfx)++, group_id, interpolation_mode, G_EX_PUSH, G_MTX_MODELVIEW, G_EX_COMPONENT_INTERPOLATE, rotation_mode,
                 G_EX_COMPONENT_INTERPOLATE, G_EX_COMPONENT_INTERPOLATE, G_EX_COMPONENT_INTERPOLATE, vertex_interpolation_mode, G_EX_COMPONENT_INTERPOLATE,
@@ -464,6 +464,8 @@ ModelSkinningData *sCurModelSkinningData;
 u32 sCurModelId;
 
 ModelSkinningData sOverlaySkinningData;
+ModelSkinningData sMapSkinningData;
+f32 *sMapSkinningPosFloats;
 
 void recomp_setup_overlay_skinning(int overlay_id) {
     sCurModelSkinningData = &sOverlaySkinningData;
@@ -489,7 +491,19 @@ void recomp_setup_marker_skinning(ActorMarker *marker) {
     sCurModelId = marker->modelId;
 }
 
-bool recomp_apply_cpu_skinning(BKModelUnk28List *arg0, BKVertexList *arg1, AnimMtxList *mtx_list, float **pos, float **vel) {
+void recomp_setup_map_skinning(int map_model_id, float *pos_floats) {
+    sCurModelSkinningData = &sMapSkinningData;
+    sCurModelId = map_model_id;
+    sMapSkinningPosFloats = pos_floats;
+}
+
+void recomp_clear_map_skinning() {
+    sCurModelSkinningData = NULL;
+    sCurModelId = 0;
+    sMapSkinningPosFloats = NULL;
+}
+
+bool recomp_apply_cpu_skinning(BKModelUnk28List *arg0, BKVertexList *arg1, AnimMtxList *mtx_list, float *pos_override, float **pos, float **vel) {
     *pos = NULL;
     *vel = NULL;
 
@@ -509,12 +523,18 @@ bool recomp_apply_cpu_skinning(BKModelUnk28List *arg0, BKVertexList *arg1, AnimM
     }
 
     // Copy unmodified positions.
-    float *dst_pos = &sSkinningPosFloats[sSkinningFloatFrame & 0x1][sSkinningFloatCount];
     s32 i, j = 0;
-    for (i = 0; i < arg1->count; i++) {
-        dst_pos[j++] = arg1->vtx_18[i].v.ob[0];
-        dst_pos[j++] = arg1->vtx_18[i].v.ob[1];
-        dst_pos[j++] = arg1->vtx_18[i].v.ob[2];
+    float *dst_pos = &sSkinningPosFloats[sSkinningFloatFrame & 0x1][sSkinningFloatCount];
+    float *dst_vel = &sSkinningVelFloats[sSkinningFloatCount];
+    if (pos_override != NULL) {
+        memcpy(dst_pos, pos_override, sizeof(float) * arg1->count * 3);
+    }
+    else {
+        for (i = 0; i < arg1->count; i++) {
+            dst_pos[j++] = arg1->vtx_18[i].v.ob[0];
+            dst_pos[j++] = arg1->vtx_18[i].v.ob[1];
+            dst_pos[j++] = arg1->vtx_18[i].v.ob[2];
+        }
     }
     
     // Increase the current float count. Always align to multiples of 2.
@@ -523,38 +543,39 @@ bool recomp_apply_cpu_skinning(BKModelUnk28List *arg0, BKVertexList *arg1, AnimM
         sSkinningFloatCount++;
     }
 
-    // Apply animation.
-    BKModelUnk28 *i_ptr = (BKModelUnk28 *)(arg0 + 1);
-    s32 mtx_index = -2;
-    f32 src_coord[3];
-    f32 dst_coord[3];
-    s32 vertex_index;
-    for (i = 0; i < arg0->count; i++) {
-        if (mtx_index != i_ptr->anim_index) {
-            mtx_index = i_ptr->anim_index;
-            mlMtxSet(animMtxList_get(mtx_list, mtx_index));
+    if (arg0 != NULL) {
+        // Apply animation.
+        BKModelUnk28 *i_ptr = (BKModelUnk28 *)(arg0 + 1);
+        s32 mtx_index = -2;
+        f32 src_coord[3];
+        f32 dst_coord[3];
+        s32 vertex_index;
+        for (i = 0; i < arg0->count; i++) {
+            if (mtx_index != i_ptr->anim_index) {
+                mtx_index = i_ptr->anim_index;
+                mlMtxSet(animMtxList_get(mtx_list, mtx_index));
+            }
+
+            src_coord[0] = i_ptr->coord[0];
+            src_coord[1] = i_ptr->coord[1];
+            src_coord[2] = i_ptr->coord[2];
+            mlMtx_apply_vec3f(dst_coord, src_coord);
+
+            for (j = 0; j < i_ptr->vtx_count; j++) {
+                vertex_index = i_ptr->vtx_list[j] * 3;
+                dst_pos[vertex_index++] = dst_coord[0];
+                dst_pos[vertex_index++] = dst_coord[1];
+                dst_pos[vertex_index] = dst_coord[2];
+            }
+
+            i_ptr = (BKModelUnk28 *)((s16 *)(i_ptr + 1) + (i_ptr->vtx_count - 1));
         }
-
-        src_coord[0] = i_ptr->coord[0];
-        src_coord[1] = i_ptr->coord[1];
-        src_coord[2] = i_ptr->coord[2];
-        mlMtx_apply_vec3f(dst_coord, src_coord);
-
-        for (j = 0; j < i_ptr->vtx_count; j++) {
-            vertex_index = i_ptr->vtx_list[j] * 3;
-            dst_pos[vertex_index++] = dst_coord[0];
-            dst_pos[vertex_index++] = dst_coord[1];
-            dst_pos[vertex_index] = dst_coord[2];
-        }
-
-        i_ptr = (BKModelUnk28 *)((s16 *)(i_ptr + 1) + (i_ptr->vtx_count - 1));
     }
 
     // Compute velocities if applicable.
     // To apply, the frame index stored on the extended marker data must be exactly the previous frame and the model ID must match.
     if (prev_skinning_data.frameCount == sSkinningFloatFrame - 1 && prev_skinning_data.modelId == cur_model_id) {
         const float *prev_pos = &sSkinningPosFloats[(sSkinningFloatFrame & 0x1) ^ 1][prev_skinning_data.floatStart];
-        float *dst_vel = &sSkinningVelFloats[sSkinningFloatCount];
         j = 0;
         for (i = 0; i < arg1->count; i++) {
             for (s32 k = 0; k < 3; k++) {
@@ -562,6 +583,7 @@ bool recomp_apply_cpu_skinning(BKModelUnk28List *arg0, BKVertexList *arg1, AnimM
                 j++;
             }
         }
+
         *vel = dst_vel;
     }
 
@@ -826,23 +848,28 @@ RECOMP_PATCH BKModelBin *modelRender_draw(Gfx **gfx, Mtx **mtx, f32 position[3],
     }
 
     // @recomp Use higher precision vertex buffer when the model requires CPU skinning.
+    f32 *skinned_pos = NULL, *skinned_vel = NULL;
     cur_model_uses_ex_vertex = FALSE;
 
     if(model_bin->unk28 != NULL && D_8038371C != NULL){
         func_802E6BD0((u8*)modelRenderModelBin + modelRenderModelBin->unk28, modelRendervertexList, D_8038371C);
         
         // @recomp Do the skinning again on a high precision version of the vertex buffer. Force its usage for any subsequent display lists.
-        f32 *skinned_pos, *skinned_vel;
-        if (recomp_apply_cpu_skinning((u8 *)modelRenderModelBin + modelRenderModelBin->unk28, modelRendervertexList, D_8038371C, &skinned_pos, &skinned_vel)) {
-            gEXSetVertexSegment((*gfx)++, G_EX_VERTEX_POSITION, G_EX_ENABLED, skinned_pos, &modelRendervertexList->vtx_18);
-            if (skinned_vel != NULL) {
-                gEXSetVertexSegment((*gfx)++, G_EX_VERTEX_VELOCITY, G_EX_ENABLED, skinned_vel, &modelRendervertexList->vtx_18);
-            }
-            else {
-                gEXSetVertexSegment((*gfx)++, G_EX_VERTEX_VELOCITY, G_EX_DISABLED, 0, 0);
-            }
-            cur_model_uses_ex_vertex = TRUE;
+        recomp_apply_cpu_skinning((u8 *)modelRenderModelBin + modelRenderModelBin->unk28, modelRendervertexList, D_8038371C, NULL, &skinned_pos, &skinned_vel);
+    }
+    // @recomp Apply skinning using the floats applied by the map model.
+    else if (sMapSkinningPosFloats != NULL) {
+        recomp_apply_cpu_skinning(NULL, modelRendervertexList, NULL, sMapSkinningPosFloats, &skinned_pos, &skinned_vel);
+    }
+
+    if (skinned_pos != NULL) {
+        gEXSetVertexSegment((*gfx)++, G_EX_VERTEX_POSITION, G_EX_ENABLED, skinned_pos, &modelRendervertexList->vtx_18);
+
+        if (skinned_vel != NULL) {
+            gEXSetVertexSegment((*gfx)++, G_EX_VERTEX_VELOCITY, G_EX_ENABLED, skinned_vel, &modelRendervertexList->vtx_18);
         }
+
+        cur_model_uses_ex_vertex = TRUE;
     }
 
     mlMtxIdent();
@@ -874,7 +901,7 @@ RECOMP_PATCH BKModelBin *modelRender_draw(Gfx **gfx, Mtx **mtx, f32 position[3],
         gEXMatrixGroupSkipAll((*gfx)++, cur_drawn_model_transform_id, G_EX_PUSH, G_MTX_MODELVIEW, G_EX_EDIT_NONE);
         pushed_matrix_group = TRUE;
     }
-    else if (cur_drawn_model_is_map) {
+    else if (cur_drawn_model_is_map && !cur_model_uses_ex_vertex) {
         gEXMatrixGroupDecomposedVerts((*gfx)++, cur_drawn_model_transform_id, G_EX_PUSH, G_MTX_MODELVIEW, G_EX_EDIT_NONE);
         pushed_matrix_group = TRUE;
     }
