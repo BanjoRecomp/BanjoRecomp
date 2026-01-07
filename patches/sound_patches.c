@@ -9,6 +9,7 @@
 bool isMusic(s16 trackId) {
     switch (trackId) {
         case COMUSIC_2_MM:
+        case COMUSIC_3_FP_TWINKLIES_TALKING:
         case COMUSIC_4_MMM_CLOCK_VERSION:
         case COMUSIC_5_TTC_VACATION_VERSION:
         case COMUSIC_6_BGS:
@@ -19,6 +20,7 @@ bool isMusic(s16 trackId) {
         case COMUSIC_12_TTC_NIPPER:
         case COMUSIC_13_INSIDE_SANDCASTLE:
         case COMUSIC_1B_MYSTERIOUS_INDOORS:
+        case COMUSIC_1C_CC_ALTERNATIVE:
         case COMUSIC_1E_GL_MM_VERSION:
         case COMUSIC_1F_CC_INSIDE_CLANKER:
         case COMUSIC_20_GV_ALTERNATIVE:
@@ -94,6 +96,11 @@ bool isMusic(s16 trackId) {
         case COMUSIC_95_BBONUS_A:
         case COMUSIC_AC_GOOD_ENDING:
         case MUSIC_MUMBO_BBQ:
+        case COMUSIC_A8_KLUNGO_BY_FALLEN_GRUNTY:
+        case COMUSIC_AA_BEACH:
+        case COMUSIC_91_GRUNTY_FALLING:
+        case COMUSIC_80_GAME_OVER_CUTSCENE:
+        case COMUSIC_1_FINAL_BATTLE:
             return TRUE;
         default:
             return FALSE;
@@ -117,6 +124,8 @@ RECOMP_PATCH void musicTrack_setVolume(u8 arg0, s16 arg1) {
 
     if (isMusic(musicTracks[arg0].track_id)) {
         alCSPSetVol(&D_80281720[arg0].cseqp, (s16)(arg1 * recomp_get_bgm_volume()));
+    } else {
+        alCSPSetVol(&D_80281720[arg0].cseqp, arg1);
     }
     if (D_80281720[arg0].unk3 && arg1) {
         func_8024FCE0(arg0, arg1);
@@ -137,10 +146,6 @@ RECOMP_PATCH void coMusicPlayer_update(void) {
 
     for (var_s0 = musicTracks; var_s0 < &musicTracks[MAX_MUSIC_STRUCT_COUNT]; var_s0++) {
         if (var_s0->track_id >= 0) {
-            if (var_s0->track_id != 16) {
-                recomp_printf("TrackID: %d\n",var_s0->track_id);
-            }
-            
             temp_lo = var_s0 - musicTracks;
             var_s0->unk4 = ml_min_f(var_s0->unk4 + dt, 600.0f);
 
@@ -178,7 +183,7 @@ RECOMP_PATCH void coMusicPlayer_update(void) {
                 D_80276E34 = TRUE;
                 
                 // @recomp Send a volume command to incorporate the current BGM volume if the track's volume wasn't changed.
-                if (!isSfx(var_s0->track_id)) {
+                if (isMusic(var_s0->track_id)) {
                     alCSPSetVol(&D_80281720[temp_lo].cseqp, (s16)(var_s0->volume * recomp_get_bgm_volume()));
                 }
 
