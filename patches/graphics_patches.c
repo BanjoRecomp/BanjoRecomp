@@ -72,9 +72,9 @@ RECOMP_PATCH void graphicsCache_init(void){
 }
 
 extern enum map_e map_get(void);
-extern int shouldLag;
-extern int introCutsceneCounter;
-extern bool should_lag_intro_cutscene(void);
+bool should_lag_intro_cutscene(void);
+void add_extra_vis(void);
+void increment_intro_cutscene_timer(void);
 // @recomp Patched to check for graphics stack overflow after processing a frame.
 // Also patched to wait for a message when the displaylist is completed immediately after queueing it to solve vertex modification race conditions.
 RECOMP_PATCH void game_draw(s32 arg0){
@@ -163,9 +163,9 @@ RECOMP_PATCH void game_draw(s32 arg0){
     switch (map_get()) {
         case MAP_1E_CS_START_NINTENDO:
             if (should_lag_intro_cutscene()) {
-                shouldLag = 1;
+                add_extra_vis();
             }
-            introCutsceneCounter++; 
+            increment_intro_cutscene_timer();
             break;
         default:
             break;

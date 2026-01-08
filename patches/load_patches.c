@@ -93,15 +93,14 @@ void hotpatch_intro_opa_map_model(BKModelBin* model_bin) {
     gSPDisplayList(&dl[INTRO_OPA_DL_WALL_PATCH_INDEX], intro_wall_extension_dl);
 }
 
-extern int introCutsceneCounter;
-extern int introCutsceneNextStutter;
-extern int introCutsceneLagIndex;
-extern void reset_intro_cutscene_timings_state(void);
+void reset_intro_cutscene_timings_state(void);
+
 // @recomp Patched to act as a point to run code when a new map is loaded.
 // This includes:
 //   * Resetting all extended marker data and skip interpolation for the next frame.
 //   * Hotpatching the map model for the title cutscene to fix ultrawide effects. 
 //   * Resetting the spawned static note count.
+//   * Resetting the variables used to keep track of correcting the intro cutscene timings
 RECOMP_PATCH void func_803329AC(void){
     s32 i;
     
