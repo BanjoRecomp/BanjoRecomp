@@ -71,6 +71,10 @@ RECOMP_PATCH void graphicsCache_init(void){
     gTextureFilterPoint = 0;
 }
 
+extern enum map_e map_get(void);
+extern bool shouldLag;
+extern int introCutsceneCounter;
+extern bool should_lag_intro_cutscene(void);
 // @recomp Patched to check for graphics stack overflow after processing a frame.
 // Also patched to wait for a message when the displaylist is completed immediately after queueing it to solve vertex modification race conditions.
 RECOMP_PATCH void game_draw(s32 arg0){
@@ -153,6 +157,16 @@ RECOMP_PATCH void game_draw(s32 arg0){
         if(arg0) {
             scissorBox_setDefault();
         }
+    }
+
+    // @recomp Call the relevant function to fix cutscene timings, if there is one.
+    switch (map_get()) {
+        case MAP_1E_CS_START_NINTENDO:
+            shouldLag = should_lag_intro_cutscene();
+            introCutsceneCounter++; 
+            break;
+        default:
+            break;
     }
 
     // Allow interpolation for the next frame.

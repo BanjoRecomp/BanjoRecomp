@@ -104,27 +104,34 @@ RECOMP_PATCH int demo_readInput(OSContPad* arg0, s32* arg1){
     return not_eof;
 }
 
+bool shouldLag = FALSE;
+
 // @recomp Patched to override the VI frame divisor when the demo frame divisor has been set.
+// Also overrides it if a cutscene needs timing compensation.
 RECOMP_PATCH s32 viMgr_func_8024BFA0() {
     if (demo_frame_divisor != -1) {
         return demo_frame_divisor;
     }
-    return D_802808DC;
+    return D_802808DC + shouldLag;
 }
 
-// @recomp Patched to clear the demo frame divisor after viMgr_func_8024BFD8.
+// @recomp Patched to clear lag overrides after viMgr_func_8024BFD8.
 RECOMP_PATCH void viMgr_func_8024C1B4(void){
     viMgr_func_8024BFD8(0);
     // @recomp Clear the demo frame divisor.
     demo_frame_divisor = -1;
     dummy_func_8025AFB8();
+    // @recomp Clear the lag override for cutscenes.
+    shouldLag = FALSE;
 }
 
-// @recomp Patched to clear the demo frame divisor after viMgr_func_8024BFD8.
+// @recomp Patched to clear lag overrides after viMgr_func_8024BFD8.
 RECOMP_PATCH void viMgr_func_8024C1DC(void){
     viMgr_func_8024BFD8(1);
     // @recomp Clear the demo frame divisor.
     demo_frame_divisor = -1;
+    // @recomp Clear the lag override for cutscenes.
+    shouldLag = FALSE;
 }
 
 // @recomp Patched to use a fixed time delta of 30 FPS when decrementing the hourglass timer during Bottles' Bonus.
@@ -141,4 +148,52 @@ RECOMP_PATCH void func_80345EB0(enum item_e item){
     }else{
         func_802FACA4(item);
     }
+}
+
+// @recomp The intro cutscene stutters on console, but it does not stutter in recomp.
+// The cutscene is timed with the stutters in mind so this causes desyncs with the music and sound effects.
+// We have manually analyzed the cutscene and taken note of the exact frames during which it stutters,
+// and we lag the game to 15 FPS internally (this cutscene targets 20 FPS) for a few frames when it would
+// have stuttered on console in order to keep the cutscene in sync.
+
+// What frames of the cutscene to lag on, and for how many frames.
+int introStuttersStartFrames[] = { 269, 521, 583, 663, 769, 959, 1155, 1182, 1214 };
+int introStutterDurations[] =    { 4,   4,   4,   4,   4,   4,   4,    4,    4    };
+
+// These are reset on map load, so that the cutscene can be replayed (such as when saving and exiting)
+// See func_803329AC in load_patches.c
+int introCutsceneCounter = 0;
+int introCutsceneNextStutter = 0;
+int introCutsceneLagIndex = 0;
+
+bool should_lag_intro_cutscene(void) {
+    // No stutters left to compensate for. Exit the function early. 
+    if (introCutsceneNextStutter == -1) {
+        // recomp_printf("Return false\n");
+        return FALSE;
+    }
+
+    // First frame of the cutscene. Set the first stutter frame.
+    if (introCutsceneNextStutter < introStuttersStartFrames[0]) {
+        introCutsceneNextStutter = introStuttersStartFrames[0];
+        recomp_printf("Start intro cutscene with timing corrections. First stutter frame: %d\n", introCutsceneNextStutter);
+    }
+
+    if (introCutsceneCounter >= (introCutsceneNextStutter)  && introCutsceneCounter < (introCutsceneNextStutter + introStutterDurations[introCutsceneLagIndex])) {
+        // A stutter would have occured on console now. Lag the game for a given amount of frames.
+        recomp_printf("LAGGING. Stutter number %d. Frame number %d\n", introCutsceneLagIndex, introCutsceneCounter);
+        return TRUE;
+    } else if (introCutsceneCounter > (introCutsceneNextStutter)) {
+        introCutsceneLagIndex++;
+        if (introCutsceneLagIndex >= (int)sizeof(introStuttersStartFrames) / (int)sizeof(introStuttersStartFrames[0])) {
+            // That was the last stutter. We're done.
+            introCutsceneNextStutter = -1;
+            recomp_printf("End intro cutscene. %d\n", introCutsceneNextStutter);
+        } else {
+            // Set the next stutter frame. 
+            introCutsceneNextStutter = introStuttersStartFrames[introCutsceneLagIndex];
+            recomp_printf("Next stutter: %d\n", introCutsceneNextStutter);
+        }
+    }
+    return FALSE;
 }
