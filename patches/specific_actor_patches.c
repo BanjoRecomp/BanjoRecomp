@@ -27,6 +27,9 @@ typedef struct {
 }ActorLocal_core2_47BD0;
 
 extern s32 func_8033A170(void);
+extern enum map_e map_get(void);
+
+extern u32 get_intro_cutscene_counter(void);
 
 // @recomp Patched to give the bees in the bee swarm individual IDs. The bees can show interpolation glitches otherwise, as they all share one matrix
 // group and can get culled individually based on distance. This is easily reproduceable by walking into a beehive with bees from a far away distance.
@@ -104,5 +107,34 @@ RECOMP_PATCH Actor *actor_draw(ActorMarker *marker, Gfx **gfx, Mtx **mtx, Vtx **
     modelRender_draw(gfx, mtx, this->position, sp3C, this->scale, (this->unk104 != NULL) ? D_8036E580 : NULL, func_803257B4(marker));
     // @recomp Re-enable interpolation
     cur_drawn_model_skip_interpolation = FALSE;
+    return this;
+}
+
+extern void func_802E0710(Actor *this);
+
+// @recomp Make sure the model being skipped are the bulls during the intro cutscene, and only during the
+// first few seconds of the cutscene while the camera is panning.
+bool skip_drawing_intro_bulls(u32 model_id) {
+    return 
+        (map_get() == MAP_1E_CS_START_NINTENDO) && 
+        (model_id == ASSET_353_MODEL_BIGBUTT || model_id == ASSET_354_MODEL_BULL_INTRO) &&
+        get_intro_cutscene_counter() < 180;
+}
+
+// @recomp Patched to skip drawing the bull actors on the intro cutscene's start.
+RECOMP_PATCH Actor *func_802E0738(ActorMarker *marker, Gfx **gfx, Mtx **mtx, Vtx **vtx) {
+    f32 sp34[3];
+    Actor *this;
+
+    this = marker_getActorAndRotation(marker, &sp34);
+    
+    // @recomp Check the condition for not drawing this actor if it's one of the bulls during the intro.
+    if (skip_drawing_intro_bulls(marker->modelId)) {
+        return this;
+    }
+
+    modelRender_preDraw((GenFunction_1)func_802E0710, (s32)this);
+    modelRender_postDraw((GenFunction_1)actor_postdrawMethod, (s32)marker);
+    modelRender_draw(gfx, mtx, this->position, sp34, this->scale, NULL, marker_loadModelBin(marker));
     return this;
 }
