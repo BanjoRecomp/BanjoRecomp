@@ -104,7 +104,7 @@ RECOMP_PATCH int demo_readInput(OSContPad* arg0, s32* arg1){
     return not_eof;
 }
 
-bool shouldLag = FALSE;
+int shouldLag = 0;
 
 // @recomp Patched to override the VI frame divisor when the demo frame divisor has been set.
 // Also overrides it if a cutscene needs timing compensation.
@@ -122,7 +122,7 @@ RECOMP_PATCH void viMgr_func_8024C1B4(void){
     demo_frame_divisor = -1;
     dummy_func_8025AFB8();
     // @recomp Clear the lag override for cutscenes.
-    shouldLag = FALSE;
+    shouldLag = 0;
 }
 
 // @recomp Patched to clear lag overrides after viMgr_func_8024BFD8.
@@ -131,7 +131,7 @@ RECOMP_PATCH void viMgr_func_8024C1DC(void){
     // @recomp Clear the demo frame divisor.
     demo_frame_divisor = -1;
     // @recomp Clear the lag override for cutscenes.
-    shouldLag = FALSE;
+    shouldLag = 0;
 }
 
 // @recomp Patched to use a fixed time delta of 30 FPS when decrementing the hourglass timer during Bottles' Bonus.
@@ -169,31 +169,37 @@ int introCutsceneLagIndex = 0;
 bool should_lag_intro_cutscene(void) {
     // No stutters left to compensate for. Exit the function early. 
     if (introCutsceneNextStutter == -1) {
-        // recomp_printf("Return false\n");
         return FALSE;
     }
 
     // First frame of the cutscene. Set the first stutter frame.
     if (introCutsceneNextStutter < introStuttersStartFrames[0]) {
         introCutsceneNextStutter = introStuttersStartFrames[0];
-        recomp_printf("Start intro cutscene with timing corrections. First stutter frame: %d\n", introCutsceneNextStutter);
+        //recomp_printf("Start intro cutscene with timing corrections. First stutter frame: %d\n", introCutsceneNextStutter);
     }
 
     if (introCutsceneCounter >= (introCutsceneNextStutter)  && introCutsceneCounter < (introCutsceneNextStutter + introStutterDurations[introCutsceneLagIndex])) {
         // A stutter would have occured on console now. Lag the game for a given amount of frames.
-        recomp_printf("LAGGING. Stutter number %d. Frame number %d\n", introCutsceneLagIndex, introCutsceneCounter);
+        //recomp_printf("LAGGING. Stutter number %d. Frame number %d\n", introCutsceneLagIndex, introCutsceneCounter);
         return TRUE;
     } else if (introCutsceneCounter > (introCutsceneNextStutter)) {
         introCutsceneLagIndex++;
         if (introCutsceneLagIndex >= (int)sizeof(introStuttersStartFrames) / (int)sizeof(introStuttersStartFrames[0])) {
             // That was the last stutter. We're done.
             introCutsceneNextStutter = -1;
-            recomp_printf("End intro cutscene. %d\n", introCutsceneNextStutter);
+            //recomp_printf("End intro cutscene. %d\n", introCutsceneNextStutter);
         } else {
             // Set the next stutter frame. 
             introCutsceneNextStutter = introStuttersStartFrames[introCutsceneLagIndex];
-            recomp_printf("Next stutter: %d\n", introCutsceneNextStutter);
+            //recomp_printf("Next stutter: %d\n", introCutsceneNextStutter);
         }
     }
     return FALSE;
+}
+// @recomp Reset the custom cutscene frame counter and the stutter frame index used to
+// correct the timings of the intro cutscene.
+void reset_intro_cutscene_timings_state(void) {
+    introCutsceneCounter = 0;
+    introCutsceneNextStutter = 0;
+    introCutsceneLagIndex = 0;
 }

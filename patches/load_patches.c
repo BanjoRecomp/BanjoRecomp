@@ -96,6 +96,7 @@ void hotpatch_intro_opa_map_model(BKModelBin* model_bin) {
 extern int introCutsceneCounter;
 extern int introCutsceneNextStutter;
 extern int introCutsceneLagIndex;
+extern void reset_intro_cutscene_timings_state(void);
 // @recomp Patched to act as a point to run code when a new map is loaded.
 // This includes:
 //   * Resetting all extended marker data and skip interpolation for the next frame.
@@ -131,9 +132,6 @@ RECOMP_PATCH void func_803329AC(void){
     // @recomp Run note saving map load code.
     note_saving_on_map_load();
 
-    // @recomp Reset the custom cutscene frame counter and the stutter frame index used to
-    // correct the timings of the intro cutscen. See should_lag_intro_cutscene in timing_patches.c
-    introCutsceneCounter = 0;
-    introCutsceneNextStutter = 0;
-    introCutsceneLagIndex = 0;
+    // @recomp Reset the intro cutscene timing corrections so the cutscene can be played again
+    reset_intro_cutscene_timings_state();
 }
