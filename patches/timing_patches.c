@@ -150,7 +150,7 @@ RECOMP_PATCH void func_80345EB0(enum item_e item){
     }
 }
 
-// @recomp The intro cutscene stutters on console, but it does not stutter in recomp.
+// The intro cutscene stutters on console, but it does not stutter in recomp.
 // The cutscene is timed with the stutters in mind so this causes desyncs with the music and sound effects.
 // We have manually analyzed the cutscene and taken note of the exact frames during which it stutters,
 // and we lag the game to 15 FPS internally (this cutscene targets 20 FPS) for a few frames when it would
@@ -196,7 +196,7 @@ bool should_lag_intro_cutscene(void) {
     }
     return FALSE;
 }
-// @recomp Reset the custom cutscene frame counter and the stutter frame index used to
+// Reset the custom cutscene frame counter and the stutter frame index used to
 // correct the timings of the intro cutscene.
 void reset_intro_cutscene_timings_state(void) {
     introCutsceneCounter = 0;
@@ -204,6 +204,8 @@ void reset_intro_cutscene_timings_state(void) {
     introCutsceneLagIndex = 0;
 }
 
+// Check the current map to see if it's a cutscene map that requires timing fixes,
+// and run the relevant function if so.
 void handle_cutscene_timings(void) {
     switch (map_get()) {
         case MAP_1E_CS_START_NINTENDO:
