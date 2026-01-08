@@ -175,23 +175,23 @@ bool should_lag_intro_cutscene(void) {
     // First frame of the cutscene. Set the first stutter frame.
     if (introCutsceneNextStutter < introStuttersStartFrames[0]) {
         introCutsceneNextStutter = introStuttersStartFrames[0];
-        recomp_printf("Start intro cutscene with timing corrections. First stutter frame: %d\n", introCutsceneNextStutter);
+        //recomp_printf("Start intro cutscene with timing corrections. First stutter frame: %d\n", introCutsceneNextStutter);
     }
 
     if (introCutsceneCounter >= (introCutsceneNextStutter)  && introCutsceneCounter < (introCutsceneNextStutter + introStutterDurations[introCutsceneLagIndex])) {
         // A stutter would have occured on console now. Lag the game for a given amount of frames.
-        recomp_printf("LAGGING. Stutter number %d. Frame number %d\n", introCutsceneLagIndex, introCutsceneCounter);
+        //recomp_printf("LAGGING. Stutter number %d. Frame number %d\n", introCutsceneLagIndex, introCutsceneCounter);
         return TRUE;
     } else if (introCutsceneCounter > (introCutsceneNextStutter)) {
         introCutsceneLagIndex++;
         if (introCutsceneLagIndex >= (int)sizeof(introStuttersStartFrames) / (int)sizeof(introStuttersStartFrames[0])) {
             // That was the last stutter. We're done.
             introCutsceneNextStutter = -1;
-            recomp_printf("End intro cutscene. %d\n", introCutsceneNextStutter);
+            //recomp_printf("End intro cutscene. %d\n", introCutsceneNextStutter);
         } else {
             // Set the next stutter frame. 
             introCutsceneNextStutter = introStuttersStartFrames[introCutsceneLagIndex];
-            recomp_printf("Next stutter: %d\n", introCutsceneNextStutter);
+            //recomp_printf("Next stutter: %d\n", introCutsceneNextStutter);
         }
     }
     return FALSE;
@@ -204,10 +204,15 @@ void reset_intro_cutscene_timings_state(void) {
     introCutsceneLagIndex = 0;
 }
 
-void add_extra_vis(void) {
-    extraVis = 1;
-}
-
-void increment_intro_cutscene_timer(void) {
-    introCutsceneCounter++;
+void handle_cutscene_timings(void) {
+    switch (map_get()) {
+        case MAP_1E_CS_START_NINTENDO:
+            if (should_lag_intro_cutscene()) {
+                extraVis = 1;
+            }
+            introCutsceneCounter++;
+            break;
+        default:
+            break;
+    }    
 }
