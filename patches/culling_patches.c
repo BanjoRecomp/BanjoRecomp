@@ -188,10 +188,10 @@ RECOMP_PATCH void actor_predrawMethod(Actor *this){
         }
     }
 
-    if(this->unkF4_30){
-        // @recomp Set up skinning data for this actor.
-        recomp_setup_marker_skinning(this->marker);
+    // @recomp Set up skinning data for this actor.
+    recomp_setup_marker_skinning(this->marker);
 
+    if(this->unkF4_30){
         sp40 = func_80330C74(this);
         if(this->unk138_29){
             sp34[0] = this->pitch;
