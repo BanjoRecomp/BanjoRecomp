@@ -40,6 +40,7 @@
 #include "banjo_sound.h"
 #include "banjo_support.h"
 #include "banjo_game.h"
+#include "banjo_launcher.h"
 #include "recomp_data.h"
 #include "ovl_patches.hpp"
 #include "theme.h"
@@ -82,7 +83,7 @@ ultramodern::gfx_callbacks_t::gfx_data_t create_gfx() {
     SDL_SetHint(SDL_HINT_MOUSE_FOCUS_CLICKTHROUGH, "1");
     SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, "1");
 
-    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER) > 0) {
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER | SDL_INIT_JOYSTICK | SDL_INIT_HAPTIC) > 0) {
         exit_error("Failed to initialize SDL2: %s\n", SDL_GetError());
     }
 
@@ -547,18 +548,8 @@ void on_launcher_init(recompui::LauncherMenu *menu) {
         recompui::GameOptionsMenuLayout::Center
     );
     game_options_menu->add_default_options();
-
-    constexpr float banjo_apsect_ratio = 1.0434f;
-    constexpr float banjo_height = 500.0f;
-
-    // TODO: Style launcher and get better background.
-    auto bg_element = menu->set_launcher_background_svg("Banjo.svg");
-    bg_element->set_top(50.0f, recompui::Unit::Percent);
-    bg_element->set_left(50.0f, recompui::Unit::Percent);
-    bg_element->set_height(banjo_height, recompui::Unit::Dp);
-    bg_element->set_width(banjo_height * banjo_apsect_ratio, recompui::Unit::Dp);
-    bg_element->set_translate_2D(-50.0f, -50.0f, recompui::Unit::Percent);
-    bg_element->set_opacity(0.25f);
+    
+    banjo::launcher_animation_setup(menu);
 }
 
 #define REGISTER_FUNC(name) recomp::overlays::register_base_export(#name, name)
@@ -682,6 +673,7 @@ int main(int argc, char** argv) {
     banjo::init_config();
 
     recompui::register_launcher_init_callback(on_launcher_init);
+    recompui::register_launcher_update_callback(banjo::launcher_animation_update);
 
     recomp::rsp::callbacks_t rsp_callbacks{
         .get_rsp_microcode = get_rsp_microcode,

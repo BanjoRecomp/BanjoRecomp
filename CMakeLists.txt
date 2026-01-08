@@ -140,6 +140,7 @@ add_custom_command(OUTPUT
 add_executable(BanjoRecompiled)
 
 set (SOURCES
+    ${CMAKE_SOURCE_DIR}/src/main/launcher_animation.cpp
     ${CMAKE_SOURCE_DIR}/src/main/main.cpp
     ${CMAKE_SOURCE_DIR}/src/main/register_overlays.cpp
     ${CMAKE_SOURCE_DIR}/src/main/register_patches.cpp
