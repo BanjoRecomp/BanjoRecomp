@@ -112,13 +112,15 @@ bool recomp_analog_camera_enabled() {
 
 // @recomp Check whether analog camera movement is currently allowed. Analog camera movement is disabled while crouching and its
 // related states to allow the user to use the right stick as C Button inputs without rotating the camera.
-bool recomp_analog_camera_allowed() {
+bool recomp_analog_camera_allowed(bool allow_transition_states) {
     switch (bs_getState()) {
     case BS_CROUCH:
     case BS_9_EGG_HEAD:
     case BS_A_EGG_ASS:
-    case BS_14_BTROT_ENTER:
         return FALSE;
+    case BS_14_BTROT_ENTER:
+    case BS_1A_WONDERWING_ENTER:
+        return allow_transition_states;
     default:
         return TRUE;
     }
@@ -211,7 +213,7 @@ s32 recomp_get_first_person_inverted_y() {
 
 // @recomp Check whether the analog camera stick is currently held.
 bool recomp_analog_camera_held() {
-    if (recomp_analog_camera_enabled() && recomp_analog_camera_allowed()) {
+    if (recomp_analog_camera_enabled() && recomp_analog_camera_allowed(FALSE)) {
         float input_x, input_y;
         recomp_analog_camera_get(&input_x, &input_y);
         return (mlAbsF(input_x) > 1e-6f) || (mlAbsF(input_y) > 1e-6f);
@@ -223,7 +225,7 @@ bool recomp_analog_camera_held() {
 
 // @recomp If movement is allowed, update the current camera mode's yaw with the input.
 void recomp_analog_camera_update() {
-    if (recomp_analog_camera_enabled() && recomp_analog_camera_allowed()) {
+    if (recomp_analog_camera_enabled() && recomp_analog_camera_allowed(FALSE)) {
         f32 analog_yaw = recomp_analog_camera_get_x() * 120.0f * time_getDelta();
         if (mlAbsF(analog_yaw) > 1e-6f) {
             if (ncDynamicCamera_getState() != DYNAMIC_CAMERA_STATE_R_LOOK) {
@@ -486,8 +488,8 @@ RECOMP_PATCH void func_80290F14(void) {
     // @recomp Replicate the existing group of conditions to check if zoom level changes are allowed.
     // If they are, use the vertical movement to update the zoom level.
     if (recomp_analog_camera_enabled()) {
-        if (!func_80298850() && player_movementGroup() != BSGROUP_4_LOOK && batimer_get(7) == 0.0f && recomp_analog_camera_allowed()) {
-            analog_zoom = ml_clamp_f(analog_zoom + recomp_analog_camera_get_y() * 0.15f, 0.5f, 3.0f);
+        if (!func_80298850() && player_movementGroup() != BSGROUP_4_LOOK && batimer_get(7) == 0.0f && recomp_analog_camera_allowed(FALSE)) {
+            analog_zoom = ml_clamp_f(analog_zoom + recomp_analog_camera_get_y() * 4.5f * time_getDelta(), 0.5f, 3.0f);
         }
     }
 
@@ -628,7 +630,7 @@ RECOMP_PATCH int func_80290E8C(void) {
 RECOMP_PATCH void pfsManager_readData() {
     // @recomp Supress right stick analog input if analog camera movement is allowed. This will prevent
     // any bindings associated to the right analog stick from triggering.
-    recomp_set_right_analog_suppressed(recomp_analog_camera_enabled() && recomp_analog_camera_allowed());
+    recomp_set_right_analog_suppressed(recomp_analog_camera_enabled() && recomp_analog_camera_allowed(TRUE));
 
     func_8024F35C(0);
     if (!pfsManagerContStatus.errno)
