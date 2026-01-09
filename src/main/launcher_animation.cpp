@@ -168,20 +168,18 @@ void banjo::launcher_animation_setup(recompui::LauncherMenu *menu) {
         { 0.6f, 0.0f },
     };
 
-    // Animate Kazooie.
-    launcher_context.kazooie_svg.position_keyframes = {
-       { 0.0f, 1200.0f, 0.0f },
-       { 0.6f, 165.0f, 0.0f },
-       { 0.65f, 150.0f, 0.0f },
-       { 0.8f, 165.0f, 0.0f },
-    };
-
-    launcher_context.kazooie_svg.rotation_keyframes = {
-        { 0.0f, 15.0f },
-        { 0.6f, 0.0f },
-    };
-
+    // Animate Kazooie. Mirror all of Banjo's keyframes except for the scale.
+    launcher_context.kazooie_svg.position_keyframes = launcher_context.banjo_svg.position_keyframes;
     launcher_context.kazooie_svg.scale_keyframes = launcher_context.banjo_svg.scale_keyframes;
+    launcher_context.kazooie_svg.rotation_keyframes = launcher_context.banjo_svg.rotation_keyframes;
+
+    for (auto &kf : launcher_context.kazooie_svg.position_keyframes) {
+        kf.x = -kf.x;
+    }
+
+    for (auto &kf : launcher_context.kazooie_svg.rotation_keyframes) {
+        kf.deg = -kf.deg;
+    }
 }
 
 void banjo::launcher_animation_update(recompui::LauncherMenu *menu) {
