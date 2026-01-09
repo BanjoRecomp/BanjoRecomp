@@ -7,7 +7,6 @@
 #include "recompinput/recompinput.h"
 #include "recompui/recompui.h"
 #include "recompui/renderer.h"
-#include "banjo_render.h"
 #include "banjo_sound.h"
 #include "librecomp/helpers.hpp"
 #include "../patches/input.h"
