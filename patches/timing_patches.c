@@ -204,6 +204,11 @@ void reset_intro_cutscene_timings_state(void) {
     introCutsceneLagIndex = 0;
 }
 
+// Return the current intro cutscene counter.
+u32 get_intro_cutscene_counter(void) {
+    return introCutsceneCounter;
+}
+
 // Check the current map to see if it's a cutscene map that requires timing fixes,
 // and run the relevant function if so.
 void handle_cutscene_timings(void) {
