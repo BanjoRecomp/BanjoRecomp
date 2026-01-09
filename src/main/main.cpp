@@ -12,6 +12,7 @@
 
 #include "ultramodern/ultra64.h"
 #include "ultramodern/ultramodern.hpp"
+#include "ultramodern/config.hpp"
 #define SDL_MAIN_HANDLED
 #ifdef _WIN32
 #include "SDL.h"
@@ -37,7 +38,6 @@
 #include "recompinput/profiles.h"
 #include "banjo_config.h"
 #include "banjo_sound.h"
-#include "banjo_render.h"
 #include "banjo_support.h"
 #include "banjo_game.h"
 #include "recomp_data.h"
@@ -688,7 +688,10 @@ int main(int argc, char** argv) {
     };
 
     ultramodern::renderer::callbacks_t renderer_callbacks{
-        .create_render_context = recompui::renderer::create_render_context,
+        .create_render_context = [](uint8_t* rdram, ultramodern::renderer::WindowHandle window_handle, bool developer_mode) {
+            auto presentation_mode = ultramodern::renderer::PresentationMode::PresentEarly;
+            return recompui::renderer::create_render_context(rdram, window_handle, presentation_mode, developer_mode);
+        },
     };
 
     ultramodern::gfx_callbacks_t gfx_callbacks{

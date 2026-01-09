@@ -3,7 +3,6 @@
 #include "recompui/config.h"
 #include "recompinput/recompinput.h"
 #include "banjo_sound.h"
-#include "banjo_render.h"
 #include "banjo_support.h"
 #include "ultramodern/config.hpp"
 #include "librecomp/files.hpp"
