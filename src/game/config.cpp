@@ -162,13 +162,13 @@ static void set_control_descriptions() {
     recompinput::set_game_input_description(recompinput::GameInput::L, "L Button.");
     recompinput::set_game_input_description(recompinput::GameInput::R, "R Button.");
     recompinput::set_game_input_description(recompinput::GameInput::C_UP, "C-Up Button.");
-    recompinput::set_game_input_description(recompinput::GameInput::C_LEFT, "C-Left Button.");
     recompinput::set_game_input_description(recompinput::GameInput::C_DOWN, "C-Down Button.");
+    recompinput::set_game_input_description(recompinput::GameInput::C_LEFT, "C-Left Button.");
     recompinput::set_game_input_description(recompinput::GameInput::C_RIGHT, "C-Right Button.");
     recompinput::set_game_input_description(recompinput::GameInput::DPAD_UP, "D-Pad Up Button.");
-    recompinput::set_game_input_description(recompinput::GameInput::DPAD_RIGHT, "D-Pad Right Button.");
     recompinput::set_game_input_description(recompinput::GameInput::DPAD_DOWN, "D-Pad Down Button.");
     recompinput::set_game_input_description(recompinput::GameInput::DPAD_LEFT, "D-Pad Left Button.");
+    recompinput::set_game_input_description(recompinput::GameInput::DPAD_RIGHT, "D-Pad Right Button.");
     recompinput::set_game_input_description(recompinput::GameInput::Y_AXIS_POS, "Y-Axis Up Movement.");
     recompinput::set_game_input_description(recompinput::GameInput::Y_AXIS_NEG, "Y-Axis Down Movement.");
     recompinput::set_game_input_description(recompinput::GameInput::X_AXIS_NEG, "X-Axis Left Movement.");
