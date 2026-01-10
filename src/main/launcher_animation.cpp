@@ -230,7 +230,7 @@ void banjo::launcher_animation_setup(recompui::LauncherMenu *menu) {
 }
 
 void banjo::launcher_animation_update(recompui::LauncherMenu *menu) {
-    std::chrono::steady_clock::time_point now = std::chrono::high_resolution_clock::now();
+    std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
     float delta_time = launcher_context.started ? std::chrono::duration_cast<std::chrono::milliseconds>(now - launcher_context.last_update_time).count() / 1000.0f : 0.0f;
     launcher_context.last_update_time = now;
     launcher_context.started = true;
