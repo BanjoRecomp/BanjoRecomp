@@ -155,24 +155,24 @@ static void add_graphics_options(recomp::config::Config &config) {
 }
 
 static void set_control_descriptions() {
-    recompinput::set_game_input_description(recompinput::GameInput::A, "A Button.");
-    recompinput::set_game_input_description(recompinput::GameInput::B, "B Button.");
-    recompinput::set_game_input_description(recompinput::GameInput::Z, "Z Button.");
-    recompinput::set_game_input_description(recompinput::GameInput::START, "Start Button.");
-    recompinput::set_game_input_description(recompinput::GameInput::L, "L Button.");
-    recompinput::set_game_input_description(recompinput::GameInput::R, "R Button.");
-    recompinput::set_game_input_description(recompinput::GameInput::C_UP, "C-Up Button.");
-    recompinput::set_game_input_description(recompinput::GameInput::C_DOWN, "C-Down Button.");
-    recompinput::set_game_input_description(recompinput::GameInput::C_LEFT, "C-Left Button.");
-    recompinput::set_game_input_description(recompinput::GameInput::C_RIGHT, "C-Right Button.");
-    recompinput::set_game_input_description(recompinput::GameInput::DPAD_UP, "D-Pad Up Button.");
-    recompinput::set_game_input_description(recompinput::GameInput::DPAD_DOWN, "D-Pad Down Button.");
-    recompinput::set_game_input_description(recompinput::GameInput::DPAD_LEFT, "D-Pad Left Button.");
-    recompinput::set_game_input_description(recompinput::GameInput::DPAD_RIGHT, "D-Pad Right Button.");
-    recompinput::set_game_input_description(recompinput::GameInput::Y_AXIS_POS, "Y-Axis Up Movement.");
-    recompinput::set_game_input_description(recompinput::GameInput::Y_AXIS_NEG, "Y-Axis Down Movement.");
-    recompinput::set_game_input_description(recompinput::GameInput::X_AXIS_NEG, "X-Axis Left Movement.");
-    recompinput::set_game_input_description(recompinput::GameInput::X_AXIS_POS, "X-Axis Right Movement.");
+    recompinput::set_game_input_description(recompinput::GameInput::Y_AXIS_POS, "Used to control the main character and for steering while flying and swimming. Axis inversion for flying and swimming can be configured in the General tab.");
+    recompinput::set_game_input_description(recompinput::GameInput::Y_AXIS_NEG, "Used to control the main character and for steering while flying and swimming. Axis inversion for flying and swimming can be configured in the General tab.");
+    recompinput::set_game_input_description(recompinput::GameInput::X_AXIS_NEG, "Used to control the main character and for steering while flying and swimming. Axis inversion for flying and swimming can be configured in the General tab.");
+    recompinput::set_game_input_description(recompinput::GameInput::X_AXIS_POS, "Used to control the main character and for steering while flying and swimming. Axis inversion for flying and swimming can be configured in the General tab.");
+    recompinput::set_game_input_description(recompinput::GameInput::A, "Used for jumping and for selecting options in menus. Also used for flying upwards.");
+    recompinput::set_game_input_description(recompinput::GameInput::B, "Used for attacks, which change depending on whether you are stationary, moving, in the air, or crouching.");
+    recompinput::set_game_input_description(recompinput::GameInput::Z, "Used for crouching, which enables A, B and the C-Buttons to perform different actions.");
+    recompinput::set_game_input_description(recompinput::GameInput::L, "Unused. Mods may use it for additional features.");
+    recompinput::set_game_input_description(recompinput::GameInput::R, "On the ground, it's used for centering the camera behind Banjo. In the air and while swimming, holding it allows tighter horizontal turns.");
+    recompinput::set_game_input_description(recompinput::GameInput::START, "Used for pausing and for skipping certain cutscenes.");
+    recompinput::set_game_input_description(recompinput::GameInput::C_UP, "Used to enter first-person mode. When holding Z, it's used to shoot eggs forwards.");
+    recompinput::set_game_input_description(recompinput::GameInput::C_DOWN, "Used to toggle between the different camera zoom levels. When holding Z, it's used to shoot eggs backwards.");
+    recompinput::set_game_input_description(recompinput::GameInput::C_LEFT, "Used to rotate the camera sideways (axis inversion can be configured in the General tab). When holding Z, it's used to enter Talon Trot. It's also used to rotate pieces in the bonus puzzle minigame.");
+    recompinput::set_game_input_description(recompinput::GameInput::C_RIGHT, "Used to rotate the camera sideways (axis inversion can be configured in the General tab). When holding Z, it's used to enter Wonderwing. It's also used to rotate pieces in the bonus puzzle minigame.");
+    recompinput::set_game_input_description(recompinput::GameInput::DPAD_UP, "Unused. Mods may use it for additional features.");
+    recompinput::set_game_input_description(recompinput::GameInput::DPAD_DOWN, "Unused. Mods may use it for additional features.");
+    recompinput::set_game_input_description(recompinput::GameInput::DPAD_LEFT, "Unused. Mods may use it for additional features.");
+    recompinput::set_game_input_description(recompinput::GameInput::DPAD_RIGHT, "Unused. Mods may use it for additional features.");
 }
 
 banjo::CutsceneAspectRatioMode banjo::get_cutscene_aspect_ratio_mode() {
