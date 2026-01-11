@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=BanjoRecompiled
+Type=Application
+Terminal=false
+Icon=BanjoRecompiled
+Exec=BanjoRecompiled
+GenericName=BanjoRecompiled
+Categories=Game;
+

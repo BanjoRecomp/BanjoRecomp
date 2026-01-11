@@ -1,0 +1,64 @@
+name: update-pr-artifacts
+on:
+  workflow_run:
+    workflows: [validate-external, validate-internal]
+    types:
+      - completed
+jobs:
+  update-pr-artifacts:
+    runs-on: ubuntu-latest
+    if: (github.event.workflow_run.event == 'pull_request' || github.event.workflow_run.event == 'pull_request_target') && github.event.workflow_run.conclusion == 'success'
+    name: Update PR Artifacts
+    steps:
+      - name: Get PR Number
+        id: pr-number
+        uses: actions/github-script@v6
+        with:
+          result-encoding: string
+          script: |
+            const { owner, repo } = context.repo;
+            
+            const findPRNumber = async () => {
+              const pulls = await github.rest.pulls.list({ owner, repo });
+              for await (const { data } of github.paginate.iterator(pulls)) {
+                for (const pull of data) {
+                  if (pull.head.sha === '${{ github.event.workflow_run.head_sha }}' && pull.user.id === ${{ github.event.sender.id }}) {
+                    return pull.number;
+                  }
+                }
+              }
+
+              return null;
+            };
+
+            const prNumber = await findPRNumber();
+            if (!prNumber) {
+              core.error(`No matching pull request found`);
+            } else {
+              return prNumber;
+            }
+      - name: Create Artifacts Content
+        id: artifacts-content
+        uses: actions/github-script@v6
+        with:
+          result-encoding: string
+          script: |
+            const artifacts = await github.rest.actions.listWorkflowRunArtifacts({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: context.payload.workflow_run.id,
+            });
+            
+            const nightlyLinks = artifacts.data.artifacts.reduce((acc, item) => {
+              acc += `- [${item.name}.zip](https://nightly.link/${context.repo.owner}/${context.repo.repo}/actions/artifacts/${item.id}.zip)\n`;
+              return acc;
+            }, '### Build Artifacts\n');
+      
+            return nightlyLinks;
+      - name: Update PR Description
+        uses: garrettjoecox/pr-section@3.1.0
+        with:
+            section-name: 'artifacts'
+            repo-token: '${{ secrets.GITHUB_TOKEN }}'
+            pr-number: ${{ steps.pr-number.outputs.result }}
+            section-value: '${{ steps.artifacts-content.outputs.result }}'

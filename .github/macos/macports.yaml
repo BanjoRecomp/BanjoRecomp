@@ -1,0 +1,16 @@
+version: '2.10.6'
+prefix: '/opt/local'
+variants:
+  select:
+    - aqua
+    - metal
+  deselect: x11
+ports:
+  - name: libiconv
+    select: universal
+  - name: libsdl2
+    select: universal
+  - name: freetype
+    select: universal
+  - name: clang-18
+  - name: llvm-18

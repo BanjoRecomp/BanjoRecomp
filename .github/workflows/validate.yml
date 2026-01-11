@@ -1,0 +1,421 @@
+name: validate
+on:
+  workflow_call:
+    inputs:
+      SDL2_VERSION:
+        type: string
+        required: false
+        default: '2.30.3'
+      N64RECOMP_COMMIT:
+        type: string
+        required: false
+        default: '2b6f05688de2abc7d86da5b4a89b84c2c6acbabe'
+    secrets:
+      SECRET_NAME:
+        required: true
+      SECRET_TOKEN:
+        required: true
+      SECRET_PAT:
+        required: true
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  build-linux:
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        type: [ Debug, Release ]
+        os: [ ubuntu-22.04 ]
+    name: ubuntu-22.04 (x64, ${{ matrix.type }}, Native)
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.ref }}
+          submodules: recursive
+          token: ${{ secrets.SECRET_PAT }}
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ matrix.os }}-banjo-ccache-${{ matrix.type }}-x64-${{ inputs.N64RECOMP_COMMIT }}
+      - name: Get extra dependencies
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ secrets.SECRET_NAME }}
+          token: ${{ secrets.SECRET_TOKEN }}
+          path: extra
+      - name: Install Linux Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build libgtk-3-dev lld llvm clang-15 libfuse2
+          
+          # Install SDL2
+          echo ::group::install SDL2
+
+          # Enable ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+
+          wget https://github.com/libsdl-org/SDL/releases/download/release-${{ inputs.SDL2_VERSION }}/SDL2-${{ inputs.SDL2_VERSION }}.tar.gz
+          tar -xzf SDL2-${{ inputs.SDL2_VERSION }}.tar.gz
+          cd SDL2-${{ inputs.SDL2_VERSION }}
+          ./configure
+          make -j 10
+          sudo make install
+          sudo cp -av /usr/local/lib/libSDL* /lib/x86_64-linux-gnu/
+          echo ::endgroup::
+      - name: Build N64Recomp & RSPRecomp
+        run: |
+          git clone https://github.com/Mr-Wiseguy/N64Recomp.git --recurse-submodules N64RecompSource
+          cd N64RecompSource
+          git checkout ${{ inputs.N64RECOMP_COMMIT }}
+          git submodule update --init --recursive
+          
+          # enable ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          
+          # Build N64Recomp & RSPRecomp
+          cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER=g++-11 -DCMAKE_C_COMPILER=gcc-11 -DCMAKE_MAKE_PROGRAM=ninja -G Ninja -S . -B cmake-build
+          cmake --build cmake-build --config Release --target N64RecompCLI -j $(nproc)
+          cmake --build cmake-build --config Release --target RSPRecomp -j $(nproc)
+          
+          # Copy N64Recomp & RSPRecomp to root directory
+          cp cmake-build/N64Recomp ..
+          cp cmake-build/RSPRecomp ..
+      - name: Run N64Recomp & RSPRecomp
+        run: |
+          # Copy extra dependencies to root directory
+          cp extra/* .
+          
+          ./N64Recomp banjo.us.rev0.toml
+          ./RSPRecomp n_aspMain.us.rev0.toml
+      - name: Build BanjoRecomp
+        run: |-
+          # enable ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          
+          cmake -DCMAKE_BUILD_TYPE=${{ matrix.type }} -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER=clang++-15 -DCMAKE_C_COMPILER=clang-15 -DCMAKE_MAKE_PROGRAM=ninja -G Ninja -S . -B cmake-build -DPATCHES_C_COMPILER=clang-15 -DPATCHES_LD=ld.lld-15
+          cmake --build cmake-build --config ${{ matrix.type }} --target BanjoRecompiled -j $(nproc)
+      - name: Prepare Archive
+        run: |
+          mv cmake-build/BanjoRecompiled BanjoRecompiled
+          rm -rf assets/scss
+          tar -czf BanjoRecompiled.tar.gz BanjoRecompiled assets/ recompcontrollerdb.txt
+      - name: Archive BanjoRecomp
+        uses: actions/upload-artifact@v4
+        with:
+          name: BanjoRecompiled-${{ runner.os }}-X64-${{ matrix.type }}
+          path: BanjoRecompiled.tar.gz
+#  build-linux-arm64:
+#    runs-on: ubuntu-22.04-arm
+#    strategy:
+#      matrix:
+#        type: [ Debug, Release ]
+#        os: [ ubuntu-22.04 ]
+#    name: ${{ matrix.os }} (arm64, ${{ matrix.type }}, Native)
+#    steps:
+#      - name: Checkout
+#        uses: actions/checkout@v4
+#        with:
+#          ref: ${{ github.event.pull_request.head.sha || github.ref }}
+#          submodules: recursive
+#          token: ${{ secrets.SECRET_PAT }}
+#      - name: ccache
+#        uses: hendrikmuhs/ccache-action@v1.2
+#        with:
+#          key: ${{ matrix.os }}-banjo-ccache-${{ matrix.type }}-arm64-${{ inputs.N64RECOMP_COMMIT }}
+#      - name: Install Linux Dependencies
+#        run: |
+#          sudo apt-get update
+#          sudo apt-get install -y ninja-build libgtk-3-dev lld llvm clang-15 libfuse2
+#          
+#          # Install SDL2
+#          echo ::group::install SDL2
+#
+#          # Enable ccache
+#          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+#
+#          wget https://github.com/libsdl-org/SDL/releases/download/release-${{ inputs.SDL2_VERSION }}/SDL2-${{ inputs.SDL2_VERSION }}.tar.gz
+#          tar -xzf SDL2-${{ inputs.SDL2_VERSION }}.tar.gz
+#          cd SDL2-${{ inputs.SDL2_VERSION }}
+#          ./configure
+#          make -j 10
+#          sudo make install
+#          sudo cp -av /usr/local/lib/libSDL* /lib/aarch64-linux-gnu/
+#          echo ::endgroup::
+#      - name: Get extra dependencies
+#        uses: actions/checkout@v4
+#        with:
+#          repository: ${{ secrets.SECRET_NAME }}
+#          token: ${{ secrets.SECRET_TOKEN }}
+#          path: extra
+#      - name: Build N64Recomp & RSPRecomp
+#        run: |
+#          git clone https://github.com/Mr-Wiseguy/N64Recomp.git --recurse-submodules N64RecompSource
+#          cd N64RecompSource
+#          git checkout ${{ inputs.N64RECOMP_COMMIT }}
+#          git submodule update --init --recursive
+#          
+#          # enable ccache
+#          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+#          
+#          # Build N64Recomp & RSPRecomp
+#          cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER=g++-11 -DCMAKE_C_COMPILER=gcc-11 -DCMAKE_MAKE_PROGRAM=ninja -G Ninja -S . -B cmake-build
+#          cmake --build cmake-build --config Release --target N64RecompCLI -j $(nproc)
+#          cmake --build cmake-build --config Release --target RSPRecomp -j $(nproc)
+#          
+#          # Copy N64Recomp & RSPRecomp to root directory
+#          cp cmake-build/N64Recomp ..
+#          cp cmake-build/RSPRecomp ..
+#      - name: Run N64Recomp & RSPRecomp
+#        run: |
+#          # Copy extra dependencies to root directory
+#          cp extra/* .
+#          
+#          ./N64Recomp banjo.us.rev0.toml
+#          ./RSPRecomp n_aspMain.us.rev0.toml
+#      - name: Build BanjoRecomp
+#        run: |-
+#          # enable ccache
+#          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+#          
+#          cmake -DCMAKE_BUILD_TYPE=${{ matrix.type }} -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER=clang++-15 -DCMAKE_C_COMPILER=clang-15 -DCMAKE_MAKE_PROGRAM=ninja -G Ninja -S . -B cmake-build
+#          cmake --build cmake-build --config ${{ matrix.type }} --target BanjoRecompiled -j $(nproc)
+#      - name: Prepare Archive
+#        run: |
+#          mv cmake-build/BanjoRecompiled BanjoRecompiled
+#          rm -rf assets/scss
+#          tar -czf BanjoRecompiled.tar.gz BanjoRecompiled assets/ recompcontrollerdb.txt
+#      - name: Archive BanjoRecomp
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: BanjoRecompiled-${{ runner.os }}-ARM64-${{ matrix.type }}
+#          path: BanjoRecompiled.tar.gz
+  build-linux-flatpak:
+    runs-on: ubuntu-latest
+    env:
+      FLATPAK_ID: io.github.banjorecomp.banjorecomp
+      FREEDESKTOP_VERSION: 25.08
+      LLVM_VERSION: 20
+    strategy:
+      matrix:
+        type: [ Debug, Release ]
+        os: [ ubuntu-latest ]
+    name: ${{ matrix.os }} (x64, ${{ matrix.type }}, Flatpak)
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.ref }}
+          submodules: recursive
+          token: ${{ secrets.SECRET_PAT }}
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ matrix.os }}-banjo-ccache-${{ matrix.type }}-x64-${{ inputs.N64RECOMP_COMMIT }}
+      - name: Install Linux Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y flatpak-builder ccache lld
+
+      - name: Get extra dependencies
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ secrets.SECRET_NAME }}
+          token: ${{ secrets.SECRET_TOKEN }}
+          path: extra
+
+      - name: Prepare Flatpak
+        run: |
+          flatpak --user remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+          flatpak --user install -y flathub org.freedesktop.Sdk//${{ env.FREEDESKTOP_VERSION }}
+          flatpak --user install -y flathub org.freedesktop.Sdk.Extension.llvm${{ env.LLVM_VERSION }}//${{ env.FREEDESKTOP_VERSION }}
+
+      - name: Build BanjoRecomp
+        run: |-
+          cp extra/* .
+          export CCACHE_DIR=/tmp/ccache
+          git config --global protocol.file.allow always
+          make -C patches CC=clang LD=ld.lld
+          flatpak-builder --user --force-clean --install-deps-from=flathub --repo=repo --ccache builddir ./flatpak/${{ env.FLATPAK_ID }}.json
+          flatpak build-bundle repo ./${{ env.FLATPAK_ID }}.flatpak ${{ env.FLATPAK_ID }} --runtime-repo=https://flathub.org/repo/flathub.flatpakrepo
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: BanjoRecompiled-Flatpak-X64-${{ matrix.type }}
+          path: ./${{ env.FLATPAK_ID }}.flatpak
+  build-windows:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        type: [ Debug, RelWithDebInfo ]
+    name: windows (${{ matrix.type }})
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.ref }}
+          submodules: recursive
+          token: ${{ secrets.SECRET_PAT }}
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ runner.os }}-banjo-ccache-${{ matrix.type }}
+      - name: Install Windows Dependencies
+        run: |
+          choco install ninja
+          Remove-Item -Path "C:\ProgramData\Chocolatey\bin\ccache.exe" -Force -ErrorAction SilentlyContinue
+      - name: Download portable LLVM
+        run: |
+          $ProgressPreference = 'SilentlyContinue'
+          Invoke-WebRequest -Uri "https://github.com/llvm/llvm-project/releases/download/llvmorg-19.1.3/LLVM-19.1.3-Windows-X64.tar.xz" -OutFile "LLVM.tar.xz"
+          New-Item -ItemType Directory -Path portable-llvm > $null
+          7z x LLVM.tar.xz
+          7z x LLVM.tar -oportable-llvm
+      - name: Configure Developer Command Prompt
+        uses: ilammy/msvc-dev-cmd@v1
+      - name: Get extra dependencies
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ secrets.SECRET_NAME }}
+          token: ${{ secrets.SECRET_TOKEN }}
+          path: extra
+      - name: Build N64Recomp & RSPRecomp
+        run: |
+          git clone https://github.com/Mr-Wiseguy/N64Recomp.git --recurse-submodules N64RecompSource
+          cd N64RecompSource
+          git checkout ${{ inputs.N64RECOMP_COMMIT }}
+          git submodule update --init --recursive
+
+          # enable ccache
+          set $env:PATH="$env:USERPROFILE/.cargo/bin;$env:PATH"
+          $cpuCores = (Get-CimInstance -ClassName Win32_Processor).NumberOfLogicalProcessors
+
+          cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_MAKE_PROGRAM=ninja -G Ninja -S . -B cmake-build
+          cmake --build cmake-build --config Release --target N64RecompCLI -j $cpuCores
+          cmake --build cmake-build --config Release --target RSPRecomp -j $cpuCores
+
+          # Copy N64Recomp & RSPRecomp to root directory
+          cp cmake-build/N64Recomp.exe ..
+          cp cmake-build/RSPRecomp.exe ..
+      - name: Run N64Recomp & RSPRecomp
+        run: |
+          # Copy extra dependencies to root directory
+          cp extra/* .
+
+          ./N64Recomp banjo.us.rev0.toml
+          ./RSPRecomp n_aspMain.us.rev0.toml
+      - name: Build BanjoRecomp
+        run: |-
+          # enable ccache
+          set $env:PATH="$env:USERPROFILE/.cargo/bin;$env:PATH"
+          $cpuCores = (Get-CimInstance -ClassName Win32_Processor).NumberOfLogicalProcessors
+
+          # remove LLVM from PATH so it doesn't overshadow the one provided by VS
+          $env:PATH = ($env:PATH -split ';' | Where-Object { $_ -ne 'C:\Program Files\LLVM\bin' }) -join ';'
+
+          cmake -DCMAKE_BUILD_TYPE=${{ matrix.type }} -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER=clang-cl -DCMAKE_C_COMPILER=clang-cl -DCMAKE_MAKE_PROGRAM=ninja -DPATCHES_C_COMPILER="..\portable-llvm\LLVM-19.1.3-Windows-X64\bin\clang" -DPATCHES_LD="..\portable-llvm\LLVM-19.1.3-Windows-X64\bin\ld.lld" -G Ninja -S . -B cmake-build -DCMAKE_CXX_FLAGS="-Xclang -fexceptions -Xclang -fcxx-exceptions"
+          cmake --build cmake-build --config ${{ matrix.type }} --target BanjoRecompiled -j $cpuCores
+        env:
+          SDL2_VERSION: ${{ inputs.SDL2_VERSION }}
+      - name: Prepare Archive
+        run: |
+          Move-Item -Path "cmake-build/BanjoRecompiled.exe" -Destination "BanjoRecompiled.exe"
+          Move-Item -Path "cmake-build/dxcompiler.dll" -Destination "dxcompiler.dll"
+          Move-Item -Path "cmake-build/dxil.dll" -Destination "dxil.dll"
+          Move-Item -Path "cmake-build/SDL2.dll" -Destination "SDL2.dll"
+          Move-Item -Path "cmake-build/BanjoRecompiled.pdb" -Destination "BanjoRecompiled.pdb"
+          Remove-Item -Path "assets/scss" -Recurse -Force
+      - name: Archive BanjoRecomp
+        uses: actions/upload-artifact@v4
+        with:
+          name: BanjoRecompiled-${{ runner.os }}-${{ matrix.type }}
+          path: |
+            BanjoRecompiled.exe
+            dxcompiler.dll
+            dxil.dll
+            SDL2.dll
+            assets/
+            recompcontrollerdb.txt
+      - name: Archive Debug Files
+        uses: actions/upload-artifact@v4
+        with:
+          name: BanjoRecompiled-PDB-${{ matrix.type }}
+          path: |
+            BanjoRecompiled.pdb
+#  build-macos:
+#    runs-on: macos-14
+#    strategy:
+#      matrix:
+#        type: [ Debug, Release ]
+#    name: macos (x64, arm64, ${{ matrix.type }})
+#    steps:
+#      - name: Checkout
+#        uses: actions/checkout@v4
+#        with:
+#          ref: ${{ github.event.pull_request.head.sha || github.ref }}
+#          submodules: recursive
+#          token: ${{ secrets.SECRET_PAT }}
+#      - name: ccache
+#        uses: hendrikmuhs/ccache-action@v1.2
+#        with:
+#          key: ${{ runner.os }}-banjo-ccache-${{ matrix.type }}
+#      - name: Homebrew Setup
+#        run: |
+#          brew install ninja
+#          brew uninstall --ignore-dependencies libpng freetype
+#      - name: MacPorts Setup
+#        uses: melusina-org/setup-macports@v1
+#        id: 'macports'
+#        with:
+#          parameters: '.github/macos/macports.yaml'
+#      - name: Get extra dependencies
+#        uses: actions/checkout@v4
+#        with:
+#          repository: ${{ secrets.SECRET_NAME }}
+#          token: ${{ secrets.SECRET_TOKEN }}
+#          path: extra
+#      - name: Build N64Recomp & RSPRecomp
+#        run: |
+#          git clone https://github.com/Mr-Wiseguy/N64Recomp.git --recurse-submodules N64RecompSource
+#          cd N64RecompSource
+#          git checkout ${{ inputs.N64RECOMP_COMMIT }}
+#          git submodule update --init --recursive
+#          
+#          # enable ccache
+#          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+#          
+#          # Build N64Recomp & RSPRecomp
+#          cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_MAKE_PROGRAM=ninja -G Ninja -S . -B cmake-build
+#          cmake --build cmake-build --config Release --target N64Recomp -j $(sysctl -n hw.ncpu)
+#          cmake --build cmake-build --config Release --target RSPRecomp -j $(sysctl -n hw.ncpu)
+#          
+#          # Copy N64Recomp & RSPRecomp to root directory
+#          cp cmake-build/N64Recomp ..
+#          cp cmake-build/RSPRecomp ..
+#      - name: Run N64Recomp & RSPRecomp
+#        run: |
+#          # Copy extra dependencies to root directory
+#          cp extra/* .
+#          
+#          ./N64Recomp banjo.us.rev0.toml
+#          ./RSPRecomp n_aspMain.us.rev0.toml
+#      - name: Build BanjoRecomp
+#        run: |-
+#          # enable ccache
+#          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+#          
+#          cmake -DCMAKE_BUILD_TYPE=${{ matrix.type }} -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_MAKE_PROGRAM=ninja -G Ninja -S . -B cmake-build \
+#          -DPATCHES_LD=/opt/local/bin/ld.lld-mp-18 -DCMAKE_AR=/opt/local/bin/llvm-ar-mp-18 -DPATCHES_C_COMPILER=/opt/local/bin/clang-mp-18 \
+#          -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64"
+#          cmake --build cmake-build --config ${{ matrix.type }} --target BanjoRecompiled -j $(sysctl -n hw.ncpu)
+#      - name: Prepare Archive
+#        run: |
+#          mv cmake-build/BanjoRecompiled.app BanjoRecompiled.app
+#          zip -r -y BanjoRecompiled.zip BanjoRecompiled.app
+#      - name: Archive BanjoRecomp
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: BanjoRecompiled-${{ runner.os }}-${{ matrix.type }}
+#          path: BanjoRecompiled.zip
