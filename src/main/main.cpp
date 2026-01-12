@@ -633,9 +633,6 @@ int main(int argc, char** argv) {
     // Set up console output to accept UTF-8 on windows
     SetConsoleOutputCP(CP_UTF8);
 
-    // Initialize native file dialogs.
-    NFD_Init();
-
     // Change to a font that supports Japanese characters
     CONSOLE_FONT_INFOEX cfi;
     cfi.cbSize = sizeof cfi;
@@ -660,6 +657,9 @@ int main(int argc, char** argv) {
     std::error_code ec;
     std::filesystem::current_path("/var/data", ec);
 #endif
+
+    // Initialize native file dialogs.
+    NFD_Init();
 
     // Initialize SDL audio and set the output frequency.
     SDL_InitSubSystem(SDL_INIT_AUDIO);

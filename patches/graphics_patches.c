@@ -114,6 +114,9 @@ RECOMP_PATCH void game_draw(s32 arg0){
     // @recomp Turn off nearclipping (i.e. turn on depth clamp) to prevent the camera from clipping through lots of geometry in ultrawide aspect ratios.
     gEXSetNearClipping(gfx++, FALSE);
 
+    // @recomp Set the global wrapping point for texture coordinate interpolation to 256.
+    gEXSetTexcoordWrapPoint(gfx++, 256 * 4, 256 * 4);
+
     func_802E39D0(&gfx, &mtx, &vtx, getActiveFramebuffer(), arg0);
 
     // @recomp Check for graphics stack overflow

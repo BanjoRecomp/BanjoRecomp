@@ -101,6 +101,14 @@ RECOMP_PATCH Actor *actor_draw(ActorMarker *marker, Gfx **gfx, Mtx **mtx, Vtx **
             cur_drawn_model_skip_interpolation = TRUE;
         }
     }
+    // @recomp Check for the hut model.
+    else if (marker->modelId == ASSET_7D7_MODEL_MM_HUT) {
+        // @recomp Check if the hut is destroyed (HUT_STATE_2_DESTROYED).
+        if (this->state == 2) {
+            cur_drawn_model_skip_interpolation = TRUE;
+        }
+    }
+
 
     modelRender_preDraw((GenFunction_1)actor_predrawMethod, (s32)this);
     modelRender_postDraw((GenFunction_1)actor_postdrawMethod, (s32)marker);
