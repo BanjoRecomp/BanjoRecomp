@@ -24,7 +24,7 @@ struct AnimationData {
 };
 
 struct AnimatedSvg {
-    recompui::Svg *svg = nullptr;
+    recompui::Element *svg = nullptr;
     std::vector<Keyframe2D> position_keyframes;
     std::vector<Keyframe2D> scale_keyframes;
     std::vector<KeyframeRot> rotation_keyframes;
@@ -41,7 +41,10 @@ struct LauncherContext {
     AnimatedSvg jiggy_color_svg;
     AnimatedSvg jiggy_shine_svg;
     AnimatedSvg jiggy_hole_svg;
+    recompui::Element *wrapper;
+    recompui::Element *title;
     std::chrono::steady_clock::time_point last_update_time;
+    std::chrono::steady_clock::time_point start_time;
     bool started = false;
 } launcher_context;
 
@@ -125,17 +128,32 @@ void update_animated_svg(AnimatedSvg &animated_svg, float delta_time, float bg_w
     animated_svg.svg->set_rotation(rotation_degrees);
 }
 
-void banjo::launcher_animation_setup(recompui::LauncherMenu *menu) {
+const float jiggy_scale_anim_start = 0.4f;
+const float jiggy_scale_anim_length = 0.75f;
+const float jiggy_scale_anim_end = jiggy_scale_anim_start + jiggy_scale_anim_length;
+const float jiggy_move_over_start = jiggy_scale_anim_end + 0.5f;
+const float jiggy_move_over_length = 0.75f;
+const float jiggy_move_over_end = jiggy_move_over_start + jiggy_move_over_length;
+const float jiggy_shine_start = jiggy_move_over_end - 0.5f;
+const float jiggy_shine_length = 0.8f;
+
+void banjo::launcher_animation_setup(recompui::LauncherMenu *menu, recompui::Element *title) {
     auto context = recompui::get_current_context();
     recompui::Element *background_container = menu->get_background_container();
     background_container->set_background_color({ 0x1A, 0x56, 0x98, 0xFF });
 
+    launcher_context.wrapper = context.create_element<recompui::Element>(background_container, 0);
+    launcher_context.wrapper->set_position(recompui::Position::Absolute);
+    launcher_context.wrapper->set_width(100, recompui::Unit::Percent);
+    launcher_context.wrapper->set_height(100, recompui::Unit::Percent);
+    launcher_context.wrapper->set_top(0);
+
     // The creation order of these is important.
-    launcher_context.jiggy_color_svg = create_animated_svg(context, background_container, "JiggyColor.svg", 1054.0f, 1044.0f);
-    launcher_context.jiggy_shine_svg = create_animated_svg(context, background_container, "JiggyShine.svg", 219.0f, 1080.0f);
-    launcher_context.jiggy_hole_svg = create_animated_svg(context, background_container, "JiggyHole.svg", 2180.0f, 2160.0f);
-    launcher_context.banjo_svg = create_animated_svg(context, background_container, "Banjo.svg", 649.0f, 622.0f);
-    launcher_context.kazooie_svg = create_animated_svg(context, background_container, "Kazooie.svg", 626.0f, 774.0f);
+    launcher_context.jiggy_color_svg = create_animated_svg(context, launcher_context.wrapper, "JiggyColor.svg", 1054.0f, 1044.0f);
+    launcher_context.jiggy_shine_svg = create_animated_svg(context, launcher_context.wrapper, "JiggyShine.svg", 219.0f, 1080.0f);
+    launcher_context.jiggy_hole_svg = create_animated_svg(context, launcher_context.wrapper, "JiggyHole.svg", 2180.0f, 2160.0f);
+    launcher_context.banjo_svg = create_animated_svg(context, launcher_context.wrapper, "Banjo.svg", 649.0f, 622.0f);
+    launcher_context.kazooie_svg = create_animated_svg(context, launcher_context.wrapper, "Kazooie.svg", 626.0f, 774.0f);
 
     // Animate the jiggy hole.
     launcher_context.jiggy_hole_svg.position_keyframes = {
@@ -147,14 +165,14 @@ void banjo::launcher_animation_setup(recompui::LauncherMenu *menu) {
 
     launcher_context.jiggy_hole_svg.scale_keyframes = {
         { 0.0f, 0.0f, 0.0f },
-        { 1.0f, 0.0f, 0.0f },
-        { 2.2f, 1.0f, 1.0f },
+        { jiggy_scale_anim_start + 0.0f, 0.0f, 0.0f },
+        { jiggy_scale_anim_start + jiggy_scale_anim_length, 1.0f, 1.0f },
     };
 
     launcher_context.jiggy_hole_svg.rotation_keyframes = {
         { 0.0f, -45.0f },
-        { 1.0f, -45.0f },
-        { 2.2f, 0.0f },
+        { jiggy_scale_anim_start + 0.0f, -45.0f },
+        { jiggy_scale_anim_start + jiggy_scale_anim_length, 0.0f },
     };
 
     launcher_context.jiggy_hole_svg.position_animation.loop_keyframe_index = 1;
@@ -173,14 +191,14 @@ void banjo::launcher_animation_setup(recompui::LauncherMenu *menu) {
     // Animate the jiggy shine.
     launcher_context.jiggy_shine_svg.position_keyframes = {
         { 0.0f, 700.0f, 0.0f },
-        { 2.0f, 700.0f, 0.0f },
-        { 3.0f, -700.0f, 0.0f },
+        { jiggy_shine_start, 700.0f, 0.0f },
+        { jiggy_shine_start + jiggy_shine_length, -700.0f, 0.0f },
     };
 
     launcher_context.jiggy_shine_svg.scale_keyframes = {
         { 0.0f, 0.0f, 0.0f },
-        { 2.0f, 0.0f, 0.0f },
-        { 2.0f, 1.0f, 1.0f },
+        { jiggy_shine_start, 0.0f, 0.0f },
+        { jiggy_shine_start + 0.01f, 1.0f, 1.0f },
     };
 
     launcher_context.jiggy_shine_svg.position_animation.interpolation_method = InterpolationMethod::Smootherstep;
@@ -227,6 +245,10 @@ void banjo::launcher_animation_setup(recompui::LauncherMenu *menu) {
     for (auto &kf : launcher_context.kazooie_svg.rotation_keyframes) {
         kf.deg = -kf.deg;
     }
+
+    launcher_context.start_time = std::chrono::steady_clock::now();
+
+    launcher_context.title = title;
 }
 
 void banjo::launcher_animation_update(recompui::LauncherMenu *menu) {
@@ -244,4 +266,43 @@ void banjo::launcher_animation_update(recompui::LauncherMenu *menu) {
     update_animated_svg(launcher_context.jiggy_color_svg, delta_time, bg_width, bg_height);
     update_animated_svg(launcher_context.jiggy_shine_svg, delta_time, bg_width, bg_height);
     update_animated_svg(launcher_context.jiggy_hole_svg, delta_time, bg_width, bg_height);
+
+    auto elapsed = now - launcher_context.start_time;
+    float elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count();
+    float from_ms = jiggy_move_over_start * 1000.0f;
+    float to_ms = jiggy_move_over_end * 1000.0f;
+    if (elapsed_ms > from_ms && elapsed_ms < to_ms) {
+        float now_ms = elapsed_ms;
+        float t = (now_ms - from_ms) / (to_ms - from_ms);
+        float x_translation = interpolate_value(0, 1440 * -0.2f, t, InterpolationMethod::Smootherstep);
+        launcher_context.wrapper->set_translate_2D(x_translation, 0, recompui::Unit::Dp);
+        float y_translation = interpolate_value(0, launcher_options_top_offset, t, InterpolationMethod::Smootherstep);
+        launcher_context.wrapper->set_top(y_translation);
+        float scale = interpolate_value(1, 0.666f, t, InterpolationMethod::Smootherstep);
+        launcher_context.wrapper->set_scale_2D(scale, scale);
+
+        float game_option_menu_opacity = interpolate_value(0, 1.0f, t, InterpolationMethod::Smootherstep);
+        for (auto option : menu->get_game_options_menu()->get_options()) {
+            option->set_opacity(game_option_menu_opacity);
+        }
+        launcher_context.title->set_opacity(game_option_menu_opacity);
+
+        float game_option_menu_right = interpolate_value(
+            launcher_options_right_position_start, launcher_options_right_position_end, t, InterpolationMethod::Smootherstep);
+        menu->get_game_options_menu()->set_right(game_option_menu_right);
+    }
+
+    if (elapsed_ms <= from_ms) {
+        for (auto option : menu->get_game_options_menu()->get_options()) {
+            option->set_opacity(0);
+        }
+        launcher_context.title->set_opacity(0.0f);
+        menu->get_game_options_menu()->set_right(launcher_options_right_position_start);
+    } else if (elapsed_ms >= to_ms) {
+        for (auto option : menu->get_game_options_menu()->get_options()) {
+            option->set_opacity(1.0f);
+        }
+        launcher_context.title->set_opacity(1.0f);
+        menu->get_game_options_menu()->set_right(launcher_options_right_position_end);
+    }
 }

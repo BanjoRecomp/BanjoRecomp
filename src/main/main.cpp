@@ -152,7 +152,7 @@ ultramodern::renderer::WindowHandle create_window(ultramodern::gfx_callbacks_t::
     flags |= SDL_WINDOW_VULKAN;
 #endif
 
-    window = SDL_CreateWindow("Banjo: Recompiled", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1600, 960,  flags);
+    window = SDL_CreateWindow("Banjo: Recompiled", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1600, 900,  flags);
 
     if (window == nullptr) {
         exit_error("Failed to create window: %s\n", SDL_GetError());
@@ -547,9 +547,43 @@ void on_launcher_init(recompui::LauncherMenu *menu) {
         supported_games[0].mod_game_id,
         recompui::GameOptionsMenuLayout::Center
     );
+
     game_options_menu->add_default_options();
-    
-    banjo::launcher_animation_setup(menu);
+
+    for (auto option : game_options_menu->get_options()) {
+        option->set_justify_content(recompui::JustifyContent::FlexEnd);
+        option->set_border_radius(0);
+
+        std::vector<recompui::Style *> hover_focus = {&option->hover_style, &option->focus_style};
+        for (auto style : hover_focus) {
+            style->set_background_color(recompui::theme::color::Transparent);
+        }
+    }
+
+    recompui::Element *menu_container = menu->get_menu_container();
+    menu_container->set_width(1440);
+    menu_container->unset_left();
+    menu_container->set_top(banjo::launcher_options_top_offset);
+    menu_container->set_bottom(-banjo::launcher_options_top_offset);
+    menu_container->set_right(50, recompui::Unit::Percent);
+    menu_container->set_translate_2D(50.0f, 0.0f, recompui::Unit::Percent);
+
+    game_options_menu->unset_left();
+    game_options_menu->set_bottom(50.0f, recompui::Unit::Percent);
+    game_options_menu->set_translate_2D(0.0f, 50.0f, recompui::Unit::Percent);
+    game_options_menu->set_right(banjo::launcher_options_right_position_start);
+
+    menu->remove_default_title();
+
+    recompui::ContextId context = recompui::get_current_context();
+    recompui::Label* title_label = context.create_element<recompui::Label>(menu, "Banjo: Recompiled", recompui::theme::Typography::Header1);
+    title_label->set_position(recompui::Position::Absolute);
+    title_label->set_top(banjo::launcher_options_title_offset);
+    title_label->set_right(50.0f, recompui::Unit::Percent);
+    title_label->set_translate_2D(50.0f, 0.0f, recompui::Unit::Percent);
+    title_label->set_color(recompui::theme::color::White);
+
+    banjo::launcher_animation_setup(menu, title_label);
 }
 
 #define REGISTER_FUNC(name) recomp::overlays::register_base_export(#name, name)
