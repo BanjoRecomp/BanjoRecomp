@@ -443,9 +443,12 @@ RECOMP_PATCH void func_803162B4(GcZoombox *this) {
         cur_pushed_text_transform_origin = G_EX_ORIGIN_LEFT;
     }
 
-    // FIXME: Text inside the zoombox can be tagged but suffers from interpolation errors when scrolling
-    // to the next line. This can probably be fixed by assigning IDs in a more clever way.
-    //cur_pushed_text_transform_id = ZOOMBOX_PRINT_TRANSFORM_ID_START + this->portrait_id * ZOOMBOX_PRINT_TRANSFORM_ID_COUNT;
+    // @recomp Only push the transform ID while the text is actively scrolling or has finished scrolling. It is
+    // necessary to switch the IDs around when it has finished scrolling so the previous text finishes interpolation
+    // and doesn't skip ahead for one frame.
+    if (this->state == 1 || this->state == 4) {
+        cur_pushed_text_transform_id = ZOOMBOX_PRINT_TRANSFORM_ID_START + (this->portrait_id * 2 + (this->state == 1)) * ZOOMBOX_PRINT_TRANSFORM_ID_COUNT;
+    }
 
     func_802F7B90(this->unk168, this->unk168, this->unk168);
     if (this->unk1A4_30) {
@@ -459,6 +462,13 @@ RECOMP_PATCH void func_803162B4(GcZoombox *this) {
             print_dialog(this->unk16A, this->unk16C, this->unk0);
         }
     }
+
+    // @recomp Only interpolate the second line of text while scrolling. The second line isn't moving nor is visible
+    // after finishing scrolling.
+    if (this->state == 4) {
+        cur_pushed_text_transform_id = ZOOMBOX_PRINT_TRANSFORM_ID_START + (this->portrait_id * 2 + 1) * ZOOMBOX_PRINT_TRANSFORM_ID_COUNT;
+    }
+
     if (this->unk1A4_29) {
         if (this->unk1A4_15) {
             print_bold_spaced(this->unk16A, this->unk16E, this->unk30);
@@ -473,6 +483,6 @@ RECOMP_PATCH void func_803162B4(GcZoombox *this) {
         cur_pushed_text_transform_origin = G_EX_ORIGIN_NONE;
     }
 
-    // @recomp If IDs were assigned to the zoombox's text, it would get cleared here.
-    //cur_pushed_text_transform_id = 0;
+    // @recomp Clear ID assigned to the text.
+    cur_pushed_text_transform_id = 0;
 }
