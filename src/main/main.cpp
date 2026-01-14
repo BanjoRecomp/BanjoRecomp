@@ -513,7 +513,7 @@ void release_preload(PreloadContext& context) {
     context = {};
 }
 
-#else
+#elif defined(__linux__) || defined(APPLE)
 
 struct PreloadContext {
 
@@ -523,6 +523,15 @@ bool preload_executable(PreloadContext& context) {
     // Preloading isn't implemented on Linux and MacOS, but it's also unnecessary there, as the OS already preloads the executable.
     // Therefore, we can just consider the executable to be preloaded.
     return true;
+}
+
+void release_preload(PreloadContext& context) {
+}
+
+#else
+
+bool preload_executable(PreloadContext& context) {
+    return false;
 }
 
 void release_preload(PreloadContext& context) {
