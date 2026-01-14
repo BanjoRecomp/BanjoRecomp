@@ -154,6 +154,49 @@ static void add_graphics_options(recomp::config::Config &config) {
     );    
 }
 
+static void set_control_defaults() {
+    using namespace recompinput;
+
+    // Left shoulder -> C Down | Backwards eggs / zoom out
+    set_default_mapping_for_controller(
+        GameInput::C_DOWN,
+        { 
+            InputField::controller_analog(SDL_GameControllerAxis::SDL_CONTROLLER_AXIS_RIGHTY, true),
+            InputField::controller_digital(SDL_GameControllerButton::SDL_CONTROLLER_BUTTON_LEFTSHOULDER)
+        }
+    );
+
+    // Right shoulder -> C Up | Forwards eggs / first person
+    set_default_mapping_for_controller(
+        GameInput::C_UP,
+        { 
+            InputField::controller_analog(SDL_GameControllerAxis::SDL_CONTROLLER_AXIS_RIGHTY, false),
+            InputField::controller_digital(SDL_GameControllerButton::SDL_CONTROLLER_BUTTON_RIGHTSHOULDER)
+        }
+    );
+
+    // North button -> C Left | Talon trot / camera left
+    set_default_mapping_for_controller(
+        GameInput::C_LEFT,
+        { 
+            InputField::controller_analog(SDL_GameControllerAxis::SDL_CONTROLLER_AXIS_RIGHTX, false),
+            InputField::controller_digital(SDL_CONTROLLER_BUTTON_NORTH)
+        }
+    );
+
+    // East button -> C Right | Wonderwing / camera right
+    set_default_mapping_for_controller(
+        GameInput::C_RIGHT,
+        { 
+            InputField::controller_analog(SDL_GameControllerAxis::SDL_CONTROLLER_AXIS_RIGHTX, true),
+            InputField::controller_digital(SDL_CONTROLLER_BUTTON_EAST)
+        }
+    );
+
+    // R3 -> L | Unused in BK but can be used in mods
+    set_default_mapping_for_controller(GameInput::L, { InputField::controller_digital(SDL_GameControllerButton::SDL_CONTROLLER_BUTTON_RIGHTSTICK) });
+}
+
 static void set_control_descriptions() {
     recompinput::set_game_input_description(recompinput::GameInput::Y_AXIS_POS, "Used to move and for steering while flying and swimming. Axis inversion for flying and swimming can be configured in the General tab.");
     recompinput::set_game_input_description(recompinput::GameInput::Y_AXIS_NEG, "Used to move and for steering while flying and swimming. Axis inversion for flying and swimming can be configured in the General tab.");
@@ -197,6 +240,7 @@ void banjo::init_config() {
     auto &graphics_config = recompui::config::create_graphics_tab();
     add_graphics_options(graphics_config);
 
+    set_control_defaults();
     set_control_descriptions();
     recompui::config::create_controls_tab();
 
