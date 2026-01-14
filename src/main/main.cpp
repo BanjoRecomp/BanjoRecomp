@@ -602,6 +602,12 @@ int main(int argc, char** argv) {
     PreloadContext preload_context;
     bool preloaded = preload_executable(preload_context);
 
+    // Preloading isn't implemented on Linux and MacOS, but it's also unnecessary there, as the OS already preloads the executable.
+    // Therefore, we can just consider the executable to be preloaded.
+#if defined(__linux__) || defined(APPLE)
+    preloaded = true;
+#endif
+
     if (!preloaded) {
         fprintf(stderr, "Failed to preload executable!\n");
     }
