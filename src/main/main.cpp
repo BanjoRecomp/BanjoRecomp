@@ -504,7 +504,6 @@ bool preload_executable(PreloadContext& context) {
     }
     
     return true;
-#endif
 }
 
 void release_preload(PreloadContext& context) {
