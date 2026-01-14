@@ -431,11 +431,6 @@ struct PreloadContext {
 };
 
 bool preload_executable(PreloadContext& context) {
-#if defined(__linux__) || defined(APPLE)
-    // Preloading isn't implemented on Linux and MacOS, but it's also unnecessary there, as the OS already preloads the executable.
-    // Therefore, we can just consider the executable to be preloaded.
-    return true;
-#else
     wchar_t module_name[MAX_PATH];
     GetModuleFileNameW(NULL, module_name, MAX_PATH);
 
@@ -525,9 +520,10 @@ struct PreloadContext {
 
 };
 
-// TODO implement on other platforms
 bool preload_executable(PreloadContext& context) {
-    return false;
+    // Preloading isn't implemented on Linux and MacOS, but it's also unnecessary there, as the OS already preloads the executable.
+    // Therefore, we can just consider the executable to be preloaded.
+    return true;
 }
 
 void release_preload(PreloadContext& context) {
