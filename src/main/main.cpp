@@ -431,6 +431,11 @@ struct PreloadContext {
 };
 
 bool preload_executable(PreloadContext& context) {
+#if defined(__linux__) || defined(APPLE)
+    // Preloading isn't implemented on Linux and MacOS, but it's also unnecessary there, as the OS already preloads the executable.
+    // Therefore, we can just consider the executable to be preloaded.
+    return true;
+#else
     wchar_t module_name[MAX_PATH];
     GetModuleFileNameW(NULL, module_name, MAX_PATH);
 
@@ -504,6 +509,7 @@ bool preload_executable(PreloadContext& context) {
     }
     
     return true;
+#endif
 }
 
 void release_preload(PreloadContext& context) {
@@ -601,12 +607,6 @@ int main(int argc, char** argv) {
     // that there are no stutters from the OS having to load new pages of the executable whenever a new code page is run.
     PreloadContext preload_context;
     bool preloaded = preload_executable(preload_context);
-
-    // Preloading isn't implemented on Linux and MacOS, but it's also unnecessary there, as the OS already preloads the executable.
-    // Therefore, we can just consider the executable to be preloaded.
-#if defined(__linux__) || defined(APPLE)
-    preloaded = true;
-#endif
 
     if (!preloaded) {
         fprintf(stderr, "Failed to preload executable!\n");
