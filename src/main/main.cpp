@@ -530,6 +530,8 @@ void release_preload(PreloadContext& context) {
 
 #else
 
+struct PreloadContext {};
+
 bool preload_executable(PreloadContext& context) {
     return false;
 }
