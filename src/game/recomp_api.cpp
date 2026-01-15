@@ -204,27 +204,8 @@ extern "C" void recomp_get_right_analog_inputs(uint8_t* rdram, recomp_context* c
         return;
     }
 
-    // TODO expose this in the menu
-    constexpr float radial_deadzone = 0.05f;
-
-    float x, y;
-
-    // TODO: use controller number
-    recompinput::get_right_analog(0, &x, &y);
-
-    float magnitude = sqrtf(x * x + y * y);
-
-    if (magnitude < radial_deadzone) {
-        *x_out = 0.0f;
-        *y_out = 0.0f;
-    }
-    else {
-        float x_normalized = x / magnitude;
-        float y_normalized = y / magnitude;
-
-        *x_out = x_normalized * ((magnitude - radial_deadzone) / (1 - radial_deadzone));
-        *y_out = y_normalized * ((magnitude - radial_deadzone) / (1 - radial_deadzone));
-    }
+    // TODO: Use controller number.
+    recompinput::get_right_analog(0, x_out, y_out);
 }
 
 extern "C" void recomp_set_right_analog_suppressed(uint8_t* rdram, recomp_context* ctx) {
