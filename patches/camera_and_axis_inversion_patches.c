@@ -126,14 +126,28 @@ bool recomp_analog_camera_allowed(bool allow_transition_states) {
     }
 }
 
+// @recomp Apply per-axis deadzone to a value.
+f32 recomp_apply_per_axis_deadzone(f32 value) {
+    const f32 per_axis_deadzone = 0.2f;
+    if (value > per_axis_deadzone) {
+        return (value - per_axis_deadzone) / (1.0f - per_axis_deadzone);
+    }
+    else if (value < -per_axis_deadzone) {
+        return (value + per_axis_deadzone) / (1.0f - per_axis_deadzone);
+    }
+    else {
+        return 0.0f;
+    }
+}
+
 // @recomp Functions to get the current values of the analog camera inputs.
 void recomp_analog_camera_get(f32 *x, f32 *y) {
     float input_x, input_y;
     s32 inverted_x, inverted_y;
     recomp_get_right_analog_inputs(&input_x, &input_y);
     recomp_get_analog_inverted_axes(&inverted_x, &inverted_y);
-    *x = input_x * (inverted_x ? 1.0f : -1.0f);
-    *y = input_y * (inverted_y ? -1.0f : 1.0f);
+    *x = recomp_apply_per_axis_deadzone(input_x) * (inverted_x ? 1.0f : -1.0f);
+    *y = recomp_apply_per_axis_deadzone(input_y) * (inverted_y ? -1.0f : 1.0f);
 }
 
 f32 recomp_analog_camera_get_x() {
@@ -212,11 +226,11 @@ s32 recomp_get_first_person_inverted_y() {
 
 
 // @recomp Check whether the analog camera stick is currently held.
-bool recomp_analog_camera_held() {
+bool recomp_analog_camera_held(bool read_x, bool read_y) {
     if (recomp_analog_camera_enabled() && recomp_analog_camera_allowed(FALSE)) {
         float input_x, input_y;
         recomp_analog_camera_get(&input_x, &input_y);
-        return (mlAbsF(input_x) > 1e-6f) || (mlAbsF(input_y) > 1e-6f);
+        return ((mlAbsF(input_x) > 1e-6f) && read_x) || ((mlAbsF(input_y) > 1e-6f) && read_y);
     }
     else {
         return FALSE;
@@ -538,7 +552,7 @@ RECOMP_PATCH void func_80291108(void) {
     }
 
     // @recomp Switch to the analog camera mode.
-    if (!func_80290D48() && recomp_analog_camera_held() && ncDynamicCamera_getState() == 0x4) {
+    if (!func_80290D48() && recomp_analog_camera_held(TRUE, FALSE) && ncDynamicCamera_getState() == 0x4) {
         ncDynamicCamera_setState(DYNAMIC_CAMERA_STATE_R_LOOK);
         func_80291488(0x4);
     }
@@ -562,7 +576,7 @@ RECOMP_PATCH void func_80291154(void) {
         }
         // @recomp Switch to the R Look mode if the analog camera input is held. Unlike the R Button input, this one will not initialize the
         // target yaw to match the player's angle, but will rather use whatever current yaw is present.
-        else if (recomp_analog_camera_held()) {
+        else if (recomp_analog_camera_held(TRUE, TRUE)) {
             ncDynamicCamera_setState(DYNAMIC_CAMERA_STATE_R_LOOK);
             func_80291488(0x4);
             func_80290F14();
@@ -585,7 +599,7 @@ RECOMP_PATCH void func_802911E0(void) {
             func_802C095C();
         }
         // @recomp Don't execute the other branch if analog camera movement is present.
-        else if (recomp_analog_camera_held()) {
+        else if (recomp_analog_camera_held(TRUE, TRUE)) {
             // Do nothing.
         }
         else {
@@ -607,10 +621,11 @@ RECOMP_PATCH int func_80290E8C(void) {
     // @recomp Check whether the analog camera is active or if it was activated.
     // Switching to a diving state will reset back to the regular camera.
     //ncDynamicCamera_setState(3);
-    if (recomp_analog_camera_held() || analog_swimming_look_started) {
+    bool analog_camera_held = recomp_analog_camera_held(TRUE, FALSE);
+    if (analog_camera_held || analog_swimming_look_started) {
         ncDynamicCamera_setState(DYNAMIC_CAMERA_STATE_R_LOOK);
         recomp_analog_camera_update();
-        analog_swimming_look_started = recomp_analog_camera_held() || (bs_getState() != BS_2C_DIVE_B && bs_getState() != BS_39_DIVE_A); 
+        analog_swimming_look_started = analog_camera_held || (bs_getState() != BS_2C_DIVE_B && bs_getState() != BS_39_DIVE_A);
     }
     else {
         ncDynamicCamera_setState(3);
