@@ -601,15 +601,7 @@ void on_launcher_init(recompui::LauncherMenu *menu) {
 
     menu->remove_default_title();
 
-    recompui::ContextId context = recompui::get_current_context();
-    recompui::Label* title_label = context.create_element<recompui::Label>(menu, "Banjo: Recompiled", recompui::theme::Typography::Header1);
-    title_label->set_position(recompui::Position::Absolute);
-    title_label->set_top(banjo::launcher_options_title_offset);
-    title_label->set_right(50.0f, recompui::Unit::Percent);
-    title_label->set_translate_2D(50.0f, 0.0f, recompui::Unit::Percent);
-    title_label->set_color(recompui::theme::color::White);
-
-    banjo::launcher_animation_setup(menu, title_label);
+    banjo::launcher_animation_setup(menu);
 }
 
 #define REGISTER_FUNC(name) recomp::overlays::register_base_export(#name, name)

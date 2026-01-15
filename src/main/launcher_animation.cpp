@@ -41,8 +41,9 @@ struct LauncherContext {
     AnimatedSvg jiggy_color_svg;
     AnimatedSvg jiggy_shine_svg;
     AnimatedSvg jiggy_hole_svg;
+    AnimatedSvg logo_svg;
+    std::array<AnimatedSvg, 4> cloud_svgs;
     recompui::Element *wrapper;
-    recompui::Element *title;
     std::chrono::steady_clock::time_point last_update_time;
     std::chrono::steady_clock::time_point start_time;
     bool started = false;
@@ -134,13 +135,13 @@ const float jiggy_scale_anim_end = jiggy_scale_anim_start + jiggy_scale_anim_len
 const float jiggy_move_over_start = jiggy_scale_anim_end + 0.5f;
 const float jiggy_move_over_length = 0.75f;
 const float jiggy_move_over_end = jiggy_move_over_start + jiggy_move_over_length;
-const float jiggy_shine_start = jiggy_move_over_end - 0.5f;
+const float jiggy_shine_start = jiggy_move_over_end + 0.6f;
 const float jiggy_shine_length = 0.8f;
 
-void banjo::launcher_animation_setup(recompui::LauncherMenu *menu, recompui::Element *title) {
+void banjo::launcher_animation_setup(recompui::LauncherMenu *menu) {
     auto context = recompui::get_current_context();
     recompui::Element *background_container = menu->get_background_container();
-    background_container->set_background_color({ 0x1A, 0x56, 0x98, 0xFF });
+    background_container->set_background_color({ 0x0F, 0x53, 0xB2, 0xFF });
 
     launcher_context.wrapper = context.create_element<recompui::Element>(background_container, 0);
     launcher_context.wrapper->set_position(recompui::Position::Absolute);
@@ -154,6 +155,13 @@ void banjo::launcher_animation_setup(recompui::LauncherMenu *menu, recompui::Ele
     launcher_context.jiggy_hole_svg = create_animated_svg(context, launcher_context.wrapper, "JiggyHole.svg", 2180.0f, 2160.0f);
     launcher_context.banjo_svg = create_animated_svg(context, launcher_context.wrapper, "Banjo.svg", 649.0f, 622.0f);
     launcher_context.kazooie_svg = create_animated_svg(context, launcher_context.wrapper, "Kazooie.svg", 626.0f, 774.0f);
+
+    launcher_context.cloud_svgs[0] = create_animated_svg(context, background_container, "Cloud1.svg", 461.0f, 154.0f);
+    launcher_context.cloud_svgs[1] = create_animated_svg(context, background_container, "Cloud2.svg", 461.0f, 167.0f);
+    launcher_context.cloud_svgs[2] = create_animated_svg(context, background_container, "Cloud3.svg", 295.0f, 167.0f);
+    launcher_context.cloud_svgs[3] = create_animated_svg(context, background_container, "Cloud1.svg", 461.0f, 154.0f);
+
+    launcher_context.logo_svg = create_animated_svg(context, background_container, "Logo.svg", 6189.0f * 0.125f, 2626.0f * 0.125f);
 
     // Animate the jiggy hole.
     launcher_context.jiggy_hole_svg.position_keyframes = {
@@ -246,9 +254,71 @@ void banjo::launcher_animation_setup(recompui::LauncherMenu *menu, recompui::Ele
         kf.deg = -kf.deg;
     }
 
-    launcher_context.start_time = std::chrono::steady_clock::now();
+    // Animate the logo.
+    launcher_context.logo_svg.position_keyframes = {
+        { 0.0f, 0.0f, -900.0f },
+        { 1.0f, 0.0f, -900.0f },
+        { 2.0f, 0.0f, -350.0f },
+    };
 
-    launcher_context.title = title;
+    launcher_context.logo_svg.position_animation.interpolation_method = InterpolationMethod::Smootherstep;
+
+    // Animate the clouds.
+    const float cloud_scale_duration = 0.3f;
+    launcher_context.cloud_svgs[0].position_keyframes = {
+        { 0.0f, 600.0f, -445.0f },
+        { 3.0f, 600.0f, -455.0f },
+        { 6.0f, 600.0f, -445.0f },
+    };
+
+    launcher_context.cloud_svgs[0].scale_keyframes = {
+        { 0.0f, 0.0f, 0.0f },
+        { 2.0f, 0.0f, 0.0f },
+        { 2.0f + cloud_scale_duration, 1.0f, 1.0f },
+    };
+
+    launcher_context.cloud_svgs[1].position_keyframes = {
+        { 0.0f, -720.0f, 355.0f },
+        { 5.0f, -720.0f, 365.0f },
+        { 10.0f, -720.0f, 355.0f },
+    };
+
+    launcher_context.cloud_svgs[1].scale_keyframes = {
+        { 0.0f, 0.0f, 0.0f },
+        { 2.2f, 0.0f, 0.0f },
+        { 2.2f + cloud_scale_duration, 1.0f, 1.0f },
+    };
+
+    launcher_context.cloud_svgs[2].position_keyframes = {
+        { 0.0f, -600.0f, -295.0f },
+        { 2.0f, -600.0f, -305.0f },
+        { 4.0f, -600.0f, -295.0f },
+    };
+
+    launcher_context.cloud_svgs[2].scale_keyframes = {
+        { 0.0f, 0.0f, 0.0f },
+        { 2.4f, 0.0f, 0.0f },
+        { 2.4f + cloud_scale_duration, 1.0f, 1.0f },
+    };
+
+    launcher_context.cloud_svgs[3].position_keyframes = {
+        { 0.0f, 670.0f, 395.0f },
+        { 4.0f, 670.0f, 405.0f },
+        { 8.0f, 670.0f, 395.0f },
+    };
+
+    launcher_context.cloud_svgs[3].scale_keyframes = {
+        { 0.0f, 0.0f, 0.0f },
+        { 2.6f, 0.0f, 0.0f },
+        { 2.6f + cloud_scale_duration, 1.0f, 1.0f },
+    };
+
+    for (size_t i = 0; i < launcher_context.cloud_svgs.size(); i++) {
+        launcher_context.cloud_svgs[i].position_animation.loop_keyframe_index = 0;
+        launcher_context.cloud_svgs[i].position_animation.interpolation_method = InterpolationMethod::Smootherstep;
+    }
+
+    launcher_context.start_time = std::chrono::steady_clock::now();
 }
 
 void banjo::launcher_animation_update(recompui::LauncherMenu *menu) {
@@ -266,6 +336,11 @@ void banjo::launcher_animation_update(recompui::LauncherMenu *menu) {
     update_animated_svg(launcher_context.jiggy_color_svg, delta_time, bg_width, bg_height);
     update_animated_svg(launcher_context.jiggy_shine_svg, delta_time, bg_width, bg_height);
     update_animated_svg(launcher_context.jiggy_hole_svg, delta_time, bg_width, bg_height);
+    update_animated_svg(launcher_context.logo_svg, delta_time, bg_width, bg_height);
+
+    for (size_t i = 0; i < launcher_context.cloud_svgs.size(); i++) {
+        update_animated_svg(launcher_context.cloud_svgs[i], delta_time, bg_width, bg_height);
+    }
 
     auto elapsed = now - launcher_context.start_time;
     float elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count();
@@ -285,7 +360,6 @@ void banjo::launcher_animation_update(recompui::LauncherMenu *menu) {
         for (auto option : menu->get_game_options_menu()->get_options()) {
             option->set_opacity(game_option_menu_opacity);
         }
-        launcher_context.title->set_opacity(game_option_menu_opacity);
 
         float game_option_menu_right = interpolate_value(
             launcher_options_right_position_start, launcher_options_right_position_end, t, InterpolationMethod::Smootherstep);
@@ -296,13 +370,13 @@ void banjo::launcher_animation_update(recompui::LauncherMenu *menu) {
         for (auto option : menu->get_game_options_menu()->get_options()) {
             option->set_opacity(0);
         }
-        launcher_context.title->set_opacity(0.0f);
+
         menu->get_game_options_menu()->set_right(launcher_options_right_position_start);
     } else if (elapsed_ms >= to_ms) {
         for (auto option : menu->get_game_options_menu()->get_options()) {
             option->set_opacity(1.0f);
         }
-        launcher_context.title->set_opacity(1.0f);
+
         menu->get_game_options_menu()->set_right(launcher_options_right_position_end);
     }
 }

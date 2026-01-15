@@ -4,7 +4,7 @@
 #include "recompui/recompui.h"
 
 namespace banjo {
-    void launcher_animation_setup(recompui::LauncherMenu *menu, recompui::Element *title);
+    void launcher_animation_setup(recompui::LauncherMenu *menu);
     void launcher_animation_update(recompui::LauncherMenu *menu);
 
     constexpr float launcher_options_right_position_start = 96.0f;
