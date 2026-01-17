@@ -45,7 +45,7 @@ struct LauncherContext {
     std::array<AnimatedSvg, 4> cloud_svgs;
     recompui::Element *wrapper;
     std::chrono::steady_clock::time_point last_update_time;
-    std::chrono::steady_clock::time_point start_time;
+    float seconds = 0.0f;
     bool started = false;
 } launcher_context;
 
@@ -129,7 +129,7 @@ void update_animated_svg(AnimatedSvg &animated_svg, float delta_time, float bg_w
     animated_svg.svg->set_rotation(rotation_degrees);
 }
 
-const float jiggy_scale_anim_start = 0.4f;
+const float jiggy_scale_anim_start = 0.0f;
 const float jiggy_scale_anim_length = 0.75f;
 const float jiggy_scale_anim_end = jiggy_scale_anim_start + jiggy_scale_anim_length;
 const float jiggy_move_over_start = jiggy_scale_anim_end + 0.5f;
@@ -317,13 +317,12 @@ void banjo::launcher_animation_setup(recompui::LauncherMenu *menu) {
         launcher_context.cloud_svgs[i].position_animation.loop_keyframe_index = 0;
         launcher_context.cloud_svgs[i].position_animation.interpolation_method = InterpolationMethod::Smootherstep;
     }
-
-    launcher_context.start_time = std::chrono::steady_clock::now();
 }
 
 void banjo::launcher_animation_update(recompui::LauncherMenu *menu) {
     std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
     float delta_time = launcher_context.started ? std::chrono::duration_cast<std::chrono::milliseconds>(now - launcher_context.last_update_time).count() / 1000.0f : 0.0f;
+    launcher_context.seconds += delta_time;
     launcher_context.last_update_time = now;
     launcher_context.started = true;
 
@@ -342,13 +341,8 @@ void banjo::launcher_animation_update(recompui::LauncherMenu *menu) {
         update_animated_svg(launcher_context.cloud_svgs[i], delta_time, bg_width, bg_height);
     }
 
-    auto elapsed = now - launcher_context.start_time;
-    float elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count();
-    float from_ms = jiggy_move_over_start * 1000.0f;
-    float to_ms = jiggy_move_over_end * 1000.0f;
-    if (elapsed_ms > from_ms && elapsed_ms < to_ms) {
-        float now_ms = elapsed_ms;
-        float t = (now_ms - from_ms) / (to_ms - from_ms);
+    if (launcher_context.seconds > jiggy_move_over_start && launcher_context.seconds < jiggy_move_over_end) {
+        float t = (launcher_context.seconds - jiggy_move_over_start) / (jiggy_move_over_end - jiggy_move_over_start);
         float x_translation = interpolate_value(0, 1440 * -0.2f, t, InterpolationMethod::Smootherstep);
         launcher_context.wrapper->set_translate_2D(x_translation, 0, recompui::Unit::Dp);
         float y_translation = interpolate_value(0, launcher_options_top_offset, t, InterpolationMethod::Smootherstep);
@@ -366,13 +360,13 @@ void banjo::launcher_animation_update(recompui::LauncherMenu *menu) {
         menu->get_game_options_menu()->set_right(game_option_menu_right);
     }
 
-    if (elapsed_ms <= from_ms) {
+    if (launcher_context.seconds <= jiggy_move_over_start) {
         for (auto option : menu->get_game_options_menu()->get_options()) {
             option->set_opacity(0);
         }
 
         menu->get_game_options_menu()->set_right(launcher_options_right_position_start);
-    } else if (elapsed_ms >= to_ms) {
+    } else if (launcher_context.seconds >= jiggy_move_over_end) {
         for (auto option : menu->get_game_options_menu()->get_options()) {
             option->set_opacity(1.0f);
         }
