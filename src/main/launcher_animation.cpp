@@ -141,7 +141,7 @@ const float jiggy_shine_length = 0.8f;
 void banjo::launcher_animation_setup(recompui::LauncherMenu *menu) {
     auto context = recompui::get_current_context();
     recompui::Element *background_container = menu->get_background_container();
-    background_container->set_background_color({ 0x0F, 0x53, 0xB2, 0xFF });
+    background_container->set_background_color({ 0x1F, 0x63, 0xC2, 0xFF });
 
     launcher_context.wrapper = context.create_element<recompui::Element>(background_container, 0);
     launcher_context.wrapper->set_position(recompui::Position::Absolute);
@@ -161,7 +161,7 @@ void banjo::launcher_animation_setup(recompui::LauncherMenu *menu) {
     launcher_context.cloud_svgs[2] = create_animated_svg(context, background_container, "Cloud3.svg", 295.0f, 167.0f);
     launcher_context.cloud_svgs[3] = create_animated_svg(context, background_container, "Cloud1.svg", 461.0f, 154.0f);
 
-    launcher_context.logo_svg = create_animated_svg(context, background_container, "Logo.svg", 6189.0f * 0.125f, 2626.0f * 0.125f);
+    launcher_context.logo_svg = create_animated_svg(context, background_container, "Logo.svg", 6187.0f * 0.125f, 2625.0f * 0.125f);
 
     // Animate the jiggy hole.
     launcher_context.jiggy_hole_svg.position_keyframes = {
@@ -258,7 +258,7 @@ void banjo::launcher_animation_setup(recompui::LauncherMenu *menu) {
     launcher_context.logo_svg.position_keyframes = {
         { 0.0f, 0.0f, -900.0f },
         { 1.0f, 0.0f, -900.0f },
-        { 2.0f, 0.0f, -350.0f },
+        { 2.0f, 0.0f, -365.0f },
     };
 
     launcher_context.logo_svg.position_animation.interpolation_method = InterpolationMethod::Smootherstep;
