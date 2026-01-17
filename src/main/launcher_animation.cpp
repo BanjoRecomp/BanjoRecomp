@@ -44,6 +44,7 @@ struct LauncherContext {
     AnimatedSvg logo_svg;
     std::array<AnimatedSvg, 4> cloud_svgs;
     recompui::Element *wrapper;
+    float wrapper_phase = -1.0f;
     std::chrono::steady_clock::time_point last_update_time;
     float seconds = 0.0f;
     bool started = false;
@@ -341,36 +342,23 @@ void banjo::launcher_animation_update(recompui::LauncherMenu *menu) {
         update_animated_svg(launcher_context.cloud_svgs[i], delta_time, bg_width, bg_height);
     }
 
-    if (launcher_context.seconds > jiggy_move_over_start && launcher_context.seconds < jiggy_move_over_end) {
-        float t = (launcher_context.seconds - jiggy_move_over_start) / (jiggy_move_over_end - jiggy_move_over_start);
-        float x_translation = interpolate_value(0, 1440 * -0.2f, t, InterpolationMethod::Smootherstep);
+    float wrapper_phase = std::clamp((launcher_context.seconds - jiggy_move_over_start) / (jiggy_move_over_end - jiggy_move_over_start), 0.0f, 1.0f);
+    if (wrapper_phase != launcher_context.wrapper_phase) {
+        float x_translation = interpolate_value(0, 1440 * -0.2f, wrapper_phase, InterpolationMethod::Smootherstep);
         launcher_context.wrapper->set_translate_2D(x_translation, 0, recompui::Unit::Dp);
-        float y_translation = interpolate_value(0, launcher_options_top_offset, t, InterpolationMethod::Smootherstep);
+        float y_translation = interpolate_value(0, launcher_options_top_offset, wrapper_phase, InterpolationMethod::Smootherstep);
         launcher_context.wrapper->set_top(y_translation);
-        float scale = interpolate_value(1, 0.666f, t, InterpolationMethod::Smootherstep);
+        float scale = interpolate_value(1, 0.666f, wrapper_phase, InterpolationMethod::Smootherstep);
         launcher_context.wrapper->set_scale_2D(scale, scale);
 
-        float game_option_menu_opacity = interpolate_value(0, 1.0f, t, InterpolationMethod::Smootherstep);
+        float game_option_menu_opacity = interpolate_value(0, 1.0f, wrapper_phase, InterpolationMethod::Smootherstep);
         for (auto option : menu->get_game_options_menu()->get_options()) {
             option->set_opacity(game_option_menu_opacity);
         }
 
-        float game_option_menu_right = interpolate_value(
-            launcher_options_right_position_start, launcher_options_right_position_end, t, InterpolationMethod::Smootherstep);
+        float game_option_menu_right = interpolate_value(launcher_options_right_position_start, launcher_options_right_position_end, wrapper_phase, InterpolationMethod::Smootherstep);
         menu->get_game_options_menu()->set_right(game_option_menu_right);
-    }
 
-    if (launcher_context.seconds <= jiggy_move_over_start) {
-        for (auto option : menu->get_game_options_menu()->get_options()) {
-            option->set_opacity(0);
-        }
-
-        menu->get_game_options_menu()->set_right(launcher_options_right_position_start);
-    } else if (launcher_context.seconds >= jiggy_move_over_end) {
-        for (auto option : menu->get_game_options_menu()->get_options()) {
-            option->set_opacity(1.0f);
-        }
-
-        menu->get_game_options_menu()->set_right(launcher_options_right_position_end);
+        launcher_context.wrapper_phase = wrapper_phase;
     }
 }
