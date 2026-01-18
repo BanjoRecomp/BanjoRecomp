@@ -182,6 +182,8 @@ void banjo::launcher_animation_setup(recompui::LauncherMenu *menu) {
 
     // Disable and hide the options.
     for (auto option : menu->get_game_options_menu()->get_options()) {
+        option->set_text_transform(recompui::TextTransform::Uppercase);
+        option->set_font_family("Suplexmentary Comic NC");
         option->set_enabled(false);
         option->set_opacity(0.0f);
     }
