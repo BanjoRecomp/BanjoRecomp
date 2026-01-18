@@ -150,6 +150,17 @@ RECOMP_PATCH Actor *func_802E0738(ActorMarker *marker, Gfx **gfx, Mtx **mtx, Vtx
         return this;
     }
 
+#if 1
+    if (marker->modelId == 0x355) {
+        // @recomp Greenscreen for recording concert Banjo.
+        const u32 green = 0x07C107C1;
+        gDPSetCycleType((*gfx)++, G_CYC_FILL);
+        gDPSetRenderMode((*gfx)++, G_RM_NOOP, G_RM_NOOP2);
+        gDPSetFillColor((*gfx)++, green);
+        gDPScisFillRectangle((*gfx)++, 0, 0, DEFAULT_FRAMEBUFFER_WIDTH - 1, DEFAULT_FRAMEBUFFER_HEIGHT - 1);
+    }
+#endif
+
     modelRender_preDraw((GenFunction_1)func_802E0710, (s32)this);
     modelRender_postDraw((GenFunction_1)actor_postdrawMethod, (s32)marker);
     modelRender_draw(gfx, mtx, this->position, sp34, this->scale, NULL, marker_loadModelBin(marker));

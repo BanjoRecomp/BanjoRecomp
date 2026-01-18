@@ -335,6 +335,18 @@ RECOMP_PATCH void func_803163A8(GcZoombox *this, Gfx **gfx, Mtx **mtx) {
     f32 sp38[3];
     f32 sp34;
 
+#if 1
+    // @recomp Greenscreen for recording.
+    const u32 half_height = DEFAULT_FRAMEBUFFER_HEIGHT / 2;
+    const u32 uly = (this->unk172 / half_height) * half_height;
+    const u32 blue = 0x003F003F;
+    const u32 green = 0x07C107C1;
+    gDPSetCycleType((*gfx)++, G_CYC_FILL);
+    gDPSetRenderMode((*gfx)++, G_RM_NOOP, G_RM_NOOP2);
+    gDPSetFillColor((*gfx)++, blue);
+    gDPScisFillRectangle((*gfx)++, 0, uly, DEFAULT_FRAMEBUFFER_WIDTH - 1, uly + half_height - 1);
+#endif
+
     // @recomp Align the zoombox to the left of the screen if necessary.
     // NOTE: gScissorBoxRight/gScissorBoxTop are incorrectly named in the decompilation and must be swapped.
     if (left_aligned_zoombox(this)) {

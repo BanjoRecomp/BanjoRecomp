@@ -28,3 +28,15 @@ RECOMP_PATCH void dummy_func_8025AFB0(void) {
     // This allows the start indices to account for any changes made by mods. 
     calculate_map_start_note_indices();
 }
+
+#if 0
+
+RECOMP_PATCH enum map_e getDefaultBootMap(void) {
+    return MAP_95_CS_END_ALL_100;
+}
+
+RECOMP_PATCH int ability_hasLearned(enum ability_e ability) {
+    return TRUE;
+}
+
+#endif
