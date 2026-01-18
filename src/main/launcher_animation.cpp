@@ -1,4 +1,5 @@
 #include "banjo_launcher.h"
+#include <atomic>
 
 struct KeyframeRot {
     float seconds;
