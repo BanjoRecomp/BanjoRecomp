@@ -29,7 +29,7 @@ typedef struct {
 extern s32 func_8033A170(void);
 extern enum map_e map_get(void);
 
-extern u32 get_intro_cutscene_counter(void);
+extern u32 get_cutscene_counter(void);
 
 // @recomp Patched to give the bees in the bee swarm individual IDs. The bees can show interpolation glitches otherwise, as they all share one matrix
 // group and can get culled individually based on distance. This is easily reproduceable by walking into a beehive with bees from a far away distance.
@@ -126,7 +126,7 @@ bool skip_drawing_intro_bulls(u32 model_id) {
     return 
         (map_get() == MAP_1E_CS_START_NINTENDO) && 
         (model_id == ASSET_353_MODEL_BIGBUTT || model_id == ASSET_354_MODEL_BULL_INTRO) &&
-        get_intro_cutscene_counter() < 180;
+        get_cutscene_counter() < 180;
 }
 
 // @recomp Patched to skip drawing the bull actors on the intro cutscene's start.
