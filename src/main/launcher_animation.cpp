@@ -48,6 +48,9 @@ struct LauncherContext {
     std::chrono::steady_clock::time_point last_update_time;
     float seconds = 0.0f;
     bool started = false;
+    bool options_enabled = false;
+    bool animation_skipped = false;
+    std::atomic<bool> skip_animation_next_update = false;
 } launcher_context;
 
 float interpolate_value(float a, float b, float t, InterpolationMethod method) {
@@ -130,6 +133,31 @@ void update_animated_svg(AnimatedSvg &animated_svg, float delta_time, float bg_w
     animated_svg.svg->set_rotation(rotation_degrees);
 }
 
+bool check_skip_input(SDL_Event* event) {
+    switch (event->type) {
+    case SDL_KEYDOWN:
+        return event->key.keysym.scancode == SDL_SCANCODE_ESCAPE ||
+            event->key.keysym.scancode == SDL_SCANCODE_SPACE ||
+            (event->key.keysym.scancode == SDL_SCANCODE_RETURN && (event->key.keysym.mod & (KMOD_LALT | KMOD_RALT)) == KMOD_NONE);
+    case SDL_CONTROLLERBUTTONDOWN:
+    case SDL_MOUSEBUTTONDOWN:
+        return true;
+    default:
+        return false;
+    }
+}
+
+int launcher_event_watch(void* userdata, SDL_Event* event) {
+    if (!launcher_context.animation_skipped && check_skip_input(event)) {
+        launcher_context.animation_skipped = true;
+        launcher_context.skip_animation_next_update = true;
+        return 0;
+    }
+    else {
+        return 1;
+    }
+}
+
 const float jiggy_scale_anim_start = 0.0f;
 const float jiggy_scale_anim_length = 0.75f;
 const float jiggy_scale_anim_end = jiggy_scale_anim_start + jiggy_scale_anim_length;
@@ -138,6 +166,8 @@ const float jiggy_move_over_length = 0.75f;
 const float jiggy_move_over_end = jiggy_move_over_start + jiggy_move_over_length;
 const float jiggy_shine_start = jiggy_move_over_end + 0.6f;
 const float jiggy_shine_length = 0.8f;
+
+const float animation_skip_time = 10.0f;
 
 void banjo::launcher_animation_setup(recompui::LauncherMenu *menu) {
     auto context = recompui::get_current_context();
@@ -149,6 +179,12 @@ void banjo::launcher_animation_setup(recompui::LauncherMenu *menu) {
     launcher_context.wrapper->set_width(100, recompui::Unit::Percent);
     launcher_context.wrapper->set_height(100, recompui::Unit::Percent);
     launcher_context.wrapper->set_top(0);
+
+    // Disable and hide the options.
+    for (auto option : menu->get_game_options_menu()->get_options()) {
+        option->set_enabled(false);
+        option->set_opacity(0.0f);
+    }
 
     // The creation order of these is important.
     launcher_context.jiggy_color_svg = create_animated_svg(context, launcher_context.wrapper, "JiggyColor.svg", 1054.0f, 1044.0f);
@@ -318,11 +354,19 @@ void banjo::launcher_animation_setup(recompui::LauncherMenu *menu) {
         launcher_context.cloud_svgs[i].position_animation.loop_keyframe_index = 0;
         launcher_context.cloud_svgs[i].position_animation.interpolation_method = InterpolationMethod::Smootherstep;
     }
+
+    // Install an event watch to skip the launcher animation if a keyboard, mouse or controller input is detected.
+    SDL_AddEventWatch(&launcher_event_watch, nullptr);
 }
 
 void banjo::launcher_animation_update(recompui::LauncherMenu *menu) {
     std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
     float delta_time = launcher_context.started ? std::chrono::duration_cast<std::chrono::milliseconds>(now - launcher_context.last_update_time).count() / 1000.0f : 0.0f;
+    if (launcher_context.skip_animation_next_update) {
+        delta_time = std::max(animation_skip_time - launcher_context.seconds, 0.0f);
+        launcher_context.skip_animation_next_update = false;
+    }
+
     launcher_context.seconds += delta_time;
     launcher_context.last_update_time = now;
     launcher_context.started = true;
@@ -360,5 +404,16 @@ void banjo::launcher_animation_update(recompui::LauncherMenu *menu) {
         menu->get_game_options_menu()->set_right(game_option_menu_right);
 
         launcher_context.wrapper_phase = wrapper_phase;
+    }
+
+    if (!launcher_context.options_enabled && launcher_context.seconds >= jiggy_move_over_end) {
+        SDL_DelEventWatch(&launcher_event_watch, nullptr);
+
+        for (auto option : menu->get_game_options_menu()->get_options()) {
+            option->set_enabled(true);
+            option->set_opacity(1.0f);
+        }
+
+        launcher_context.options_enabled = true;
     }
 }
