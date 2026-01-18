@@ -162,7 +162,7 @@ int concertStutterDurations[] =    { 4,   4,   4,   4,   4,   4,   4,    4,    4
 
 // What frames of the cutscene to lag on, and for how many frames.
 int lairDingpotStuttersStartFrames[] = { 258, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 800, 850, 900, 950, 1000 };
-int lairDingpotStutterDurations[] =    { 6,   5,   5,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4 };
+int lairDingpotStutterDurations[] =    { 6,   5,   5,   5,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4 };
 
 // These are reset on map load, so that the cutscene can be replayed (such as when saving and exiting)
 // See func_803329AC in load_patches.c
@@ -176,7 +176,7 @@ bool should_lag_cutscene(int *stuttersStartFrames, int *stutterDurations, int st
         return FALSE;
     }
 
-    recomp_printf("cutsceneCounter %d\n", cutsceneCounter);
+    //recomp_printf("cutsceneCounter %d\n", cutsceneCounter);
 
     // First frame of the cutscene. Set the first stutter frame.
     if (cutsceneNextStutter < stuttersStartFrames[0]) {
