@@ -240,7 +240,7 @@ bool recomp_analog_camera_held(bool read_x, bool read_y) {
 // @recomp If movement is allowed, update the current camera mode's yaw with the input.
 void recomp_analog_camera_update() {
     if (recomp_analog_camera_enabled() && recomp_analog_camera_allowed(FALSE)) {
-        f32 analog_yaw = recomp_analog_camera_get_x() * recomp_get_analog_cam_sensitivity() * 40 * time_getDelta();
+        f32 analog_yaw = recomp_analog_camera_get_x() * recomp_get_analog_cam_sensitivity() * 40.0f * time_getDelta();
         if (mlAbsF(analog_yaw) > 1e-6f) {
             if (ncDynamicCamera_getState() != DYNAMIC_CAMERA_STATE_R_LOOK) {
                 ncDynamicCamera_setState(DYNAMIC_CAMERA_STATE_R_LOOK);
@@ -503,7 +503,7 @@ RECOMP_PATCH void func_80290F14(void) {
     // If they are, use the vertical movement to update the zoom level.
     if (recomp_analog_camera_enabled()) {
         if (!func_80298850() && player_movementGroup() != BSGROUP_4_LOOK && batimer_get(7) == 0.0f && recomp_analog_camera_allowed(FALSE)) {
-            analog_zoom = ml_clamp_f(analog_zoom + recomp_analog_camera_get_y() * 4.5f * time_getDelta(), 0.5f, 3.0f);
+            analog_zoom = ml_clamp_f(analog_zoom + recomp_analog_camera_get_y() * recomp_get_analog_cam_sensitivity() * 1.5f * time_getDelta(), 0.5f, 3.0f);
         }
     }
 
