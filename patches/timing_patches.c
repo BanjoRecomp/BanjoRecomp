@@ -229,7 +229,6 @@ void handle_cutscene_timings(void) {
             if (should_lag_cutscene(lairDingpotStuttersStartFrames, lairDingpotStutterDurations, (int)sizeof(lairDingpotStuttersStartFrames) / (int)sizeof(lairDingpotStuttersStartFrames[0]))) {
                 extraVis = 1;
             }
-
             cutsceneCounter++;
             break;
         default:
