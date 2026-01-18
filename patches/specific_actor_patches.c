@@ -156,7 +156,7 @@ RECOMP_PATCH Actor *func_802E0738(ActorMarker *marker, Gfx **gfx, Mtx **mtx, Vtx
     return this;
 }
 
-// @recomp TODO Patch for shadows.
+// @recomp Patched to skip interpolating the player shadow on large surface changes.
 RECOMP_PATCH Actor* func_802CA7BC(ActorMarker* marker, Gfx** gfx, Mtx** mtx, Vtx** vtx) {
     Actor* this;
     f32 sp60;
