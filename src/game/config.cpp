@@ -46,6 +46,17 @@ static void add_general_options(recomp::config::Config &config) {
         analog_cam_mode_options,
         banjo::AnalogCamMode::Off
     );
+    config.add_number_option(
+        banjo::configkeys::general::analog_camera_sensitivity,
+        "Analog Camera Sensitivity",
+        "Sets the sensitivity of the right stick analog camera, if enabled.",
+        1, 10, 1, 0, false, 3
+    );
+    config.add_option_hidden_dependency(
+        banjo::configkeys::general::analog_camera_sensitivity,
+        banjo::configkeys::general::analog_cam_mode,
+        banjo::AnalogCamMode::Off
+    );
     static EnumOptionVector camera_invert_mode_options = {
         {banjo::CameraInvertMode::InvertNone, "InvertNone", "None"},
         {banjo::CameraInvertMode::InvertX, "InvertX", "Invert X"},
@@ -92,6 +103,11 @@ T get_general_config_enum_value(const std::string& option_id) {
     return static_cast<T>(std::get<uint32_t>(recompui::config::get_general_config().get_option_value(option_id)));
 }
 
+template <typename T = uint32_t>
+T get_general_config_number_value(const std::string& option_id) {
+    return static_cast<T>(std::get<double>(recompui::config::get_general_config().get_option_value(option_id)));
+}
+
 banjo::NoteSavingMode banjo::get_note_saving_mode() {
     return get_general_config_enum_value<banjo::NoteSavingMode>(banjo::configkeys::general::note_saving_mode);
 }
@@ -114,6 +130,10 @@ banjo::CameraInvertMode banjo::get_first_person_invert_mode() {
 
 banjo::AnalogCamMode banjo::get_analog_cam_mode() {
     return get_general_config_enum_value<banjo::AnalogCamMode>(banjo::configkeys::general::analog_cam_mode);
+}
+
+uint32_t banjo::get_analog_cam_sensitivity() {
+    return get_general_config_number_value(banjo::configkeys::general::analog_camera_sensitivity);
 }
 
 template <typename T = uint32_t>

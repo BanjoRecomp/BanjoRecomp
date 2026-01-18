@@ -20,6 +20,7 @@ extern RecompAimingOverideMode recomp_aiming_override_mode;
 DECLARE_FUNC(void, recomp_get_gyro_deltas, float* x, float* y);
 DECLARE_FUNC(void, recomp_get_mouse_deltas, float* x, float* y);
 DECLARE_FUNC(void, recomp_get_inverted_axes, s32* x, s32* y);
+DECLARE_FUNC(f32, recomp_get_analog_cam_sensitivity);
 DECLARE_FUNC(s32, recomp_get_analog_cam_enabled);
 DECLARE_FUNC(void, recomp_get_analog_inverted_axes, s32* x, s32* y);
 DECLARE_FUNC(void, recomp_get_flying_and_swimming_inverted_axes, s32* x, s32* y);

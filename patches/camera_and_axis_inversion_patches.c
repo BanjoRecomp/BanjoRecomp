@@ -240,7 +240,7 @@ bool recomp_analog_camera_held(bool read_x, bool read_y) {
 // @recomp If movement is allowed, update the current camera mode's yaw with the input.
 void recomp_analog_camera_update() {
     if (recomp_analog_camera_enabled() && recomp_analog_camera_allowed(FALSE)) {
-        f32 analog_yaw = recomp_analog_camera_get_x() * 120.0f * time_getDelta();
+        f32 analog_yaw = recomp_analog_camera_get_x() * recomp_get_analog_cam_sensitivity() * 40 * time_getDelta();
         if (mlAbsF(analog_yaw) > 1e-6f) {
             if (ncDynamicCamera_getState() != DYNAMIC_CAMERA_STATE_R_LOOK) {
                 ncDynamicCamera_setState(DYNAMIC_CAMERA_STATE_R_LOOK);

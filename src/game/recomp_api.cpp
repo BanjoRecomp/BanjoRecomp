@@ -125,6 +125,11 @@ extern "C" void recomp_get_bgm_volume(uint8_t* rdram, recomp_context* ctx) {
     _return(ctx, banjo::get_bgm_volume() / 100.0f);
 }
 
+extern "C" void recomp_get_analog_cam_sensitivity(uint8_t* rdram, recomp_context* ctx) {
+    _return(ctx, banjo::get_analog_cam_sensitivity());
+}
+
+
 extern "C" void recomp_time_us(uint8_t* rdram, recomp_context* ctx) {
     _return(ctx, static_cast<u32>(std::chrono::duration_cast<std::chrono::microseconds>(ultramodern::time_since_start()).count()));
 }

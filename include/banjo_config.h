@@ -19,6 +19,7 @@ namespace banjo {
             inline const std::string third_person_camera_invert_mode = "third_person_camera_invert_mode";
             inline const std::string flying_and_swimming_invert_mode = "flying_and_swimming_invert_mode";
             inline const std::string first_person_invert_mode = "first_person_invert_mode";
+            inline const std::string analog_camera_sensitivity = "analog_camera_sensitivity";
         }
 
         namespace sound {
@@ -60,6 +61,8 @@ namespace banjo {
     });
 
     AnalogCamMode get_analog_cam_mode();
+
+    uint32_t get_analog_cam_sensitivity();
 
     enum class NoteSavingMode {
         On,
