@@ -26,8 +26,17 @@ typedef struct {
     s32 unk24;
 }ActorLocal_core2_47BD0;
 
+extern struct0* D_8037C200;
+
+extern f32 func_8028E82C(void);
+extern void func_8028E84C(f32 arg0[3]);
+extern bool func_8028F070(void);
+extern bool func_8028F150(void);
+extern bool func_8028F2DC(void);
+extern void func_802CA790(Actor* this);
 extern s32 func_8033A170(void);
 extern enum map_e map_get(void);
+extern enum bswatergroup_e player_getWaterState(void);
 
 extern u32 get_intro_cutscene_counter(void);
 
@@ -144,5 +153,68 @@ RECOMP_PATCH Actor *func_802E0738(ActorMarker *marker, Gfx **gfx, Mtx **mtx, Vtx
     modelRender_preDraw((GenFunction_1)func_802E0710, (s32)this);
     modelRender_postDraw((GenFunction_1)actor_postdrawMethod, (s32)marker);
     modelRender_draw(gfx, mtx, this->position, sp34, this->scale, NULL, marker_loadModelBin(marker));
+    return this;
+}
+
+// @recomp TODO Patch for shadows.
+RECOMP_PATCH Actor* func_802CA7BC(ActorMarker* marker, Gfx** gfx, Mtx** mtx, Vtx** vtx) {
+    Actor* this;
+    f32 sp60;
+    f32 sp54[3];
+    f32 rotation[3];
+    f32 sp44;
+    f32 sp40;
+    f32 sp34[3];
+
+    sp60 = (player_getWaterState() == BSWATERGROUP_2_UNDERWATER) ? 8.0f : 4.0f;
+    this = marker_getActor(marker);
+    if (!func_8028F070()
+        || !func_8028F150()
+        || !func_8028F2DC()
+        ) {
+        return this;
+    }
+
+    player_getPosition(sp54);
+    sp40 = func_8028E82C();
+    func_8028E84C(sp34);
+    this->position_x = sp54[0];
+    this->position_y = sp40 + sp60;
+    this->position_z = sp54[2];
+
+    func_80258108(sp34, &this->yaw, &this->pitch);
+
+    rotation[0] = this->pitch;
+    rotation[1] = this->yaw;
+    rotation[2] = this->roll;
+    sp44 = ml_map_f(sp54[1] - sp40, 0.0f, 300.0f, 0.43f, 0.28f);
+    
+    // @recomp Check for the player shadow model.
+    if (marker->modelId == ASSET_3BF_MODEL_PLAYER_SHADOW) {
+        // @recomp Skip interpolation if the player's projected position on the floor has changed too quickly. Only do this check when the triangle has changed.
+        static f32 previousPosY = 0.0f;
+        static f32 previousNormY = 1.0f;
+        static s16 previousTri[3] = { 0, 0, 0 };
+        s16* currentTri = &D_8037C200->unk4.unk0[0];
+        if (currentTri[0] != previousTri[0] || currentTri[1] != previousTri[1] || currentTri[2] != previousTri[2]) {
+            f32 projectedHeightDistance = previousNormY * mlAbsF(this->position_y - previousPosY);
+            const f32 skipHeightThreshold = 20.0f;
+            cur_drawn_model_skip_interpolation = projectedHeightDistance >= skipHeightThreshold;
+
+            previousNormY = D_8037C200->normY;
+            previousTri[0] = currentTri[0];
+            previousTri[1] = currentTri[1];
+            previousTri[2] = currentTri[2];
+        }
+
+        previousPosY = this->position_y;
+    }
+
+    modelRender_preDraw((GenFunction_1)func_802CA790, (s32)this);
+    modelRender_draw(gfx, mtx, this->position, rotation, sp44, NULL, marker_loadModelBin(marker));
+
+    // @recomp Re-enable interpolation
+    cur_drawn_model_skip_interpolation = FALSE;
+
     return this;
 }
