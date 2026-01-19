@@ -93,7 +93,7 @@ void hotpatch_intro_opa_map_model(BKModelBin* model_bin) {
     gSPDisplayList(&dl[INTRO_OPA_DL_WALL_PATCH_INDEX], intro_wall_extension_dl);
 }
 
-void reset_intro_cutscene_timings_state(void);
+void reset_cutscene_timings_state(void);
 
 // @recomp Patched to act as a point to run code when a new map is loaded.
 // This includes:
@@ -132,5 +132,5 @@ RECOMP_PATCH void func_803329AC(void){
     note_saving_on_map_load();
 
     // @recomp Reset the intro cutscene timing corrections so the cutscene can be played again
-    reset_intro_cutscene_timings_state();
+    reset_cutscene_timings_state();
 }

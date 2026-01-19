@@ -150,63 +150,69 @@ RECOMP_PATCH void func_80345EB0(enum item_e item){
     }
 }
 
-// The intro cutscene stutters on console, but it does not stutter in recomp.
+// The concert intro cutscene stutters on console, but it does not stutter in recomp.
 // The cutscene is timed with the stutters in mind so this causes desyncs with the music and sound effects.
 // We have manually analyzed the cutscene and taken note of the exact frames during which it stutters,
 // and we lag the game to 15 FPS internally (this cutscene targets 20 FPS) for a few frames when it would
 // have stuttered on console in order to keep the cutscene in sync.
 
 // What frames of the cutscene to lag on, and for how many frames.
-int introStuttersStartFrames[] = { 269, 521, 583, 663, 769, 959, 1155, 1182, 1214 };
-int introStutterDurations[] =    { 4,   4,   4,   4,   4,   4,   4,    4,    4    };
+int concertStuttersStartFrames[] = { 269, 521, 583, 663, 769, 959, 1155, 1182, 1214 };
+int concertStutterDurations[] =    { 4,   4,   4,   4,   4,   4,   4,    4,    4    };
+
+// What frames of the cutscene to lag on, and for how many frames.
+int lairDingpotStuttersStartFrames[] = { 258, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 800, 850, 900, 950, 1000 };
+int lairDingpotStutterDurations[] =    { 6,   5,   5,   5,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4 };
 
 // These are reset on map load, so that the cutscene can be replayed (such as when saving and exiting)
 // See func_803329AC in load_patches.c
-int introCutsceneCounter = 0;
-int introCutsceneNextStutter = 0;
-int introCutsceneLagIndex = 0;
+int cutsceneCounter = 0;
+int cutsceneNextStutter = 0;
+int cutsceneLagIndex = 0;
 
-bool should_lag_intro_cutscene(void) {
+bool should_lag_cutscene(int *stuttersStartFrames, int *stutterDurations, int stuttersStartFramesCount) {
     // No stutters left to compensate for. Exit the function early. 
-    if (introCutsceneNextStutter == -1) {
+    if (cutsceneNextStutter == -1) {
         return FALSE;
     }
 
+    //recomp_printf("cutsceneCounter %d\n", cutsceneCounter);
+
     // First frame of the cutscene. Set the first stutter frame.
-    if (introCutsceneNextStutter < introStuttersStartFrames[0]) {
-        introCutsceneNextStutter = introStuttersStartFrames[0];
-        //recomp_printf("Start intro cutscene with timing corrections. First stutter frame: %d\n", introCutsceneNextStutter);
+    if (cutsceneNextStutter < stuttersStartFrames[0]) {
+        cutsceneNextStutter = stuttersStartFrames[0];
+        //recomp_printf("Start cutscene with timing corrections. First stutter frame: %d\n", cutsceneNextStutter);
     }
 
-    if (introCutsceneCounter >= (introCutsceneNextStutter)  && introCutsceneCounter < (introCutsceneNextStutter + introStutterDurations[introCutsceneLagIndex])) {
+    if (cutsceneCounter >= (cutsceneNextStutter)  && cutsceneCounter < (cutsceneNextStutter + stutterDurations[cutsceneLagIndex])) {
         // A stutter would have occured on console now. Lag the game for a given amount of frames.
-        //recomp_printf("LAGGING. Stutter number %d. Frame number %d\n", introCutsceneLagIndex, introCutsceneCounter);
+        //recomp_printf("LAGGING. Stutter number %d. Frame number %d\n", cutsceneLagIndex, cutsceneCounter);
         return TRUE;
-    } else if (introCutsceneCounter > (introCutsceneNextStutter)) {
-        introCutsceneLagIndex++;
-        if (introCutsceneLagIndex >= (int)sizeof(introStuttersStartFrames) / (int)sizeof(introStuttersStartFrames[0])) {
+    } else if (cutsceneCounter > (cutsceneNextStutter)) {
+        cutsceneLagIndex++;
+        if (cutsceneLagIndex >= stuttersStartFramesCount) {
             // That was the last stutter. We're done.
-            introCutsceneNextStutter = -1;
-            //recomp_printf("End intro cutscene. %d\n", introCutsceneNextStutter);
+            cutsceneNextStutter = -1;
+            //recomp_printf("End cutscene. %d\n", cutsceneNextStutter);
         } else {
             // Set the next stutter frame. 
-            introCutsceneNextStutter = introStuttersStartFrames[introCutsceneLagIndex];
-            //recomp_printf("Next stutter: %d\n", introCutsceneNextStutter);
+            cutsceneNextStutter = stuttersStartFrames[cutsceneLagIndex];
+            //recomp_printf("Next stutter: %d\n", cutsceneNextStutter);
         }
     }
     return FALSE;
 }
 // Reset the custom cutscene frame counter and the stutter frame index used to
-// correct the timings of the intro cutscene.
-void reset_intro_cutscene_timings_state(void) {
-    introCutsceneCounter = 0;
-    introCutsceneNextStutter = 0;
-    introCutsceneLagIndex = 0;
+// correct the timings of the cutscene.
+void reset_cutscene_timings_state(void) {
+    cutsceneCounter = 0;
+    cutsceneNextStutter = 0;
+    cutsceneLagIndex = 0;
 }
 
-// Return the current intro cutscene counter.
-u32 get_intro_cutscene_counter(void) {
-    return introCutsceneCounter;
+// Return the current cutscene counter.
+u32 get_cutscene_counter(void) {
+    return cutsceneCounter;
 }
 
 // Check the current map to see if it's a cutscene map that requires timing fixes,
@@ -214,10 +220,16 @@ u32 get_intro_cutscene_counter(void) {
 void handle_cutscene_timings(void) {
     switch (map_get()) {
         case MAP_1E_CS_START_NINTENDO:
-            if (should_lag_intro_cutscene()) {
+            if (should_lag_cutscene(concertStuttersStartFrames, concertStutterDurations, (int)sizeof(concertStuttersStartFrames) / (int)sizeof(concertStuttersStartFrames[0]))) {
                 extraVis = 1;
             }
-            introCutsceneCounter++;
+            cutsceneCounter++;
+            break;
+        case MAP_7B_CS_INTRO_GL_DINGPOT_1:
+            if (should_lag_cutscene(lairDingpotStuttersStartFrames, lairDingpotStutterDurations, (int)sizeof(lairDingpotStuttersStartFrames) / (int)sizeof(lairDingpotStuttersStartFrames[0]))) {
+                extraVis = 1;
+            }
+            cutsceneCounter++;
             break;
         default:
             break;
