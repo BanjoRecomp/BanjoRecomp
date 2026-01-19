@@ -106,9 +106,9 @@ ultramodern::input::connected_device_info_t get_connected_device_info(int contro
     };
 }
 
-#if defined(__gnu_linux__)
 #include "icon_bytes.h"
 
+#if defined(__gnu_linux__)
 bool SetImageAsIcon(const char* filename, SDL_Window* window)
 {
     // Read data
@@ -371,10 +371,12 @@ std::vector<recomp::GameEntry> supported_games = {
     {
         .rom_hash = 0x1B67585D56E07F8CULL,
         .internal_name = "Banjo-Kazooie",
+        .display_name = "Banjo-Kazooie",
         .game_id = u8"bk.n64.us.1.0",
         .mod_game_id = "bk",
         // Eep16k instead of Eep4k to have room for extra save file data.
         .save_type = recomp::SaveType::Eep16k,
+        .thumbnail_bytes = std::span<const char>(icon_bytes),
         .is_enabled = false,
         .decompression_routine = banjo::decompress_bk,
         .has_compressed_code = true,
@@ -571,6 +573,8 @@ void on_launcher_init(recompui::LauncherMenu *menu) {
     auto game_options_menu = menu->init_game_options_menu(
         supported_games[0].game_id,
         supported_games[0].mod_game_id,
+        supported_games[0].display_name,
+        supported_games[0].thumbnail_bytes,
         recompui::GameOptionsMenuLayout::Center
     );
 
