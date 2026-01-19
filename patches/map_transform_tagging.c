@@ -371,7 +371,7 @@ RECOMP_PATCH void mapModel_xlu_draw(Gfx **gfx, Mtx **mtx, Vtx **vtx) {
         cur_drawn_model_is_map = TRUE;
         cur_drawn_model_transform_id = MAP_MODEL_XLU_TRANSFORM_ID_START;
 
-        // @recomp Because the patched water functions run after this function, run through the vector and see if there's a mode
+        // @recomp Because the patched water functions run after this function, run through the vector and see if there's a model
         // that uses the vertex modification function that was patched. The addresses must be hardcoded as it's not possible to
         // retrieve the right function address inside a recompiled patch instead.
         BKVertexList *vtxList = (BKVertexList *)((s32)mapModel.model_bin_xlu + mapModel.model_bin_xlu->vtx_list_offset_10);
