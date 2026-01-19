@@ -329,6 +329,18 @@ RECOMP_PATCH void gctransition_draw(Gfx **gdl, Mtx **mptr, Vtx **vptr){
                 patch_falling_jiggies_model(transition_model);
                 transition_model->pad0[0] = 0xBA;
             }
+
+#if 1
+            if (s_current_transition.substate > 2) {
+                // @recomp Greenscreen for recording.
+                const u32 blue = 0x003F003F;
+                const u32 green = 0x07C107C1;
+                gDPSetCycleType((*gdl)++, G_CYC_FILL);
+                gDPSetRenderMode((*gdl)++, G_RM_NOOP, G_RM_NOOP2);
+                gDPSetFillColor((*gdl)++, 0x07C107C1);
+                gDPScisFillRectangle((*gdl)++, 0, 0, DEFAULT_FRAMEBUFFER_WIDTH - 1, DEFAULT_FRAMEBUFFER_HEIGHT - 1);
+            }
+#endif
         }
     }
     else {
