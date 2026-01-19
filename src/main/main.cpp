@@ -579,6 +579,7 @@ void on_launcher_init(recompui::LauncherMenu *menu) {
     );
 
     game_options_menu->add_default_options();
+    game_options_menu->set_width(30, recompui::Unit::Percent);
 
     for (auto option : game_options_menu->get_options()) {
         option->set_justify_content(recompui::JustifyContent::FlexEnd);
