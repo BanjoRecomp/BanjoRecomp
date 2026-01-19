@@ -40,6 +40,7 @@ void modelRender_setAnimatedTexturesCacheId(s32 arg0);
 bool mapModel_has_xlu_bin(void);
 void func_802F7BC0(Gfx **, Mtx **, Vtx **);
 void func_8034E660(s32 arg0, BKVtxRef *src, Vtx *dst, s32 arg3);
+void func_8034EC50(s32 arg0, BKVtxRef* ref, Vtx* dst, s32 arg3);
 void BKModel_transformMesh(BKModel *model, s32 mesh_id, void (*fn)(s32, BKVtxRef *, Vtx *, s32), s32 arg3);
 
 void recomp_setup_map_skinning(int map_model_id, float *pos_floats);
@@ -208,7 +209,7 @@ void recomp_reset_map_model_skinning() {
     map_model_xlu_pos_floats_count = 0;
 }
 
-// @recomp Patched to store the moved water vertices with higher precision floats.
+// @recomp Patched to store the moved water vertices with higher precision floats for TTC.
 RECOMP_PATCH void func_8034E8E4(Struct73s *arg0, BKModel *arg1, s32 arg2) {
     f32 sp3C;
     f32 sp38;
@@ -290,6 +291,67 @@ RECOMP_PATCH void func_8034E8E4(Struct73s *arg0, BKModel *arg1, s32 arg2) {
     }
 }
 
+// @recomp Patched to store the moved water vertices with higher precision floats for the ending cutscene.
+RECOMP_PATCH void func_8034EF60(Struct77s* arg0, BKModel* arg1, s32 arg2) {
+    f32 temp_f0;
+    f32 sp2C[2];
+
+    temp_f0 = time_getDelta();
+    arg0->unk2C += temp_f0;
+    arg0->unk4 += temp_f0 * arg0->unk0 * 3;
+    arg0->unk8 += temp_f0 * (arg0->unk0 + 0.01) * 3;
+    sp2C[0] = ((150.0f * cosf(arg0->unk2C * 0.2 * BAD_PI)) + (sinf(arg0->unk2C * 0.08 * BAD_PI) * 100.0f)) * 0.8;
+    sp2C[1] = ((50.0f * sinf(arg0->unk2C * 0.5 * BAD_PI)) + (cosf(arg0->unk2C * 0.22 * BAD_PI) * 100.0f)) * 0.8;
+    arg0->unk28[0] = (sp2C[0] >= 0.0) ? (sp2C[0] + 0.5) : (sp2C[0] - 0.5);
+    arg0->unk28[1] = (sp2C[1] >= 0.0) ? (sp2C[1] + 0.5) : (sp2C[1] - 0.5);
+    BKModel_transformMesh(arg1, arg2, &func_8034EC50, (s32)arg0);
+
+    // @recomp Don't use high precision floats if the model exceeds the bounds of the floats array, in case the model was modified.
+    if (arg1->vtxList_4->count <= MAP_MODEL_XLU_VERTEX_COUNT_MAX) {
+        // @recomp Make sure to copy all the vertices from the model to the higher precision floats at least once per frame.
+        s32 i, j = 0;
+        if (map_model_xlu_pos_floats_count < arg1->vtxList_4->count) {
+            Vtx* vtx = vtxList_getVertices(arg1->vtxList_4);
+            for (i = 0; i < arg1->vtxList_4->count; i++) {
+                map_model_xlu_pos_floats[j++] = vtx->v.ob[0];
+                map_model_xlu_pos_floats[j++] = vtx->v.ob[1];
+                map_model_xlu_pos_floats[j++] = vtx->v.ob[2];
+                vtx++;
+            }
+
+            map_model_xlu_pos_floats_count = arg1->vtxList_4->count;
+        }
+
+        // @recomp Run the logic of BKModel_transformMesh again with only the modification of the Y component as seen in func_8034EC50.
+        // The result is stored in the higher precision floats instead of the model binary itself. The original value of dy is used
+        // before it's rounded to make the animation smoother.
+        BKMesh* iMesh = (BKMesh*)(arg1 + 1);
+        BKVtxRef* iVtx;
+        BKVtxRef* start_vtx_ref;
+        BKVtxRef* end_vtx_ref;
+        f32 tmp0, tmp1, temp_f2;
+        for (i = 0; i < arg1->meshList_0->meshCount_0; i++) {
+            if (arg2 == iMesh->uid_0) {
+                start_vtx_ref = (BKVtxRef*)(iMesh + 1);
+                end_vtx_ref = start_vtx_ref + iMesh->vtxCount_2;
+                for (iVtx = start_vtx_ref; iVtx < end_vtx_ref; iVtx++) {
+                    j = iVtx->unk10 * 3;
+                    tmp0 = arg0->unk4 + (iVtx->v.v.ob[0] - arg0->unk10) * 200.0f;
+                    tmp1 = arg0->unk8 + (iVtx->v.v.ob[2] - arg0->unk14) * 200.0f;
+                    temp_f2 = (sinf(tmp0) + cosf(tmp1)) * arg0->unk20;
+                    map_model_xlu_pos_floats[j + 0] = iVtx->v.v.ob[0];
+                    map_model_xlu_pos_floats[j + 1] = arg0->unkC + temp_f2;
+                    map_model_xlu_pos_floats[j + 2] = iVtx->v.v.ob[2];
+                }
+
+                break;
+            }
+
+            iMesh = (BKMesh*)(((BKVtxRef*)(iMesh + 1)) + iMesh->vtxCount_2);
+        };
+    }
+}
+
 // @recomp Patched to set the transform ID when drawing the map's translucent model.
 RECOMP_PATCH void mapModel_xlu_draw(Gfx **gfx, Mtx **mtx, Vtx **vtx) {
     s32 temp_a0;
@@ -309,15 +371,15 @@ RECOMP_PATCH void mapModel_xlu_draw(Gfx **gfx, Mtx **mtx, Vtx **vtx) {
         cur_drawn_model_is_map = TRUE;
         cur_drawn_model_transform_id = MAP_MODEL_XLU_TRANSFORM_ID_START;
 
-        // @recomp Because func_8034E8E4 runs after this function, run through the vector and see if there's a model that uses
-        // the vertex modification function that was patched. The address must be hardcoded as it's not possible to retrieve
-        // the right function address inside a recompiled patch by referencing func_8034E8E4 instead.
+        // @recomp Because the patched water functions run after this function, run through the vector and see if there's a mode
+        // that uses the vertex modification function that was patched. The addresses must be hardcoded as it's not possible to
+        // retrieve the right function address inside a recompiled patch instead.
         BKVertexList *vtxList = (BKVertexList *)((s32)mapModel.model_bin_xlu + mapModel.model_bin_xlu->vtx_list_offset_10);
         if (vtxList->count <= MAP_MODEL_XLU_VERTEX_COUNT_MAX) {
             struct1Ds *iPtr;
             struct1Ds *endPtr = vector_getEnd(D_80386140.unk4);
             for (iPtr = vector_getBegin(D_80386140.unk4); iPtr < endPtr; iPtr++) {
-                if (D_80372030[iPtr->xform_id].unk4 == 0x8034E8E4) {
+                if (D_80372030[iPtr->xform_id].unk4 == 0x8034E8E4 || D_80372030[iPtr->xform_id].unk4 == 0x8034EF60) {
                     recomp_setup_map_skinning(mapModel.description->xlu_model_id, map_model_xlu_pos_floats);
                     break;
                 }
