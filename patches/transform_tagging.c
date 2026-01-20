@@ -446,12 +446,6 @@ RECOMP_PATCH void func_80339124(Gfx ** gfx, Mtx ** mtx, BKGeoList *geo_list){
     }while(1);
 }
 
-typedef struct {
-    u32 frameCount;
-    u32 modelId;
-    u32 floatStart;
-} ModelSkinningData;
-
 // @recomp Applies CPU skinning and saves the result to a higher precision vertex buffer.
 #define SKINNING_POSITIONS_MAX 65536
 
@@ -960,4 +954,25 @@ RECOMP_PATCH BKModelBin *modelRender_draw(Gfx **gfx, Mtx **mtx, f32 position[3],
     // @recomp Clear the flag indicating that the model would have been culled before returning.
     cur_model_would_have_been_culled_in_demo = FALSE;
     return model_bin;
+}
+
+RECOMP_EXPORT void bkrecomp_setup_custom_skinning(ModelSkinningData* skinning_data, u32 model_id) {
+    sCurModelSkinningData = skinning_data;
+    sCurModelId = model_id;
+}
+
+RECOMP_EXPORT void bkrecomp_set_drawn_model_transform_id(u32 transform_id) {
+    cur_drawn_model_transform_id = transform_id;
+}
+
+RECOMP_EXPORT s32 bkrecomp_get_drawn_model_transform_id() {
+    return cur_drawn_model_transform_id;
+}
+
+RECOMP_EXPORT void bkrecomp_set_drawn_model_skip_interpolation(u32 skip_interpolation) {
+    cur_drawn_model_skip_interpolation = skip_interpolation;
+}
+
+RECOMP_EXPORT s32 bkrecomp_get_drawn_model_skip_interpolation() {
+    return cur_drawn_model_skip_interpolation;
 }

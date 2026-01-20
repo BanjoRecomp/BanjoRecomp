@@ -4,6 +4,12 @@
 #include "PR/ultratypes.h"
 #include "rt64_extended_gbi.h"
 
+typedef struct {
+    u32 frameCount;
+    u32 modelId;
+    u32 floatStart;
+} ModelSkinningData;
+
 #define MARKER_TRANSFORM_ID_COUNT 256 // Number of transform IDs for each ActorMarker.
 
 // Projections: 0x00001000 - 0x00001FFF

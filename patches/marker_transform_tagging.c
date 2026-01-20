@@ -8,14 +8,22 @@ extern s32 D_8036E7B0;
 
 void eggShatter_draw(Gfx **gPtr, Mtx **mPtr, Vtx **vPtr);
 void baModel_draw(Gfx **gfx, Mtx **mtx, Vtx **vtx);
+enum asset_e baModel_getModelId(void);
 void func_8033A28C(bool arg0);
 void func_8033A244(f32);
 void func_8033A280(f32);
+
+ModelSkinningData sPlayerSkinningData;
+
+void bkrecomp_setup_custom_skinning(ModelSkinningData* skinning_data, u32 model_id);
 
 // @recomp Patched to set the current transform ID to banjo's when drawing the player.
 RECOMP_PATCH void player_draw(Gfx **gfx, Mtx **mtx, Vtx **vtx) {
     if (D_8037BFB8) {
         eggShatter_draw(gfx, mtx, vtx);
+
+        // @recomp Set the custom skinning data for Banjo, so CPU-skinning forms such as the seal are interpolated.
+        bkrecomp_setup_custom_skinning(&sPlayerSkinningData, baModel_getModelId());
 
         // @recomp Set the current transform ID to banjo's.
         u32 prev_transform_id = cur_drawn_model_transform_id;
