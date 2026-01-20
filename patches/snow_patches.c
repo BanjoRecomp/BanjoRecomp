@@ -49,6 +49,7 @@ RECOMP_PATCH void func_802F9054(void) {
     D_80369288 = assetcache_get(0x8a1); //2D_light
 
     // @recomp Initialize the snow ID queue.
+    snowIDQueueCount = 0;
     while (snowIDQueueCount < SNOW_PARTICLE_COUNT_EXPANDED) {
         snowIDQueue[snowIDQueueCount] = snowIDQueueCount;
         snowIDQueueCount++;
@@ -83,6 +84,16 @@ RECOMP_PATCH void func_802F9134(s32 gfx) {
     }
 }
 
+
+// @recomp Patched to clear the array using the free function instead.
+RECOMP_PATCH void func_802F8FF0(void) {
+    // @recomp Don't just clear the count, use the free function to do it.
+    // D_80369284 = 0;
+    while (D_80369284 > 0) {
+        func_802F9134(D_80369284 - 1);
+    }
+}
+
 // @recomp Patched to increase the amount of snow particles, the spawn area and assign transform IDs to them.
 RECOMP_PATCH void func_802F919C(void) {
     f32 temp_f20;
@@ -99,7 +110,11 @@ RECOMP_PATCH void func_802F919C(void) {
 
     if (D_80369280 != NULL) {
         if (func_802BEF64() != 0) {
-            D_80369284 = 0;
+            // @recomp Don't just clear the count, use the free function to do it.
+            // D_80369284 = 0;
+            while (D_80369284 > 0) {
+                func_802F9134(D_80369284 - 1);
+            }
             return;
         }
         temp_f20 = time_getDelta();
