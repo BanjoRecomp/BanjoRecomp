@@ -144,6 +144,10 @@ extern u32 cur_pushed_text_transform_id;
 extern u32 cur_pushed_text_transform_origin;
 extern u32 cur_pushed_text_transform_skip_interpolation;
 
+ModelSkinningData sScore3SkinningData[ITEM_2B_UNKNOWN];
+
+void bkrecomp_setup_custom_skinning(ModelSkinningData* skinning_data, u32 model_id);
+
 // @recomp Tag the matrices for each honeycomb piece.
 RECOMP_PATCH void fxhoneycarrierscore_draw(s32 arg0, struct8s *arg1, Gfx **arg2, Mtx **arg3, Vtx **arg4) {
     f64 var_f24;
@@ -851,6 +855,11 @@ RECOMP_PATCH void fxcommon3score_draw(enum item_e item_id, void *arg1, Gfx **gfx
             gEXPopMatrixGroup((*gfx)++, G_MTX_MODELVIEW);
             gEXPopOtherMode((*gfx)++);
             gEXPopCombineMode((*gfx)++);
+        }
+
+        // @recomp Set the skinning data for this score.
+        if (item_id < ITEM_2B_UNKNOWN) {
+            bkrecomp_setup_custom_skinning(&sScore3SkinningData[item_id], a1->model_id);
         }
 
         // @recomp Set the model transform ID.
