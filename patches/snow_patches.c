@@ -49,6 +49,7 @@ RECOMP_PATCH void func_802F9054(void) {
     D_80369288 = assetcache_get(0x8a1); //2D_light
 
     // @recomp Initialize the snow ID queue.
+    snowIDQueueCount = 0;
     while (snowIDQueueCount < SNOW_PARTICLE_COUNT_EXPANDED) {
         snowIDQueue[snowIDQueueCount] = snowIDQueueCount;
         snowIDQueueCount++;
