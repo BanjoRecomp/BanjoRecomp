@@ -97,10 +97,50 @@ RECOMP_PATCH char* dialogBin_get(enum asset_e text_id) {
 
 #define DIALOGUE_BANJO_HEAD 0x80
 #define DIALOGUE_KAZOOIE_HEAD 0x81
+#define DIALOGUE_BOTTLES_HEAD 0x83
 #define DIALOGUE_MUMBO_HEAD 0x84
 #define DIALOGUE_COMMAND_END 0x4
 
     switch (text_id) {
+    case 3599:
+        static char* dialog_3599;
+        if (dialog_3599 == NULL) {
+            start_dialog_bin();
+            add_dialog_bin_string(DIALOGUE_BANJO_HEAD, "WOW! THAT LOOKS SO SMOOTH!");
+            add_dialog_bin_string(DIALOGUE_MUMBO_HEAD, "CAN RUN AT 60, 120 OR WHATEVER FPS YOU WANT. MUMBO'S MAGIC PC DOES 360 FPS.");
+            add_dialog_bin_string(DIALOGUE_KAZOOIE_HEAD, "STOP SHOWING OFF SHAMAN BOY. WHAT ABOUT ON MY ULTRAWIDE SCREEN?");
+            add_dialog_bin_string(DIALOGUE_MUMBO_HEAD, "RUDE BIRD NEED NOT WORRY. WIDESCREEN AND MORE SUPPORTED.");
+            add_dialog_bin_string(DIALOGUE_KAZOOIE_HEAD, "IT RUNS WELL TOO. BANJO, EVEN THAT PC YOU GOT OUT OF THE DUMPSTER CAN PROBABLY RUN IT.");
+            add_dialog_bin_string(DIALOGUE_BANJO_HEAD, "KAZOOIE!!!");
+            add_dialog_bin_string(DIALOGUE_MUMBO_HEAD, "PORT ALSO HAS NEW FEATURES. TAKE LOOK.");
+            add_dialog_bin_string(DIALOGUE_BANJO_HEAD, "NOTE SAVING? WHAT DOES THAT DO?");
+            add_dialog_bin_string(DIALOGUE_BOTTLES_HEAD, "WHEN YOU USE IT, YOU WON'T LOSE YOUR NOTES EVERY TIME YOU EXIT A WORLD. NEAT, ISN'T IT?");
+            add_dialog_bin_string(DIALOGUE_KAZOOIE_HEAD, "YOU KNEW ABOUT THIS TOO GOGGLE BOY? SPILL THE BEANS!");
+            add_dialog_bin_string(DIALOGUE_BOTTLES_HEAD, "SURE DID! CHECK OUT HOW COOL MY MINIGAME LOOKS IN THIS PORT!");
+            add_dialog_bin_string(DIALOGUE_BANJO_HEAD, "OOOH! LOOKS GREAT! CAN'T WAIT TO TRY IT!");
+            add_dialog_bin_string(DIALOGUE_KAZOOIE_HEAD, "I DON'T CARE ABOUT YOUR CHEATS BOTTLE BRAIN. HOW'S THE LOADING TIMES?");
+            add_dialog_bin_string(DIALOGUE_BOTTLES_HEAD, "MY PUZZLES ARE EVERYONE'S FAVORITE PART OF THE GAME! BUT I'M GLAD YOU ASKED, TAKE A LOOK!");
+            add_dialog_bin_string(DIALOGUE_BANJO_HEAD, "NEAT! DO WE GET ANY OTHER NEW FEATURES TOO?");
+            add_dialog_bin_string(DIALOGUE_BOTTLES_HEAD, "YES! IF YOU WANT, YOU CAN USE THE RIGHT ANALOG STICK FOR SMOOTHER CAMERA CONTROLS.");
+            add_dialog_bin_string(DIALOGUE_BOTTLES_HEAD, "YOU CAN ALSO USE HIGH DEFINITION TEXTURE PACKS AND CUSTOM MODS!");
+            add_dialog_bin_string(DIALOGUE_BANJO_HEAD, "AWESOME! WHAT KIND OF MODS CAN PEOPLE MAKE FOR THIS PORT?");
+            add_dialog_bin_string(DIALOGUE_BOTTLES_HEAD, "PRETTY MUCH ANYTHING! NEW ASSETS, GAMEPLAY CHANGES, YOU NAME IT. IN FACT, I'VE GOT ONE HERE...");
+            add_dialog_bin_string(DIALOGUE_KAZOOIE_HEAD, "YAWN. DOOM. HOW ORIGINAL. GOT ANYTHING WORTH PLAYING SOIL BRAIN?");
+            add_dialog_bin_string(DIALOGUE_BOTTLES_HEAD, "SURE! MAYBE THESE ONES ARE MORE TO YOUR LIKING...");
+            add_dialog_bin_string(DIALOGUE_BANJO_HEAD, "WOAH! THESE LOOK COOL! ARE THESE NEW ADVENTURES FOR US TO PLAY?");
+            add_dialog_bin_string(DIALOGUE_KAZOOIE_HEAD, "HEY, I THOUGHT OCARINA OF TIME WASN'T READY YET?");
+            add_dialog_bin_string(DIALOGUE_BOTTLES_HEAD, "NO FEATHER BRAIN. IT'S JIGGIES OF TIME BY KURKO MODS, WHICH YOU CAN PLAY IN THIS PORT!");
+            add_dialog_bin_string(DIALOGUE_BOTTLES_HEAD, "WE MADE TOOLS FOR MODDERS TO CONVERT THEIR COMPATIBLE ROMHACKS INTO RECOMP MODS!");
+            add_dialog_bin_string(DIALOGUE_BOTTLES_HEAD, "NOSTALGIA 64 IS ALSO AVAILABLE, AND MORE MODS WILL BE RELEASED IN THE FUTURE!");
+            add_dialog_bin_string(DIALOGUE_BANJO_HEAD, "THAT WAS GREAT! SO WHEN CAN WE PLAY THIS PORT?");
+            add_dialog_bin_string(DIALOGUE_MUMBO_HEAD, "YOU CAN PLAY IT...NOW!");
+            add_dialog_bin_string(DIALOGUE_COMMAND_END, "");
+            next_dialog_bin_character();
+            add_dialog_bin_string(DIALOGUE_COMMAND_END, "");
+            dialog_3599 = end_dialog_bin();
+        }
+
+        return dialog_3599;
     case 3705:
         static char* dialog_3705;
         if (dialog_3705 == NULL) {
@@ -166,10 +206,10 @@ RECOMP_PATCH char* dialogBin_get(enum asset_e text_id) {
         static char* dialog_3717;
         if (dialog_3717 == NULL) {
             start_dialog_bin();
+            add_dialog_bin_string(DIALOGUE_BANJO_HEAD, "SOUNDS EXCITING. WHAT COULD IT BE?");
+            add_dialog_bin_string(DIALOGUE_KAZOOIE_HEAD, "YEAH, SHOW US!");
             add_dialog_bin_string(DIALOGUE_COMMAND_END, "");
             next_dialog_bin_character();
-            add_dialog_bin_string(DIALOGUE_BANJO_HEAD, "SOUNDS EXCITING. WHAT COULD IT BE?");
-            add_dialog_bin_string(DIALOGUE_KAZOOIE_HEAD, "YEAH SHOW US YOUR SECRETS.");
             add_dialog_bin_string(DIALOGUE_COMMAND_END, "");
             dialog_3717 = end_dialog_bin();
         }

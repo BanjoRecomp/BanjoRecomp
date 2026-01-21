@@ -343,7 +343,7 @@ RECOMP_PATCH void func_803163A8(GcZoombox *this, Gfx **gfx, Mtx **mtx) {
     const u32 green = 0x07C107C1;
     gDPSetCycleType((*gfx)++, G_CYC_FILL);
     gDPSetRenderMode((*gfx)++, G_RM_NOOP, G_RM_NOOP2);
-    gDPSetFillColor((*gfx)++, blue);
+    gDPSetFillColor((*gfx)++, green);
     gDPScisFillRectangle((*gfx)++, 0, uly, DEFAULT_FRAMEBUFFER_WIDTH - 1, uly + half_height - 1);
 #endif
 
