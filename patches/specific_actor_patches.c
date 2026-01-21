@@ -4,6 +4,7 @@
 #include "bk_api.h"
 
 #define IDS_PER_BEE 8
+#define IDS_PER_PIECE 8
 
 typedef struct {
     f32 unk0[3];
@@ -25,6 +26,26 @@ typedef struct {
     BKModelBin *unk20;
     s32 unk24;
 }ActorLocal_core2_47BD0;
+
+typedef struct struct_24_s {
+    s32 unk0;
+    BKModelBin* model_bin;
+    f32 unk8[3];
+    f32 unk14[3];
+    f32 unk20[3];
+    f32 unk2C;
+    f32 unk30[3];
+    ParticleEmitter* unk3C;
+    s32 unk40[4];
+    f32 unk50;
+} Struct24s;
+
+typedef struct struct_25_s {
+    Struct24s* begin;
+    Struct24s* current;
+    Struct24s* end;
+    Struct24s data[];
+} Struct25s;
 
 extern struct0* D_8037C200;
 
@@ -87,6 +108,40 @@ RECOMP_PATCH Actor *chBeeSwarm_draw(ActorMarker *marker, Gfx **gfx, Mtx **mtx, V
         cur_drawn_model_transform_id = prev_transform_id;
     }
     return this;
+}
+
+// @recomp Patched to give the actors which spawn multiple pieces individual IDs for each piece. This function is primarily used by explosions of wood and others.
+RECOMP_PATCH Actor* func_802C8484(ActorMarker* marker, Gfx** gfx, Mtx** mtx, Vtx** vtx) {
+    Struct25s* temp_s1;
+    Struct24s* phi_s0;
+    f32 sp5C;
+    Actor* sp58;
+    u32 phi_v1;
+    s32 phi_s4;
+    
+    sp58 = marker_getActorAndRotation(marker, &sp5C);
+    temp_s1 = (Struct25s*)(sp58->unk40);
+    phi_s4 = FALSE;
+    for (phi_s0 = temp_s1->begin; phi_s0 < temp_s1->current; phi_s0++) {
+        if ((phi_s0->unk0 != 0) && (phi_s0->model_bin != NULL)) {
+            // @recomp Set the model transform ID.
+            s32 cur_drawn_marker_spawn_index = bkrecomp_get_marker_spawn_index(marker);
+            u32 transform_id = MARKER_TRANSFORM_ID_START + cur_drawn_marker_spawn_index * MARKER_TRANSFORM_ID_COUNT + (phi_s0 - temp_s1->begin) * IDS_PER_PIECE;
+            u32 prev_transform_id = cur_drawn_model_transform_id;
+            cur_drawn_model_transform_id = transform_id;
+
+            modelRender_setDepthMode(MODEL_RENDER_DEPTH_FULL);
+            modelRender_draw(gfx, mtx, phi_s0->unk8, phi_s0->unk14, phi_s0->unk2C / 10.0f, NULL, phi_s0->model_bin);
+            phi_s4 = TRUE;
+
+            // @recomp Reset the model transform ID.
+            cur_drawn_model_transform_id = prev_transform_id;
+        }
+    }
+    if (phi_s4 == FALSE) {
+        marker_despawn(marker);
+    }
+    return sp58;
 }
 
 extern f32 D_8036E580[3];
