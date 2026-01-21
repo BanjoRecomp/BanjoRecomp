@@ -29,7 +29,7 @@ RECOMP_PATCH void dummy_func_8025AFB0(void) {
     calculate_map_start_note_indices();
 }
 
-#if 0
+#if 1
 
 RECOMP_PATCH enum map_e getDefaultBootMap(void) {
     return MAP_95_CS_END_ALL_100;

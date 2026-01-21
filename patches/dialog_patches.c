@@ -132,8 +132,6 @@ RECOMP_PATCH char* dialogBin_get(enum asset_e text_id) {
             add_dialog_bin_string(DIALOGUE_BOTTLES_HEAD, "NO FEATHER BRAIN. IT'S JIGGIES OF TIME BY KURKO MODS, WHICH YOU CAN PLAY IN THIS PORT!");
             add_dialog_bin_string(DIALOGUE_BOTTLES_HEAD, "WE MADE TOOLS FOR MODDERS TO CONVERT THEIR COMPATIBLE ROMHACKS INTO RECOMP MODS!");
             add_dialog_bin_string(DIALOGUE_BOTTLES_HEAD, "NOSTALGIA 64 IS ALSO AVAILABLE, AND MORE MODS WILL BE RELEASED IN THE FUTURE!");
-            add_dialog_bin_string(DIALOGUE_BANJO_HEAD, "THAT WAS GREAT! SO WHEN CAN WE PLAY THIS PORT?");
-            add_dialog_bin_string(DIALOGUE_MUMBO_HEAD, "YOU CAN PLAY IT...NOW!");
             add_dialog_bin_string(DIALOGUE_COMMAND_END, "");
             next_dialog_bin_character();
             add_dialog_bin_string(DIALOGUE_COMMAND_END, "");
@@ -215,9 +213,34 @@ RECOMP_PATCH char* dialogBin_get(enum asset_e text_id) {
         }
 
         return dialog_3717;
+    case 3719:
+        static char* dialog_3719;
+        if (dialog_3719 == NULL) {
+            start_dialog_bin();
+            add_dialog_bin_string(DIALOGUE_BANJO_HEAD, "THAT WAS GREAT! SO WHEN CAN WE PLAY THIS PORT?");
+            add_dialog_bin_string(DIALOGUE_COMMAND_END, "");
+            next_dialog_bin_character();
+            add_dialog_bin_string(DIALOGUE_COMMAND_END, "");
+            dialog_3719 = end_dialog_bin();
+        }
+
+        return dialog_3719;
+    case 3720:
+        static char* dialog_3720;
+        if (dialog_3720 == NULL) {
+            start_dialog_bin();
+            add_dialog_bin_string(DIALOGUE_COMMAND_END, "");
+            next_dialog_bin_character();
+            add_dialog_bin_string(DIALOGUE_MUMBO_HEAD, "YOU CAN PLAY IT...NOW!");
+            add_dialog_bin_string(DIALOGUE_COMMAND_END, "");
+            dialog_3720 = end_dialog_bin();
+        }
+
+        return dialog_3720;
     default:
         break;
     }
     
     return var_v0;
 }
+

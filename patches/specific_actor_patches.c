@@ -150,7 +150,7 @@ RECOMP_PATCH Actor *func_802E0738(ActorMarker *marker, Gfx **gfx, Mtx **mtx, Vtx
         return this;
     }
 
-#if 1
+#if 0
     if (marker->modelId == 0x355) {
         // @recomp Greenscreen for recording concert Banjo.
         const u32 green = 0x07C107C1;

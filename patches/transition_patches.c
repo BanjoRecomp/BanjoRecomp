@@ -330,7 +330,7 @@ RECOMP_PATCH void gctransition_draw(Gfx **gdl, Mtx **mptr, Vtx **vptr){
                 transition_model->pad0[0] = 0xBA;
             }
 
-#if 1
+#if 0
             if (s_current_transition.substate > 2) {
                 // @recomp Greenscreen for recording.
                 const u32 blue = 0x003F003F;

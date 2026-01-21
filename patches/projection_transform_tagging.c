@@ -335,15 +335,16 @@ RECOMP_PATCH void func_803163A8(GcZoombox *this, Gfx **gfx, Mtx **mtx) {
     f32 sp38[3];
     f32 sp34;
 
-#if 1
+#if 0
     // @recomp Greenscreen for recording.
     const u32 half_height = DEFAULT_FRAMEBUFFER_HEIGHT / 2;
     const u32 uly = (this->unk172 / half_height) * half_height;
     const u32 blue = 0x003F003F;
     const u32 green = 0x07C107C1;
+    const u32 white = 0xFFFFFFFF;
     gDPSetCycleType((*gfx)++, G_CYC_FILL);
     gDPSetRenderMode((*gfx)++, G_RM_NOOP, G_RM_NOOP2);
-    gDPSetFillColor((*gfx)++, green);
+    gDPSetFillColor((*gfx)++, white);
     gDPScisFillRectangle((*gfx)++, 0, uly, DEFAULT_FRAMEBUFFER_WIDTH - 1, uly + half_height - 1);
 #endif
 
@@ -374,7 +375,9 @@ RECOMP_PATCH void func_803163A8(GcZoombox *this, Gfx **gfx, Mtx **mtx) {
     u32 prev_transform_id = cur_drawn_model_transform_id;
     cur_drawn_model_transform_id = ZOOMBOX_TRANSFORM_ID_START + this->portrait_id;
 
+#if 1
     modelRender_draw(gfx, mtx, sp50, sp5C, this->unk198 * sp34, sp38, this->model);
+#endif
 
     // @recomp Reset the model transform ID.
     cur_drawn_model_transform_id = prev_transform_id;
@@ -394,6 +397,11 @@ RECOMP_PATCH void func_803164B0(GcZoombox *this, Gfx **gfx, Mtx **mtx, s32 arg3,
     if (this->portrait_id == ZOOMBOX_SPRITE_46_TUMBLAR) {
         arg6 = 0.75f;
     }
+
+#if 0
+    arg6 = arg6 < 1.0f ? 0.0f : 1.0f;
+#endif
+
     func_80338338(0xFF, 0xFF, 0xFF);
     func_803382FC(this->unk168 * arg6);
     func_803382E4(5);
@@ -434,10 +442,12 @@ RECOMP_PATCH void func_803164B0(GcZoombox *this, Gfx **gfx, Mtx **mtx, s32 arg3,
     // @recomp Create a matrix group for the portrait's model matrix.
     gEXMatrixGroupDecomposedVerts((*gfx)++, ZOOMBOX_PORTRAIT_TRANSFORM_ID_START + this->portrait_id, G_EX_PUSH, G_MTX_MODELVIEW, G_EX_EDIT_NONE);
 
+#if 1
     modelRender_setDepthMode(MODEL_RENDER_DEPTH_NONE);
     func_80344090(arg5, this->unk186, gfx);
     func_8033687C(gfx);
     viewport_setRenderViewportAndPerspectiveMatrix(gfx, mtx);
+#endif
 
     // @recomp Pop the model matrix group.
     gEXPopMatrixGroup((*gfx)++, G_MTX_MODELVIEW);
@@ -450,6 +460,7 @@ RECOMP_PATCH void func_803164B0(GcZoombox *this, Gfx **gfx, Mtx **mtx, s32 arg3,
 
 // @recomp Patched to assign an ID to the text drawn by the zoombox.
 RECOMP_PATCH void func_803162B4(GcZoombox *this) {
+#if 1
     // @recomp Align the zoombox to the left of the screen if necessary.
     if (left_aligned_zoombox(this)) {
         cur_pushed_text_transform_origin = G_EX_ORIGIN_LEFT;
@@ -497,4 +508,5 @@ RECOMP_PATCH void func_803162B4(GcZoombox *this) {
 
     // @recomp Clear ID assigned to the text.
     cur_pushed_text_transform_id = 0;
+#endif
 }
