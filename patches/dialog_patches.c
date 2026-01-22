@@ -237,6 +237,19 @@ RECOMP_PATCH char* dialogBin_get(enum asset_e text_id) {
         }
 
         return dialog_3720;
+    case 3721:
+        static char* dialog_3721;
+        if (dialog_3721 == NULL) {
+            start_dialog_bin();
+            add_dialog_bin_string(DIALOGUE_KAZOOIE_HEAD, "REALLY?! COME ON BANJO, I WANT TO GO HOME AND PLAY IT!");
+            add_dialog_bin_string(DIALOGUE_BANJO_HEAD, "WAHEY! SOUNDS LIKE A PLAN!");
+            add_dialog_bin_string(DIALOGUE_COMMAND_END, "");
+            next_dialog_bin_character();
+            add_dialog_bin_string(DIALOGUE_COMMAND_END, "");
+            dialog_3721 = end_dialog_bin();
+        }
+
+        return dialog_3721;
     default:
         break;
     }
