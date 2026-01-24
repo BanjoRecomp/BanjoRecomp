@@ -66,7 +66,7 @@ A Thunderstore mod hosting page is currently being set up for this project. In t
 
 * [BK Jiggies of Time](https://github.com/Mr-Wiseguy/JiggiesOfTimeRecomp/releases/latest)
 * [BK Nostalgia 64](https://github.com/Mr-Wiseguy/Nostalgia64Recomp/releases/latest)
-* TODO DOOM
+* [BK Reloaded Texture Pack](https://evilgames.eu/texture-packs/bk-reloaded.htm)
 
 If you're interested in making mods for this project, check out [the mod template](https://github.com/BanjoRecomp/BKRecompModTemplate) and [the modding documentation](https://hackmd.io/fMDiGEJ9TBSjomuZZOgzNg). If you're interested in making texture packs, check out [the RT64 documentation](https://github.com/rt64/rt64/blob/main/TEXTURE-PACKS.md). You can also join the [N64: Recompiled Modding Discord server](https://discord.gg/Z8Nbm455D4).
 
