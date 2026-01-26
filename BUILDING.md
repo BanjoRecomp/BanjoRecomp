@@ -36,7 +36,7 @@ choco install make
 ```
 
 ## 3. Decompressing the target ROM
-You will need to decompress the NTSC-U 1.0 N64 Banjo-Kazooie ROM (sha1: d6133ace5afaa0882cf214cf88daba39e266c078) before running the recompiler.
+You will need to decompress the NTSC-U 1.0 N64 Banjo-Kazooie ROM (sha1: 1fe1632098865f639e22c11b9a81ee8f29c75d7a) before running the recompiler.
 
 The most straightforward way to do this is to set up the [Banjo-Kazooie decompilation](https://gitlab.com/banjo.decomp/banjo-kazooie), which will decompress the ROM when building. Alternatively, you can run the [bk_rom_compressor tool](https://github.com/MittenzHugg/bk_rom_compressor) directly, which is what the decompilation uses to decompress the ROM.
 
