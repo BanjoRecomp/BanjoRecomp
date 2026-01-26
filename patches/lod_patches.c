@@ -48,6 +48,7 @@ RECOMP_PATCH s32 func_802985F0(void){
             return ASSET_356_MODEL_BANJO_WISHYWASHY;
         // @recomp Force high poly BK player model on all maps
         case TRANSFORM_1_BANJO: 
+        default:
             return ASSET_34E_MODEL_BANJOKAZOOIE_HIGH_POLY;
     }
 }
