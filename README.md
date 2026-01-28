@@ -1,4 +1,4 @@
-# Banjo: Recompiled
+<img width="491" height="132" alt="imagen" src="https://github.com/user-attachments/assets/a513dab3-28be-4c6d-8478-738381eb33d8" /># Banjo: Recompiled
 Banjo: Recompiled is a project that uses [N64: Recompiled](https://github.com/N64Recomp/N64Recomp) to **statically recompile** Banjo-Kazooie into a native port with many new features, enhancements, and extensive mod support. This project uses [RT64](https://github.com/rt64/rt64) as the rendering engine to provide graphical enhancements.
 
 ### [Check out the latest release here](https://github.com/BanjoRecomp/BanjoRecomp/releases/latest).
@@ -113,7 +113,7 @@ Instead, you can change the game by installing mods. See the [mod support](#mod-
 #### Can you run this project as a portable application?
 Yes, if you place a file named `portable.txt` in the same folder as the executable then this project will run in portable mode. In portable mode, the save files, config files, and mods are placed in the same folder as the executable.
 
-#### Did you fix the duplicate Mumbo token IDs?
+#### Were the duplicate Mumbo token IDs in the original game fixed?
 Yes. The incorrect Mumbo tokens now use previously unused token IDs. This won't affect mods that replace levels.
 
 #### Does note saving have the same issue as the XBLA version where it collects notes during Bottles' puzzles and prevents you from getting 100% completion?
