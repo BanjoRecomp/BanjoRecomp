@@ -66,7 +66,7 @@ Any aspect ratio is supported, with all effects modded to work correctly in wide
 #### Mod Support
 Install community made mods and texture packs! Mods can change any part of the game, including adding completely new features and content. You can install mods by simply dragging the mod files onto the game window before starting the game or by clicking the **Install Mods** button in the mod menu. Mods can be toggled in the mod menu, and some mods can be configured there as well.
 
-Many mods are available on the project's Thunderstore page: https://thunderstore.io/c/banjo-recompiled/. The Thunderstore mod manager/r2modman is not required or supported, so be sure to click the "Manual Download" button when downloading a mod instead of the "Install with Mod Manager" button.
+Many mods are available on the project's Thunderstore page: https://thunderstore.io/c/banjo-recompiled/. The Thunderstore mod manager/r2modman is not required or supported, so simply download the mods directly from the website.
 
 If you're interested in making mods for this project, check out [the mod template](https://github.com/BanjoRecomp/BKRecompModTemplate) and [the modding documentation](https://hackmd.io/fMDiGEJ9TBSjomuZZOgzNg). If you're interested in making texture packs, check out [the RT64 documentation](https://github.com/rt64/rt64/blob/main/TEXTURE-PACKS.md). You can also join the [N64: Recompiled Modding Discord server](https://discord.gg/Z8Nbm455D4).
 
