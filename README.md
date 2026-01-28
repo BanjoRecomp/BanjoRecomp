@@ -118,10 +118,10 @@ Instead, you can change the game by installing mods. See the [mod support](#mod-
 Yes, if you place a file named `portable.txt` in the same folder as the executable then this project will run in portable mode. In portable mode, the save files, config files, and mods are placed in the same folder as the executable.
 
 #### Did you fix the duplicate Mumbo token IDs?
-Yes.
+Yes. The incorrect Mumbo tokens now use previously unused token IDs. This won't affect mods that replace levels.
 
 #### Does note saving have the same issue as the XBLA version where it collects notes during Bottles' puzzles and prevents you from getting 100% completion?
-No.
+No. Take has been care to ensure that notes are not collected during demos. 
 
 ## Known Issues
 * Overlays such as MSI Afterburner and other software such as Wallpaper Engine can cause performance issues with this project that prevent the game from rendering correctly. Disabling such software is recommended.
