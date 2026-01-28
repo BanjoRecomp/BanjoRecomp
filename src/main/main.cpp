@@ -326,7 +326,7 @@ void set_frequency(uint32_t freq) {
     update_audio_converter();
 }
 
-void reset_audio(uint32_t output_freq) {
+bool reset_audio(uint32_t output_freq) {
     SDL_AudioSpec spec_desired{
         .freq = (int)output_freq,
         .format = AUDIO_F32,
@@ -339,15 +339,19 @@ void reset_audio(uint32_t output_freq) {
         .userdata = nullptr
     };
 
-
     audio_device = SDL_OpenAudioDevice(nullptr, false, &spec_desired, nullptr, 0);
     if (audio_device == 0) {
-        exit_error("SDL error opening audio device: %s\n", SDL_GetError());
+        std::string audio_error = std::string("No audio device could be found. Please make sure an audio device is available.\nError opening audio device: ") + std::string(SDL_GetError());
+        recompui::message_box(audio_error.c_str());
+        return false;
     }
+
     SDL_PauseAudioDevice(audio_device, 0);
 
     output_sample_rate = output_freq;
     update_audio_converter();
+
+    return true;
 }
 
 extern RspUcodeFunc n_aspMain;
@@ -684,9 +688,16 @@ int main(int argc, char** argv) {
     // Initialize native file dialogs.
     NFD_Init();
 
+    // Initialize program settings.
+    recompui::programconfig::set_program_name(banjo::program_name);
+    recompui::programconfig::set_program_id(banjo::program_id);
+    
     // Initialize SDL audio and set the output frequency.
     SDL_InitSubSystem(SDL_INIT_AUDIO);
-    reset_audio(48000);
+    if (!reset_audio(48000)) {
+        // It is not possible to initialize without an audio device.
+        return EXIT_FAILURE;
+    }
 
     // Source controller mappings file
     std::u8string controller_db_path = (recompui::file::get_program_path() / "recompcontrollerdb.txt").u8string();
@@ -694,10 +705,11 @@ int main(int argc, char** argv) {
         fprintf(stderr, "Failed to load controller mappings: %s\n", SDL_GetError());
     }
 
-    recompui::programconfig::set_program_name(banjo::program_name);
-    recompui::programconfig::set_program_id(banjo::program_id);
+    // Register fonts.
     recompui::register_primary_font("InterVariable.ttf", "Inter Variable");
     recompui::register_extra_font("Suplexmentary Comic NC.ttf");
+
+    // Register configuration path.
     recomp::register_config_path(recompui::file::get_app_folder_path());
 
     // Register supported games and patches
