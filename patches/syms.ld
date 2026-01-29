@@ -52,3 +52,5 @@ recomp_get_flying_and_swimming_inverted_axes = 0x8F0000BC;
 recomp_get_first_person_inverted_axes = 0x8F0000C0;
 recomp_get_analog_cam_sensitivity = 0x8F0000C4;
 recomp_run_ui_callbacks = 0x8F0000C8;
+recomp_check_cutscene_skip = 0x8F0000CC;
+recomp_get_enabled_cheats = 0x8F0000D0;

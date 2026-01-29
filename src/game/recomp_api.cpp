@@ -5,6 +5,7 @@
 #include "librecomp/addresses.hpp"
 #include "banjo_config.h"
 #include "recompinput/recompinput.h"
+#include "recompinput/profiles.h"
 #include "recompui/recompui.h"
 #include "recompui/renderer.h"
 #include "banjo_sound.h"
@@ -196,6 +197,38 @@ extern "C" void recomp_get_analog_cam_enabled(uint8_t* rdram, recomp_context* ct
 
 extern "C" void recomp_get_note_saving_enabled(uint8_t* rdram, recomp_context* ctx) {
     _return<s32>(ctx, banjo::get_note_saving_mode() == banjo::NoteSavingMode::On);
+}
+
+extern "C" void recomp_check_cutscene_skip(uint8_t* rdram, recomp_context* ctx) {
+    // Check if cutscene skip setting is enabled.
+    if (banjo::get_cutscene_skip_mode() != banjo::CutsceneSkipMode::On) {
+        _return<s32>(ctx, 0);
+        return;
+    }
+
+    // Don't check input when game input is disabled (e.g. menu is open).
+    if (recompinput::game_input_disabled()) {
+        _return<s32>(ctx, 0);
+        return;
+    }
+
+    // Read the physical controller state to detect Start button.
+    uint16_t buttons = 0;
+    float x = 0.0f, y = 0.0f;
+    recompinput::profiles::get_n64_input(0, &buttons, &x, &y);
+
+    bool start_pressed = (buttons & 0x1000) != 0;
+
+    // Rising-edge detection: only return true on the frame Start is first pressed.
+    static bool prev_start = false;
+    bool just_pressed = start_pressed && !prev_start;
+    prev_start = start_pressed;
+
+    _return<s32>(ctx, just_pressed ? 1 : 0);
+}
+
+extern "C" void recomp_get_enabled_cheats(uint8_t* rdram, recomp_context* ctx) {
+    _return<u32>(ctx, banjo::get_enabled_cheats());
 }
 
 extern "C" void recomp_get_right_analog_inputs(uint8_t* rdram, recomp_context* ctx) {

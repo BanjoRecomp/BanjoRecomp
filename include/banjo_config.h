@@ -1,6 +1,7 @@
 #ifndef __BANJO_CONFIG_H__
 #define __BANJO_CONFIG_H__
 
+#include <cstdint>
 #include <filesystem>
 #include <string>
 #include <string_view>
@@ -28,6 +29,20 @@ namespace banjo {
 
         namespace graphics {
             inline const std::string cutscene_aspect_ratio_mode = "cutscene_aspect_ratio_mode";
+        }
+
+        namespace enhancements {
+            inline const std::string cutscene_skip_mode = "cutscene_skip_mode";
+
+            // Classic Cheats
+            inline const std::string cheat_infinite_health = "cheat_infinite_health";
+            inline const std::string cheat_infinite_lives = "cheat_infinite_lives";
+            inline const std::string cheat_infinite_air = "cheat_infinite_air";
+            inline const std::string cheat_infinite_eggs = "cheat_infinite_eggs";
+            inline const std::string cheat_infinite_red_feathers = "cheat_infinite_red_feathers";
+            inline const std::string cheat_infinite_gold_feathers = "cheat_infinite_gold_feathers";
+            inline const std::string cheat_infinite_mumbo_tokens = "cheat_infinite_mumbo_tokens";
+            inline const std::string cheat_hover = "cheat_hover";
         }
     }
 
@@ -85,6 +100,21 @@ namespace banjo {
     };
 
     CutsceneAspectRatioMode get_cutscene_aspect_ratio_mode();
+
+    enum class CutsceneSkipMode {
+        Off,
+        On,
+        OptionCount
+    };
+
+    NLOHMANN_JSON_SERIALIZE_ENUM(banjo::CutsceneSkipMode, {
+        {banjo::CutsceneSkipMode::Off, "Off"},
+        {banjo::CutsceneSkipMode::On, "On"}
+    });
+
+    CutsceneSkipMode get_cutscene_skip_mode();
+
+    uint32_t get_enabled_cheats();
 
     void open_quit_game_prompt();
 };

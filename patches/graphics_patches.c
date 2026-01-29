@@ -46,6 +46,7 @@ extern u32 dynamic_camera_target_index;
 extern void recomp_reset_skinning_stack();
 extern void recomp_reset_map_model_skinning();
 extern void recomp_advance_dynamic_camera_targets();
+void apply_classic_cheats(void);
 
 // @recomp Patched to not free anything.
 RECOMP_PATCH void graphicsCache_release(void) {
@@ -100,6 +101,9 @@ RECOMP_PATCH void game_draw(s32 arg0){
 
     // @recomp Update note saving state.
     note_saving_update();
+
+    // @recomp Apply any enabled classic cheats.
+    apply_classic_cheats();
 
     // @recomp Track the original values.
     Mtx* mtx_start = mtx;

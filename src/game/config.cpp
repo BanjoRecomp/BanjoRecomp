@@ -171,7 +171,72 @@ static void add_graphics_options(recomp::config::Config &config) {
         "Sets the aspect ratio limit for cutscenes. Cutscenes have been adjusted to work in <recomp-color primary>16:9</recomp-color>, which is the default option. Wider aspect ratios may show details that weren't meant to be on-screen.",
         cutscene_aspect_ratio_mode_options,
         banjo::CutsceneAspectRatioMode::Clamp16x9
-    );    
+    );
+}
+
+static void add_enhancements_options(recomp::config::Config &config) {
+    using EnumOptionVector = const std::vector<recomp::config::ConfigOptionEnumOption>;
+    static EnumOptionVector cutscene_skip_mode_options = {
+        {banjo::CutsceneSkipMode::Off, "Off", "Off"},
+        {banjo::CutsceneSkipMode::On, "On", "On"},
+    };
+    config.add_enum_option(
+        banjo::configkeys::enhancements::cutscene_skip_mode,
+        "Cutscene Skip",
+        "When enabled, press <recomp-color primary>Start</recomp-color> during cutscenes to skip them.",
+        cutscene_skip_mode_options,
+        banjo::CutsceneSkipMode::Off
+    );
+
+    // Classic Cheats
+    config.add_bool_option(
+        banjo::configkeys::enhancements::cheat_infinite_health,
+        "Infinite Health",
+        "Keeps Banjo's health at maximum at all times.",
+        false
+    );
+    config.add_bool_option(
+        banjo::configkeys::enhancements::cheat_infinite_lives,
+        "Infinite Lives",
+        "Keeps Banjo's extra lives at 9.",
+        false
+    );
+    config.add_bool_option(
+        banjo::configkeys::enhancements::cheat_infinite_air,
+        "Infinite Air",
+        "Prevents the air meter from decreasing while underwater.",
+        false
+    );
+    config.add_bool_option(
+        banjo::configkeys::enhancements::cheat_infinite_eggs,
+        "Infinite Eggs",
+        "Keeps Banjo's egg count at the maximum of 100.",
+        false
+    );
+    config.add_bool_option(
+        banjo::configkeys::enhancements::cheat_infinite_red_feathers,
+        "Infinite Red Feathers",
+        "Keeps Banjo's red feather count at the maximum of 50.",
+        false
+    );
+    config.add_bool_option(
+        banjo::configkeys::enhancements::cheat_infinite_gold_feathers,
+        "Infinite Gold Feathers",
+        "Keeps Banjo's gold feather count at the maximum of 10.",
+        false
+    );
+    config.add_bool_option(
+        banjo::configkeys::enhancements::cheat_infinite_mumbo_tokens,
+        "Infinite Mumbo Tokens",
+        "Keeps Banjo's Mumbo Token count at 99.",
+        false
+    );
+    config.add_bool_option(
+        banjo::configkeys::enhancements::cheat_hover,
+        "Hover",
+        "Hold <recomp-color primary>L</recomp-color> to levitate upward. Release to fall back down.",
+        false
+    );
 }
 
 static void set_control_defaults() {
@@ -242,6 +307,34 @@ banjo::CutsceneAspectRatioMode banjo::get_cutscene_aspect_ratio_mode() {
     return get_graphics_config_enum_value<banjo::CutsceneAspectRatioMode>(banjo::configkeys::graphics::cutscene_aspect_ratio_mode);
 }
 
+static const std::string enhancements_tab_id = "enhancements";
+
+template <typename T = uint32_t>
+T get_enhancements_config_enum_value(const std::string& option_id) {
+    return static_cast<T>(std::get<uint32_t>(recompui::config::get_config(enhancements_tab_id).get_option_value(option_id)));
+}
+
+banjo::CutsceneSkipMode banjo::get_cutscene_skip_mode() {
+    return get_enhancements_config_enum_value<banjo::CutsceneSkipMode>(banjo::configkeys::enhancements::cutscene_skip_mode);
+}
+
+static bool get_enhancements_config_bool_value(const std::string& option_id) {
+    return std::get<bool>(recompui::config::get_config(enhancements_tab_id).get_option_value(option_id));
+}
+
+uint32_t banjo::get_enabled_cheats() {
+    uint32_t flags = 0;
+    if (get_enhancements_config_bool_value(banjo::configkeys::enhancements::cheat_infinite_health))        flags |= (1 << 0);
+    if (get_enhancements_config_bool_value(banjo::configkeys::enhancements::cheat_infinite_lives))         flags |= (1 << 1);
+    if (get_enhancements_config_bool_value(banjo::configkeys::enhancements::cheat_infinite_air))           flags |= (1 << 2);
+    if (get_enhancements_config_bool_value(banjo::configkeys::enhancements::cheat_infinite_eggs))          flags |= (1 << 3);
+    if (get_enhancements_config_bool_value(banjo::configkeys::enhancements::cheat_infinite_red_feathers))  flags |= (1 << 4);
+    if (get_enhancements_config_bool_value(banjo::configkeys::enhancements::cheat_infinite_gold_feathers)) flags |= (1 << 5);
+    if (get_enhancements_config_bool_value(banjo::configkeys::enhancements::cheat_infinite_mumbo_tokens))  flags |= (1 << 6);
+    if (get_enhancements_config_bool_value(banjo::configkeys::enhancements::cheat_hover))                flags |= (1 << 7);
+    return flags;
+}
+
 void banjo::init_config() {
     std::filesystem::path recomp_dir = recompui::file::get_app_folder_path();
 
@@ -259,6 +352,9 @@ void banjo::init_config() {
 
     auto &graphics_config = recompui::config::create_graphics_tab();
     add_graphics_options(graphics_config);
+
+    auto &enhancements_config = recompui::config::create_config_tab("Enhancements", enhancements_tab_id, false);
+    add_enhancements_options(enhancements_config);
 
     set_control_defaults();
     set_control_descriptions();
