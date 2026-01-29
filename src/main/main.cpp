@@ -717,6 +717,8 @@ int main(int argc, char** argv) {
         recomp::register_game(game);
     }
 
+    recomp::mods::register_deprecated_mod("bk_recomp_mod_always_high_poly", recomp::mods::DeprecationStatus::Integrated);
+
     REGISTER_FUNC(recomp_get_window_resolution);
     REGISTER_FUNC(recomp_get_target_aspect_ratio);
     REGISTER_FUNC(recomp_get_target_framerate);
