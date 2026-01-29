@@ -102,7 +102,7 @@ RECOMP_PATCH void game_draw(s32 arg0){
     // @recomp Update note saving state.
     note_saving_update();
 
-    // @recomp Apply any enabled classic cheats.
+    // @recomp apply classic cheats
     apply_classic_cheats();
 
     // @recomp Track the original values.

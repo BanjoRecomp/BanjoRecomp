@@ -136,6 +136,6 @@ RECOMP_PATCH void func_803329AC(void){
     // @recomp Reset the intro cutscene timing corrections so the cutscene can be played again
     reset_cutscene_timings_state();
 
-    // @recomp Reset the cutscene skip state so it can be re-triggered on the next cutscene map
+    // @recomp reset cutscene skip state for new map
     reset_cutscene_skip_state();
 }

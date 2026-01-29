@@ -234,7 +234,7 @@ static void add_enhancements_options(recomp::config::Config &config) {
     config.add_bool_option(
         banjo::configkeys::enhancements::cheat_hover,
         "Hover",
-        "Hold <recomp-color primary>L</recomp-color> to levitate upward. Release to fall back down.",
+        "Hold <recomp-color primary>L</recomp-color> (<recomp-color primary>Right Stick Click</recomp-color> on Steam Deck) to levitate upward. Release to fall back down.",
         false
     );
 }

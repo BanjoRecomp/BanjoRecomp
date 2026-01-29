@@ -200,26 +200,26 @@ extern "C" void recomp_get_note_saving_enabled(uint8_t* rdram, recomp_context* c
 }
 
 extern "C" void recomp_check_cutscene_skip(uint8_t* rdram, recomp_context* ctx) {
-    // Check if cutscene skip setting is enabled.
+    // bail if cutscene skip is off
     if (banjo::get_cutscene_skip_mode() != banjo::CutsceneSkipMode::On) {
         _return<s32>(ctx, 0);
         return;
     }
 
-    // Don't check input when game input is disabled (e.g. menu is open).
+    // don't check input when game input is disabled (menu open etc)
     if (recompinput::game_input_disabled()) {
         _return<s32>(ctx, 0);
         return;
     }
 
-    // Read the physical controller state to detect Start button.
+    // read physical controller for start button
     uint16_t buttons = 0;
     float x = 0.0f, y = 0.0f;
     recompinput::profiles::get_n64_input(0, &buttons, &x, &y);
 
     bool start_pressed = (buttons & 0x1000) != 0;
 
-    // Rising-edge detection: only return true on the frame Start is first pressed.
+    // rising edge only - true on the frame start is first pressed
     static bool prev_start = false;
     bool just_pressed = start_pressed && !prev_start;
     prev_start = start_pressed;
