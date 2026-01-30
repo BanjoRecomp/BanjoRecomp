@@ -225,7 +225,7 @@ static void set_control_descriptions() {
     recompinput::set_game_input_description(recompinput::GameInput::A, "Used to jump and select options in menus. Also used for flying upwards.");
     recompinput::set_game_input_description(recompinput::GameInput::B, "Used for attacks, which change depending on whether you are stationary, moving, in the air, or crouching.");
     recompinput::set_game_input_description(recompinput::GameInput::Z, "Used to crouch, which enables A, B and the C-Buttons to perform different actions.");
-    recompinput::set_game_input_description(recompinput::GameInput::L, "Unused. Mods may use it for additional features.");
+    recompinput::set_game_input_description(recompinput::GameInput::L, "Used to skip dialogue boxes during game replays (press L + R + B simultaneously). Mods may also use it separately for additional features.");
     recompinput::set_game_input_description(recompinput::GameInput::R, "Used to center the camera behind Banjo on the ground, and to perform tighter turns while flying or swimming.");
     recompinput::set_game_input_description(recompinput::GameInput::START, "Used for pausing and for skipping certain cutscenes.");
     recompinput::set_game_input_description(recompinput::GameInput::C_UP, "Used to enter first-person mode, and to shoot eggs while holding Z.");
