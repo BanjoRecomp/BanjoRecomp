@@ -3,6 +3,7 @@
 #include "misc_funcs.h"
 #include "save_extension.h"
 #include "note_saving.h"
+#include "jinjo_saving.h"
 
 #include "functions.h"
 #include "prop.h"
@@ -413,7 +414,7 @@ s32 get_collected_note_count(enum level_e level) {
     return count;
 }
 
-// @recomp Patched to restore the saved note count when entering a level and reset the per-map collected dynamic note counts.
+// @recomp Patched to restore the saved note and jinjo count when entering a level and reset the per-map collected dynamic note counts.
 RECOMP_PATCH void itemscore_levelReset(enum level_e level){
     int i;
     
@@ -453,6 +454,10 @@ RECOMP_PATCH void itemscore_levelReset(enum level_e level){
             map_dynamic_note_despawn_counts[map_id] = 0;
         }
     }
+
+    // @recomp If jinjo saving is currently enabled, restore the jinjo count for the current level
+    if (bkrecomp_jinjo_saving_active())
+        D_80385F30[ITEM_12_JINJOS] = jinjo_saving_get_counters(level);
 }
 
 // @recomp Patched to return true for FILEPROG_99_PAST_50_NOTE_DOOR_TEXT if note saving is enabled.

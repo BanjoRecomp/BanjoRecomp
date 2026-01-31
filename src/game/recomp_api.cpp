@@ -198,6 +198,11 @@ extern "C" void recomp_get_note_saving_enabled(uint8_t* rdram, recomp_context* c
     _return<s32>(ctx, banjo::get_note_saving_mode() == banjo::NoteSavingMode::On);
 }
 
+extern "C" void recomp_get_jinjo_saving_enabled(uint8_t* rdram, recomp_context* ctx) {
+    // TODO: Currently piggybacks on whether note saving is enabled. Change once we discuss how to separate these in the UI.
+    _return<s32>(ctx, banjo::get_note_saving_mode() == banjo::NoteSavingMode::On);
+}
+
 extern "C" void recomp_get_right_analog_inputs(uint8_t* rdram, recomp_context* ctx) {
     float* x_out = _arg<0, float*>(rdram, ctx);
     float* y_out = _arg<1, float*>(rdram, ctx);
