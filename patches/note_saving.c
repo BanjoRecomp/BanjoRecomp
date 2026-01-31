@@ -141,6 +141,11 @@ void init_note_saving() {
     map_note_data[MAP_8B_RBB_ANCHOR_ROOM].static_note_count = 4;
 }
 
+RECOMP_EXPORT PropExtensionId bkrecomp_notesaving_get_note_saving_prop_extension_id()
+{
+    return note_saving_prop_extension_id;
+}
+
 RECOMP_EXPORT void bkrecomp_notesaving_clear_all_map_note_counts() {
     for (u32 i = 0; i < ARRLEN(map_note_data); i++) {
         map_note_data[i].static_note_count = 0;
@@ -234,6 +239,11 @@ bool is_note_collected(enum map_e map_id, enum level_e level_id, u8 note_index) 
     return (loaded_file_extension_data.level_notes[level_array_index].bytes[byte_index] & (1 << bit_index)) != 0;
 }
 
+RECOMP_EXPORT bool bkrecomp_is_note_collected(enum map_e map_id, enum level_e level_id, u8 note_index)
+{
+    return is_note_collected(map_id, level_id, note_index);
+}
+
 void set_note_collected(enum map_e map_id, enum level_e level_id, u8 note_index) {
     if (map_id >= ARRLEN(map_note_data)) {
         return;
@@ -252,6 +262,11 @@ void set_note_collected(enum map_e map_id, enum level_e level_id, u8 note_index)
 
     loaded_file_extension_data.level_notes[level_array_index].bytes[byte_index] |= (1 << bit_index);
 }
+RECOMP_EXPORT void bkrecomp_set_note_collected(enum map_e map_id, enum level_e level_id, u8 note_index)
+{
+	set_note_collected(map_id, level_id, note_index);
+}
+
 
 void collect_dynamic_note(enum map_e map_id, enum level_e level_id) {
     if (map_id < ARRLEN(map_note_data)) {
@@ -268,6 +283,10 @@ void collect_dynamic_note(enum map_e map_id, enum level_e level_id) {
             }
         }
     }
+}
+RECOMP_EXPORT void bkrecomp_collect_dynamic_note(enum map_e map_id, enum level_e level_id)
+{
+    collect_dynamic_note(map_id, level_id);
 }
 
 s32 dynamic_note_collected_count(enum map_e map_id) {
@@ -286,6 +305,10 @@ s32 dynamic_note_collected_count(enum map_e map_id) {
         }
     }
     return ret;
+}
+RECOMP_EXPORT s32 bkrecomp_dynamic_note_collected_count(enum map_e map_id)
+{
+    return dynamic_note_collected_count(map_id);
 }
 
 void note_saving_on_map_load() {
@@ -368,6 +391,9 @@ Cube *find_cube_for_prop(Prop *p) {
     return NULL;
 }
 
+RECOMP_DECLARE_EVENT(bkrecomp_note_collected_event(enum map_e map_id, enum level_e level_id, u8 note_index));
+RECOMP_DECLARE_EVENT(bkrecomp_dynamic_note_collected_event(enum map_e map_id, enum level_e level_id));
+
 // @recomp Patched to track collected notes.
 RECOMP_PATCH void __baMarker_resolveMusicNoteCollision(Prop *arg0) {
     // @recomp Set that the note was collected if this isn't demo playback.
@@ -375,6 +401,7 @@ RECOMP_PATCH void __baMarker_resolveMusicNoteCollision(Prop *arg0) {
         // Check if this is an actor prop and collect a dynamic note if so.
         if (arg0->is_actor) {
             collect_dynamic_note(map_get(), level_get());
+            bkrecomp_dynamic_note_collected_event(map_get(), level_get());
         }
         // Otherwise, make sure this is a sprite prop and use the prop data.
         else if (!arg0->is_3d) {
@@ -382,6 +409,7 @@ RECOMP_PATCH void __baMarker_resolveMusicNoteCollision(Prop *arg0) {
             if (prop_cube != NULL) {
                 NoteSavingExtensionData* note_data = (NoteSavingExtensionData*)bkrecomp_get_extended_prop_data(prop_cube, arg0, note_saving_prop_extension_id);
                 set_note_collected(map_get(), level_get(), note_data->note_index);
+                bkrecomp_note_collected_event(map_get(), level_get(), note_data->note_index);
             }
         }
     }
