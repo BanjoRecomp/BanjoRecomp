@@ -16,4 +16,6 @@ jobs:
     needs: authorize
     uses: ./.github/workflows/validate.yml
     secrets:
-      ZRE_REPO_WITH_PAT: ${{ secrets.ZRE_REPO_WITH_PAT }}
+      SECRET_NAME: ${{ secrets.SECRET_NAME }}
+      SECRET_TOKEN: ${{ secrets.SECRET_TOKEN }}
+
