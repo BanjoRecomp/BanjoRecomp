@@ -132,7 +132,7 @@ RECOMP_PATCH void func_803329AC(void){
     // @recomp Run note saving map load code.
     note_saving_on_map_load();
 
-    // @recomp Reset jinjo saved global counter
+    // @recomp Run jinjo saving map load code.
     jinjo_saving_on_map_load();
 
     // @recomp Reset the intro cutscene timing corrections so the cutscene can be played again

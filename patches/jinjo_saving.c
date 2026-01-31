@@ -90,9 +90,9 @@ bool jinjo_saving_override_disabled = FALSE;
 
 static struct
 {
-    u32        initialCounter;
     enum map_e map;
-} sOnMapEnter = {0};
+    u32        counter;
+} sMapInitialVars = {0};
 
 
 /*********************** Exports */
@@ -391,7 +391,7 @@ void chJinjo_update(Actor * this)
                         sJinjoJiggyLastRestoredForLevel = levelIdx;
 
                         // Check if we've just entered the map.
-                        sJinjoJiggySpawnedManually = get_global_timer() > sOnMapEnter.initialCounter + 20;
+                        sJinjoJiggySpawnedManually = get_global_timer() > sMapInitialVars.counter + 20;
 
                         jiggypos.y += 50;
 
@@ -783,19 +783,11 @@ void chjiggy_update(Actor *this)
                  * of the camera.
                  * 
                  * Assume that any jinjo jiggy that spawns at the time of us entering
-                 * the map can potentially clip out of bounds.
+                 * the map can potentially clip out of bounds. Keep it in place.
                  */
 
-                this->position[1] = clamp_f32(this->position[1], sJinjoJiggySpawnPosition.y, sJinjoJiggySpawnPosition.y + 10.f);
-
-                /**
-                 * We also clamp posX and posZ to prevent a weird-looking floating jiggy if a jiggy
-                 * like the MM hut green jinjo jiggy slides down the hut roof.
-                 * By not letting it slide down the hut, it won't float in the air.
-                 * 
-                 * TODO: Consider some alternative to this
-                 */
                 this->position[0] = clamp_f32(this->position[0], sJinjoJiggySpawnPosition.x, sJinjoJiggySpawnPosition.x + 2.f);
+                this->position[1] = clamp_f32(this->position[1], sJinjoJiggySpawnPosition.y, sJinjoJiggySpawnPosition.y + 10.f);
                 this->position[2] = clamp_f32(this->position[2], sJinjoJiggySpawnPosition.z, sJinjoJiggySpawnPosition.z + 2.f);
             }
         }
@@ -832,20 +824,20 @@ u32 jinjo_saving_get_counters(enum level_e level)
 
 void jinjo_saving_on_map_load(void)
 {
-    if (map_get() != sOnMapEnter.map)
+    if (map_get() != sMapInitialVars.map)
     {
-        sOnMapEnter.map            = map_get();
-        sOnMapEnter.initialCounter = get_global_timer();
+        sMapInitialVars.map     = map_get();
+        sMapInitialVars.counter = get_global_timer();
     }
 }
 
 /**
  * Only update our internal "is jinjo saving enabled" variable outside main levels.
+ * Same logic as `note_saving_update`.
  */
 void jinjo_saving_update(void)
 {
     // When in the lair or file select, update the cached jinjo saving enabled state.
-    // Same logic as `note_saving_update`.
     if (level_get() == LEVEL_6_LAIR || map_get() == MAP_91_FILE_SELECT)
     {
         jinjo_saving_enabled_cached = jinjo_saving_override_disabled
