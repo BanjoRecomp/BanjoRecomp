@@ -67,6 +67,7 @@ extern struct
     u8 unk0;
     u8 level;
 } D_80383300;
+extern ActorArray *suBaddieActorArray;
 
 
 /*********************** Declarations (recomp) */
@@ -79,9 +80,9 @@ bool recomp_in_demo_playback_game_mode();
 #define SAVEDJINJO_IDX_ALL_COLLECTED  (5)
 #define SAVEDJINJO_NUM_BITS_PER_LEVEL (6)
 
-static vec3f sJinjoJiggySpawnPosition        = {0};
-static u32   sJinjoJiggyLastRestoredForLevel = 0;
-static bool  sJinjoJiggySpawnedManually      = FALSE;
+static vec3f sJinjoJiggySpawnPosition     = {0};
+static bool  sJinjoJiggyRestoredForLevel  = FALSE;
+static bool  sJinjoJiggySpawnedOnMapEnter = FALSE;
 
 // Jinjo saving can only safely be changed while in the lair, so this value is only updated when in the lair.
 bool jinjo_saving_enabled_cached = FALSE;
@@ -90,8 +91,9 @@ bool jinjo_saving_override_disabled = FALSE;
 
 static struct
 {
-    enum map_e map;
-    u32        counter;
+    enum map_e   map;
+    enum level_e level;
+    u32          counter;
 } sMapInitialVars = {0};
 
 
@@ -387,11 +389,11 @@ void chJinjo_update(Actor * this)
                     {
                         // Bounce up high, and start higher too
 
-                        sJinjoJiggySpawnPosition        = jiggypos;
-                        sJinjoJiggyLastRestoredForLevel = levelIdx;
+                        sJinjoJiggySpawnPosition    = jiggypos;
+                        sJinjoJiggyRestoredForLevel = TRUE;
 
                         // Check if we've just entered the map.
-                        sJinjoJiggySpawnedManually = get_global_timer() > sMapInitialVars.counter + 20;
+                        sJinjoJiggySpawnedOnMapEnter = get_global_timer() <= sMapInitialVars.counter + 20;
 
                         jiggypos.y += 50;
 
@@ -648,152 +650,6 @@ void chJinjo_update(Actor * this)
     }
 }
 
-/***** Hook jiggy update
- * Prevent certain restored jinjo jiggies from clipping through the floor
- */
-
-RECOMP_PATCH
-void chjiggy_update(Actor *this)
-{
-    // Vanilla body
-    {
-        ActorLocal_Jiggy *local = (ActorLocal_Jiggy *)&this->local;
-        int i;
-
-        // A small chance to show a jiggy shine effect. Up to four can be shown at once.
-        if (this->marker->unk14_21) {
-            for (i = 0; i < 4; i++) {
-                if (randf() < 0.015) {
-                    commonParticle_add((s32)this->marker, i + 5, func_80329904);
-                    commonParticle_new(8, 1);
-                }
-            }
-        }
-
-        switch (this->state)
-        {
-            case 1:
-                local->isHidden = FALSE;
-
-                if (local->id == 0)
-                {
-                    local->id = getJiggyId(this);
-                }
-                
-                if (jiggyscore_isCollected(local->id))
-                {
-                    marker_despawn(this->marker);
-                }
-                else
-                {
-                    subaddie_set_state(this, 2);
-
-                    switch (chjiggy_getJiggyId(this))
-                    {
-                        case JIGGY_17_CC_CLANKER_RAISED:
-                        case JIGGY_49_CCW_EYRIE:
-                            this->marker->unk40_21 = 1;
-                            break;
-
-                        case JIGGY_36_LAIR_TTC_WITCH_SWITCH:
-                            this->unk44_14 = func_80341F2C(0x20A);
-                            this->unk48 = 0.0f;
-                            this->unk4C = 300.0f;
-                            this->marker->unk2C_2 = 1;
-                            this->unk54 = 0.0f;
-                            func_80343DEC(this);
-                            chjiggy_updateRotation(this);
-                            break;
-
-                        case JIGGY_3E_GV_GRABBA:
-                        case JIGGY_4D_CCW_FLOWER:
-                            this->unk124_6 = 0;
-                            break;
-
-                        case JIGGY_41_GV_MAZE:
-                            this->marker->unk14_10 = 30;
-                            break;
-
-                        case JIGGY_13_TTC_LOCKUP:
-                            this->marker->unk14_10 = 40;
-                            break;
-                        default:
-                            break;
-                    }
-                }
-
-                break;
-
-            case 2:
-                chjiggy_updateRotation(this);
-
-                switch (chjiggy_getJiggyId(this))
-                {
-                    case JIGGY_20_BGS_ELEVATED_WALKWAY:
-                        destroyJiggy(this, BGS_SPECIFIC_FLAG_WALKWAY_JIGGY, BGS_SPECIFIC_FLAG_WALKWAY_JIGGY_TIMER_RUNNING, STATIC_CAMERA_D_WALKWAY_JIGGY_DESTROY,
-                            BGS_SPECIFIC_FLAG_WALKWAY_JIGGY_SWITCH_PRESSED, BGS_SPECIFIC_FLAG_WALKWAY_JIGGY_RESET, VOLATILE_FLAG_AE_BGS_WALKWAY_JIGGY_MISSED);
-                        break;
-
-                    case JIGGY_25_BGS_MAZE:
-                        destroyJiggy(this, BGS_SPECIFIC_FLAG_MAZE_JIGGY, BGS_SPECIFIC_FLAG_MAZE_JIGGY_TIMER_RUNNING, STATIC_CAMERA_1E_MAZE_JIGGY_DESTROY, 
-                            BGS_SPECIFIC_FLAG_MAZE_JIGGY_SWITCH_PRESSED, BGS_SPECIFIC_FLAG_MAZE_JIGGY_RESET, VOLATILE_FLAG_AF_BGS_MAZE_JIGGY_MISSED);
-                        break;
-
-                    case JIGGY_2F_FP_XMAS_TREE:
-                        if (levelSpecificFlags_get(LEVEL_FLAG_29_FP_UNKNOWN))
-                            actor_collisionOn(this);
-                        else
-                            actor_collisionOff(this);
-
-                        break;
-                    default:
-                        break;
-                }
-
-                break;
-        }
-    }
-
-    // Run position modifying code after vanilla update fn
-    if (!sJinjoJiggySpawnedManually)
-    {
-        u32 levelIdx = level_get();
-
-        // Check if this jiggy was possibly restored by us
-        if (sJinjoJiggyLastRestoredForLevel == levelIdx)
-        {
-            u32 jinjoJiggyIdx = get_jiggy_idx_for_jinjo_jiggy(levelIdx);
-            u32 jiggyId       = chjiggy_getJiggyId(this);
-
-            // Check if this is the jinjo jiggy for this level
-            if (jiggyId == jinjoJiggyIdx)
-            {
-                /**
-                 * So now we know that this is the jinjo jiggy for this level,
-                 * and that it was restored by us.
-                 * 
-                 * It's not possible for `sJinjoJiggyLastRestoredForLevel` to be the
-                 * current level if we didn't spawn the jiggy ourselves, since after
-                 * it's set, the game doesn't spawn this same jiggy naturally, and
-                 * we cannot reach this part of the jiggy update function for it.
-                 * 
-                 * ---
-                 * 
-                 * Restored jinjo jiggies can clip through the floor if out of view
-                 * of the camera.
-                 * 
-                 * Assume that any jinjo jiggy that spawns at the time of us entering
-                 * the map can potentially clip out of bounds. Keep it in place.
-                 */
-
-                this->position[0] = clamp_f32(this->position[0], sJinjoJiggySpawnPosition.x, sJinjoJiggySpawnPosition.x + 2.f);
-                this->position[1] = clamp_f32(this->position[1], sJinjoJiggySpawnPosition.y, sJinjoJiggySpawnPosition.y + 10.f);
-                this->position[2] = clamp_f32(this->position[2], sJinjoJiggySpawnPosition.z, sJinjoJiggySpawnPosition.z + 2.f);
-            }
-        }
-    }
-}
-
 /**
  * Used when restoring jinjo count on level entry
  */
@@ -826,7 +682,15 @@ void jinjo_saving_on_map_load(void)
 {
     if (map_get() != sMapInitialVars.map)
     {
+        if (level_get() != sMapInitialVars.level)
+        {
+            // Reset on new level
+            sJinjoJiggyRestoredForLevel  = FALSE;
+            sJinjoJiggySpawnedOnMapEnter = FALSE;
+        }
+
         sMapInitialVars.map     = map_get();
+        sMapInitialVars.level   = level_get();
         sMapInitialVars.counter = get_global_timer();
     }
 }
@@ -843,6 +707,49 @@ void jinjo_saving_update(void)
         jinjo_saving_enabled_cached = jinjo_saving_override_disabled
             ? FALSE
             : bkrecomp_jinjo_saving_enabled();
+    }
+
+    // Iterate over all active objects and clamp the jinjo jiggy's position if required
+    if (jinjo_saving_enabled_cached && sJinjoJiggyRestoredForLevel && sJinjoJiggySpawnedOnMapEnter)
+    {
+        if (suBaddieActorArray != NULL)
+        {
+            s32 nObjs = suBaddieActorArray->cnt;
+
+            for (s32 i = 0; i < nObjs; i++)
+            {
+                Actor *this = &suBaddieActorArray->data[i];
+
+                u32 jinjoJiggyIdx = get_jiggy_idx_for_jinjo_jiggy(level_get());
+                u32 jiggyId       = chjiggy_getJiggyId(this);
+
+                // Check if this is the jinjo jiggy for this level
+                if (jiggyId == jinjoJiggyIdx)
+                {
+                    /**
+                     * So now we know that this is the jinjo jiggy for this level,
+                     * and that it was restored by us.
+                     * 
+                     * It's not possible for `sJinjoJiggyRestoredForLevel` to be TRUE
+                     * if we didn't spawn the jiggy ourselves, since after it's set,
+                     * the game doesn't spawn this same jiggy naturally, and we cannot
+                     * reach this part of the jiggy update function for it.
+                     * 
+                     * ---
+                     * 
+                     * Restored jinjo jiggies can clip through the floor if out of view
+                     * of the camera.
+                     * 
+                     * Assume that any jinjo jiggy that spawns at the time of us entering
+                     * the map can potentially clip out of bounds. Keep it in place.
+                     */
+
+                    this->position[0] = clamp_f32(this->position[0], sJinjoJiggySpawnPosition.x, sJinjoJiggySpawnPosition.x + 2.f);
+                    this->position[1] = clamp_f32(this->position[1], sJinjoJiggySpawnPosition.y, sJinjoJiggySpawnPosition.y + 10.f);
+                    this->position[2] = clamp_f32(this->position[2], sJinjoJiggySpawnPosition.z, sJinjoJiggySpawnPosition.z + 2.f);
+                }
+            }
+        }
     }
 }
 
