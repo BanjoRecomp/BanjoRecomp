@@ -720,33 +720,36 @@ void jinjo_saving_update(void)
             {
                 Actor *this = &suBaddieActorArray->data[i];
 
-                u32 jinjoJiggyIdx = get_jiggy_idx_for_jinjo_jiggy(level_get());
-                u32 jiggyId       = chjiggy_getJiggyId(this);
-
-                // Check if this is the jinjo jiggy for this level
-                if (jiggyId == jinjoJiggyIdx)
+                if (this->modelCacheIndex == ACTOR_46_JIGGY)
                 {
-                    /**
-                     * So now we know that this is the jinjo jiggy for this level,
-                     * and that it was restored by us.
-                     * 
-                     * It's not possible for `sJinjoJiggyRestoredForLevel` to be TRUE
-                     * if we didn't spawn the jiggy ourselves, since after it's set,
-                     * the game doesn't spawn this same jiggy naturally, and we cannot
-                     * reach this part of the jiggy update function for it.
-                     * 
-                     * ---
-                     * 
-                     * Restored jinjo jiggies can clip through the floor if out of view
-                     * of the camera.
-                     * 
-                     * Assume that any jinjo jiggy that spawns at the time of us entering
-                     * the map can potentially clip out of bounds. Keep it in place.
-                     */
+                    u32 jinjoJiggyIdx = get_jiggy_idx_for_jinjo_jiggy(level_get());
+                    u32 jiggyId       = chjiggy_getJiggyId(this);
 
-                    this->position[0] = clamp_f32(this->position[0], sJinjoJiggySpawnPosition.x, sJinjoJiggySpawnPosition.x + 2.f);
-                    this->position[1] = clamp_f32(this->position[1], sJinjoJiggySpawnPosition.y, sJinjoJiggySpawnPosition.y + 10.f);
-                    this->position[2] = clamp_f32(this->position[2], sJinjoJiggySpawnPosition.z, sJinjoJiggySpawnPosition.z + 2.f);
+                    // Check if this is the jinjo jiggy for this level
+                    if (jiggyId == jinjoJiggyIdx)
+                    {
+                        /**
+                         * So now we know that this is the jinjo jiggy for this level,
+                         * and that it was restored by us.
+                         * 
+                         * It's not possible for `sJinjoJiggyRestoredForLevel` to be TRUE
+                         * if we didn't spawn the jiggy ourselves, since after it's set,
+                         * the game doesn't spawn this same jiggy naturally, and we cannot
+                         * reach this part of the jiggy update function for it.
+                         * 
+                         * ---
+                         * 
+                         * Restored jinjo jiggies can clip through the floor if out of view
+                         * of the camera.
+                         * 
+                         * Assume that any jinjo jiggy that spawns at the time of us entering
+                         * the map can potentially clip out of bounds. Keep it in place.
+                         */
+
+                        this->position[0] = clamp_f32(this->position[0], sJinjoJiggySpawnPosition.x, sJinjoJiggySpawnPosition.x + 2.f);
+                        this->position[1] = clamp_f32(this->position[1], sJinjoJiggySpawnPosition.y, sJinjoJiggySpawnPosition.y + 10.f);
+                        this->position[2] = clamp_f32(this->position[2], sJinjoJiggySpawnPosition.z, sJinjoJiggySpawnPosition.z + 2.f);
+                    }
                 }
             }
         }
