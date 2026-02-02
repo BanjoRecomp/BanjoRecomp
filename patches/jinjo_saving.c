@@ -742,7 +742,12 @@ u32 jinjo_saving_get_counters(enum level_e level)
         // No jinjos, clear all
         jinjobits = 0b00000;
     }
-    else if (SavedJinjo_get_collected_raw_bit(level, SAVEDJINJO_IDX_ALL_COLLECTED))
+    else if (
+        SavedJinjo_get_collected_raw_bit(level, SAVEDJINJO_IDX_ALL_COLLECTED)
+        ||
+        // For older save files
+        jiggyscore_isCollected(get_jiggy_idx_for_jinjo_jiggy(level))
+    )
     {
         // Set all in a single assignment
         // Looping over as in the below loop WON'T work, due to how we save the index of the final collected jinjo
