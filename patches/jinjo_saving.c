@@ -441,21 +441,16 @@ void chJinjo_update(Actor * this)
     {
         // Check if this jinjo has already been marked as collected before even being born (loaded)
 
-        u32 levelIdx     = level_get();
-        s32 currJinjoIdx = jinjo_get_jinjoidx_by_actorId(this->modelCacheIndex);
-
-        bool toDespawn = FALSE;
+        u32 levelIdx      = level_get();
+        s32 currJinjoIdx  = jinjo_get_jinjoidx_by_actorId(this->modelCacheIndex);
+        u32 jinjoJiggyIdx = get_jiggy_idx_for_jinjo_jiggy(levelIdx);
 
         if (SavedJinjo_is_jinjo_collected(levelIdx, currJinjoIdx))
         {
-            toDespawn = TRUE;
-
             // Check if we need to respawn the jiggy in its place
             if (currJinjoIdx == SavedJinjo_restore_spawned_jiggy_at_given_jinjo_idx(levelIdx))
             {
                 // We need to spawn the jiggy at this jinjo's position
-
-                u32 jinjoJiggyIdx = get_jiggy_idx_for_jinjo_jiggy(levelIdx);
 
                 vec3f jiggypos = *(vec3f *)&this->position;
 
@@ -472,24 +467,27 @@ void chJinjo_update(Actor * this)
                 }
             }
         }
-        else if (jiggyscore_isCollected(get_jiggy_idx_for_jinjo_jiggy(levelIdx)))
+        else if (jiggyscore_isCollected(jinjoJiggyIdx))
         {
             // Odd. The jiggy is collected, but we have an uncollected jinjo.
             // Nuke all jinjos, and remember them
-            toDespawn = TRUE;
             SavedJinjo_ensure_all_marked_collected_for_level(levelIdx);
         }
-
-        if (toDespawn)
+        else
         {
-            // Skip init, despawn, and don't proceed to vanilla update
-            this->initialized = TRUE;
-
-            return marker_despawn(this->marker);
+            // This jinjo should stay, skip despawn. Proceed as normal
+            goto vanilla_update;
         }
+
+        // Don't init
+        this->initialized = TRUE;
+
+        // Despawn, and don't proceed to vanilla update
+        return marker_despawn(this->marker);
     }
 
-    // Vanilla body
+    // Vanilla update body
+    vanilla_update:
     {
         f32 sp7C[3];
         f32 sp70[3];
