@@ -16,20 +16,11 @@
 void codeABC00_spawnJiggyAtLocation(enum jiggy_e, f32[3]);
 u32 jiggyscore_isCollected(enum jiggy_e jiggy_id);
 s32 func_80329904(ActorMarker *, s32, f32 *);
-bool fileProgressFlag_get(enum file_progress_e index);
-enum asset_e __chJinjo_getMeetDialogId(enum marker_e marker_id);
-void fileProgressFlag_set(enum file_progress_e index, s32 set);
-s32  item_adjustByDiffWithHud(enum item_e item, s32 diff);
 typedef s32 (*FuncUnk40)(ActorMarker *, s32, f32[3]);
 void commonParticle_add(s32 actorMarker, s32 arg1, FuncUnk40 arg2);
 int commonParticle_new(enum common_particle_e particle_id, int arg1);
 enum jiggy_e getJiggyId(Actor *this);
 enum jiggy_e chjiggy_getJiggyId(Actor *this);
-void func_80343DEC(Actor *this);
-void chjiggy_updateRotation(Actor *this);
-void destroyJiggy(Actor *this, s32 jiggyFlag, s32 timerRunningFlag, s32 cameraId, s32 switchPressedFlag, s32 resetSwitchFlag, enum volatile_flags_e dialogFlag);
-s32 levelSpecificFlags_get(s32 i);
-s32 func_80341F2C(s32 arg0);
 void chJinjo_update(Actor *this);
 f32 func_80309B24(f32[3]);
 void __chJinjo_802CDD3C(Actor * this);
@@ -54,19 +45,8 @@ typedef struct chjiggy_s
     u32  id;
 } ActorLocal_Jiggy;
 
-extern ActorInfo chJinjoBlue;
-extern ActorInfo chJinjoGreen;
-extern ActorInfo chJinjoOrange;
-extern ActorInfo chJinjoPink;
-extern ActorInfo chJinjoYellow;
-
 extern s32 D_80385F30[0x2C];
 extern u32 gGlobalTimer;
-extern struct
-{
-    u8 unk0;
-    u8 level;
-} D_80383300;
 extern ActorArray *suBaddieActorArray;
 
 
@@ -201,8 +181,17 @@ static s32 jinjo_get_level_lookup_subtract_amount(u32 levelIdx)
     }
 }
 
-static s32 jinjodata_get_bit_idx(u32 levelIdx, u32 jinjoIdx)
+static bool jinjo_bit_idx_is_valid(s32 jinjoIdx)
 {
+    // Includes all jinjo indices, plus extra bits
+    return jinjoIdx >= 0 && jinjoIdx < SAVEDJINJO_NUM_BITS_PER_LEVEL;
+}
+
+static s32 jinjodata_get_bit_idx(u32 levelIdx, s32 jinjoIdx)
+{
+    if (!jinjo_bit_idx_is_valid(jinjoIdx))
+        return -1;
+
     s32 levelSubtract = jinjo_get_level_lookup_subtract_amount(levelIdx);
     if (levelSubtract < 0)
         return -1;
@@ -232,7 +221,7 @@ static s32 jinjo_get_jinjoidx_by_actorId(u32 actorId)
  * 
  * Pass `SAVEDJINJO_IDX_ALL_COLLECTED` for jinjoIdx to get the final "all collected" flag
  */
-static bool SavedJinjo_get_collected_raw_bit(u32 levelIdx, u32 jinjoIdx)
+static bool SavedJinjo_get_collected_raw_bit(u32 levelIdx, s32 jinjoIdx)
 {
     s32 bitIdx = jinjodata_get_bit_idx(levelIdx, jinjoIdx);
     if (bitIdx < 0)
@@ -266,8 +255,11 @@ static u32 SavedJinjo_get_raw_jinjobits(u32 levelIdx)
  * i.e. Automatically handles setting the final "all collected" flag if
  * appropriate, but does not automatically clear it.
  */
-static void SavedJinjo_set_collected(u32 levelIdx, u32 jinjoIdx, bool collected)
+static void SavedJinjo_set_collected(u32 levelIdx, s32 jinjoIdx, bool collected)
 {
+    if (!jinjo_bit_idx_is_valid(jinjoIdx))
+        return;
+
     // Check to see if getting this jinjo would give us all five.
     // If so, just set the "all collected" flag instead.
     // (this block is only relevant when collecting a jinjo, not clearing it)
@@ -298,7 +290,7 @@ static void SavedJinjo_set_collected(u32 levelIdx, u32 jinjoIdx, bool collected)
     );
 }
 
-static bool SavedJinjo_is_jinjo_collected(u32 levelIdx, u32 jinjoIdx)
+static bool SavedJinjo_is_jinjo_collected(u32 levelIdx, s32 jinjoIdx)
 {
     return SavedJinjo_get_collected_raw_bit(levelIdx, SAVEDJINJO_IDX_ALL_COLLECTED)
         || SavedJinjo_get_collected_raw_bit(levelIdx, jinjoIdx);
@@ -445,7 +437,7 @@ void chJinjo_update(Actor * this)
         s32 currJinjoIdx  = jinjo_get_jinjoidx_by_actorId(this->modelCacheIndex);
         u32 jinjoJiggyIdx = get_jiggy_idx_for_jinjo_jiggy(levelIdx);
 
-        if (SavedJinjo_is_jinjo_collected(levelIdx, currJinjoIdx))
+        if (jinjo_bit_idx_is_valid(currJinjoIdx) && SavedJinjo_is_jinjo_collected(levelIdx, currJinjoIdx))
         {
             // Check if we need to respawn the jiggy in its place
             if (currJinjoIdx == SavedJinjo_restore_spawned_jiggy_at_given_jinjo_idx(levelIdx))
