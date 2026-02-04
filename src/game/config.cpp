@@ -34,7 +34,7 @@ static void add_general_options(recomp::config::Config &config) {
     config.add_enum_option(
         banjo::configkeys::general::note_saving_mode,
         "Note & Jinjo Saving",
-        "Saves collected notes and jinjos so that you don't need to collect them again when revisiting a level. <recomp-color primary>Both</recomp-color> is the default, while <recomp-color primary>off</recomp-color> matches the original game.<br /><br />Changing this setting will only take effect when returning to Grunty's Lair or restarting the game.",
+        "Saves collected notes and jinjos so that you don't need to collect them again when revisiting a level. <recomp-color primary>Both</recomp-color> is the default, while <recomp-color primary>off</recomp-color> matches the original game.<br /><br />Changing this setting will only take effect when entering/exiting a level, or restarting the game.",
         note_saving_mode_options,
         banjo::NoteSavingMode::Both
     );

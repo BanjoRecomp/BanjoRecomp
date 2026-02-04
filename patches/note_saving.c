@@ -455,9 +455,8 @@ RECOMP_PATCH void itemscore_levelReset(enum level_e level){
         }
     }
 
-    // @recomp If jinjo saving is currently enabled, restore the jinjo count for the current level
-    if (bkrecomp_jinjo_saving_active())
-        D_80385F30[ITEM_12_JINJOS] = jinjo_saving_get_counters(level);
+    // @recomp Restore the saved jinjo count for the current level, etc
+    jinjo_saving_on_item_reset(level);
 }
 
 // @recomp Patched to return true for FILEPROG_99_PAST_50_NOTE_DOOR_TEXT if note saving is enabled.

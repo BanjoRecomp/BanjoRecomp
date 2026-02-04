@@ -146,10 +146,16 @@ static void jinjodata_set_byte(u32 idx, u8 value)
 
 /**
  * We want to have a tightly packed jinjo bitfield, where all bits
- * used are from levels that exist. Since grunty's lair's level idx
- * is right in between all others, we need to "shift" the levelIdx
- * slightly when accessing the bitfield for gets/sets.
- * 
+ * used are from levels that exist.
+ *
+ * Previously, we wanted to skip Grunty's Lair's level idx, since
+ * it's right between other levels in the list, and we "shifted"
+ * the idx of the ones that appear after it so we wouldn't needlessly
+ * allocate bits for the lair.
+ *
+ * But some mods have jinjos in the lair (like Jiggies of Time),
+ * so it's been moved back to the middle of the list.
+ *
  * We also return -1 for levels that shouldn't have jinjos, so we can
  * easily bail in those same functions.
  */
@@ -162,16 +168,14 @@ static s32 jinjo_get_level_lookup_subtract_amount(u32 levelIdx)
         case LEVEL_3_CLANKERS_CAVERN:
         case LEVEL_4_BUBBLEGLOOP_SWAMP:
         case LEVEL_5_FREEZEEZY_PEAK:
-            // Map to zero-indexed
-            return 1;
+        // Some mods (like Jiggies of Time) have jinjos in Grunty's Lair. Save them too.
+        case LEVEL_6_LAIR:
         case LEVEL_7_GOBIS_VALLEY:
         case LEVEL_8_CLICK_CLOCK_WOOD:
         case LEVEL_9_RUSTY_BUCKET_BAY:
         case LEVEL_A_MAD_MONSTER_MANSION:
             // Map to zero-indexed
-            // Level idx needs to be reduced by an additional 1 to be used with the contiguous bitfield
-            return 2;
-        case LEVEL_6_LAIR:
+            return 1;
         case LEVEL_B_SPIRAL_MOUNTAIN:
         case LEVEL_C_BOSS:
         case LEVEL_D_CUTSCENE:
@@ -461,9 +465,38 @@ void chJinjo_update(Actor * this)
         }
         else if (jiggyscore_isCollected(jinjoJiggyIdx))
         {
-            // Odd. The jiggy is collected, but we have an uncollected jinjo.
-            // Nuke all jinjos, and remember them
+            /**
+             * Odd. The jiggy is collected, but we have an uncollected jinjo.
+             * Mark all jinjos as collected, and remember them.
+             * 
+             * --------------------------------------------------------------
+             * 
+             * This is a failsafe that restores the collected jinjos if the
+             * jinjo jiggy was previously collected using a build that didn't
+             * include jinjo saving.
+             * 
+             * Running this unconditionally for all mods would also show all
+             * jinjos collected for mods that DON'T have jinjos in the lair,
+             * but have that same jiggy collected.
+             * 
+             * So we need to conditionally run this only if we know there are
+             * jinjos in the level. We ensure this by only running inside the
+             * jinjo update function.
+             * 
+             * This can cause a potential issue where the collected jinjos
+             * aren't shown in the pause menu until a map in the level that
+             * contains at least one jinjo is entered. But since this failsafe
+             * only needs to happen once per-level per-file, and that most
+             * entrance maps for levels should contain a jinjo (except e.g. CCW),
+             * this should be acceptable.
+             * 
+             * The item count restore in particular (to D_80385F30) is necessary
+             * for the first time this failsafe is triggered, to show the jinjos
+             * correctly on pause. From the next level enter, it should be
+             * auto-restored with the standard saved jinjo data.
+             */
             SavedJinjo_ensure_all_marked_collected_for_level(levelIdx);
+            D_80385F30[ITEM_12_JINJOS] = 0b11111;
         }
         else
         {
@@ -721,9 +754,23 @@ void chJinjo_update(Actor * this)
 }
 
 /**
+ * Unlike the note saving setting, which can instantly update while
+ * the player is in the lair, we support saving jinjos in the lair
+ * itself. So we can't cache the setting there either.
+ *
+ * We need to do it IN-BETWEEN levels.
+ */
+static void jinjo_saving_enabled_update(void)
+{
+    jinjo_saving_enabled_cached = jinjo_saving_override_disabled
+        ? FALSE
+        : bkrecomp_jinjo_saving_enabled();
+}
+
+/**
  * Used when restoring jinjo count on level entry
  */
-u32 jinjo_saving_get_counters(enum level_e level)
+static u32 jinjo_saving_get_counters(enum level_e level)
 {
     u32 jinjobits = 0;
 
@@ -732,12 +779,7 @@ u32 jinjo_saving_get_counters(enum level_e level)
         // No jinjos, clear all
         jinjobits = 0b00000;
     }
-    else if (
-        SavedJinjo_get_collected_raw_bit(level, SAVEDJINJO_IDX_ALL_COLLECTED)
-        ||
-        // For older save files
-        jiggyscore_isCollected(get_jiggy_idx_for_jinjo_jiggy(level))
-    )
+    else if (SavedJinjo_get_collected_raw_bit(level, SAVEDJINJO_IDX_ALL_COLLECTED))
     {
         // Set all in a single assignment
         // Looping over as in the below loop WON'T work, due to how we save the index of the final collected jinjo
@@ -751,6 +793,21 @@ u32 jinjo_saving_get_counters(enum level_e level)
     }
 
     return jinjobits;
+}
+
+/**
+ * This item reset happens before <jinjo_saving_on_map_load>,
+ * on each new level.
+ * 
+ * So we update enabled state here.
+ */
+void jinjo_saving_on_item_reset(enum level_e level)
+{
+    // Update enabled state before checking if we should restore jinjo counts
+    jinjo_saving_enabled_update();
+
+    if (jinjo_saving_enabled_cached)
+        D_80385F30[ITEM_12_JINJOS] = jinjo_saving_get_counters(level);
 }
 
 void jinjo_saving_on_map_load(void)
@@ -767,20 +824,8 @@ void jinjo_saving_on_map_load(void)
     }
 }
 
-/**
- * Only update our internal "is jinjo saving enabled" variable outside main levels.
- */
 void jinjo_saving_update(void)
 {
-    // When in the lair or file select, update the cached jinjo saving enabled state.
-    // Same logic as `note_saving_update`.
-    if (level_get() == LEVEL_6_LAIR || map_get() == MAP_91_FILE_SELECT)
-    {
-        jinjo_saving_enabled_cached = jinjo_saving_override_disabled
-            ? FALSE
-            : bkrecomp_jinjo_saving_enabled();
-    }
-
     // Iterate over all active objects and clamp the jinjo jiggy's position if required
     if (jinjo_saving_enabled_cached && sJinjoJiggySpawnedOnMapEnter)
     {
