@@ -65,14 +65,19 @@ namespace banjo {
     uint32_t get_analog_cam_sensitivity();
 
     enum class NoteSavingMode {
-        On,
+        Both,
+        OnlyJinjos,
+        OnlyNotes,
         Off,
         OptionCount
     };
 
     NLOHMANN_JSON_SERIALIZE_ENUM(banjo::NoteSavingMode, {
-        {banjo::NoteSavingMode::On, "On"},
-        {banjo::NoteSavingMode::Off, "Off"}
+        // Keeping as "On" to preserve compatibility with previous configs before jinjo saving
+        {banjo::NoteSavingMode::Both,       "On"},
+        {banjo::NoteSavingMode::OnlyJinjos, "Jinjos"},
+        {banjo::NoteSavingMode::OnlyNotes,  "Notes"},
+        {banjo::NoteSavingMode::Off,        "Off"}
     });
 
     NoteSavingMode get_note_saving_mode();
