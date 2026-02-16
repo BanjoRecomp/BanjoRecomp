@@ -156,6 +156,9 @@ bool SetImageAsIcon(const char* filename, SDL_Window* window)
 #endif
 
 SDL_Window* window;
+#if defined(__APPLE__)
+SDL_MetalView metal_view = nullptr;
+#endif
 
 ultramodern::renderer::WindowHandle create_window(ultramodern::gfx_callbacks_t::gfx_data_t) {
     uint32_t flags = SDL_WINDOW_RESIZABLE;
@@ -190,8 +193,8 @@ ultramodern::renderer::WindowHandle create_window(ultramodern::gfx_callbacks_t::
 #elif defined(__linux__) || defined(__ANDROID__)
     return ultramodern::renderer::WindowHandle{ window };
 #elif defined(__APPLE__)
-    SDL_MetalView view = SDL_Metal_CreateView(window);
-    return ultramodern::renderer::WindowHandle{ wmInfo.info.cocoa.window,  SDL_Metal_GetLayer(view) };
+    metal_view = SDL_Metal_CreateView(window);
+    return ultramodern::renderer::WindowHandle{ wmInfo.info.cocoa.window,  SDL_Metal_GetLayer(metal_view) };
 #else
     static_assert(false && "Unimplemented");
 #endif
@@ -821,6 +824,22 @@ int main(int argc, char** argv) {
     if (preloaded) {
         release_preload(preload_context);
     }
+
+#if defined(__APPLE__)
+    // Destroy the Metal view before destroying the window
+    if (metal_view != nullptr) {
+        SDL_Metal_DestroyView(metal_view);
+        metal_view = nullptr;
+    }
+#endif
+
+    // Cleanup SDL resources
+    if (window != nullptr) {
+        SDL_DestroyWindow(window);
+        window = nullptr;
+    }
+
+    SDL_Quit();
 
 #ifdef _WIN32
     // End high resolution timing period.
