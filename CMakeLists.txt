@@ -4,6 +4,20 @@ if (APPLE)
     set(CMAKE_OSX_DEPLOYMENT_TARGET "11.0" CACHE STRING "Minimum OS X deployment version")
 endif()
 
+# Use ccache if available and not already enabled on the command line.
+# This has to be done before the project() call.
+if(NOT CMAKE_CXX_COMPILER_LAUNCHER)
+    find_program(CCACHE_EXECUTABLE ccache)
+    if(CCACHE_EXECUTABLE)
+        message(STATUS "Enabling ccache")
+
+        set(CMAKE_C_COMPILER_LAUNCHER      ${CCACHE_EXECUTABLE} CACHE STRING "C compiler launcher"             FORCE)
+        set(CMAKE_CXX_COMPILER_LAUNCHER    ${CCACHE_EXECUTABLE} CACHE STRING "C++ compiler launcher"           FORCE)
+        set(CMAKE_OBJC_COMPILER_LAUNCHER   ${CCACHE_EXECUTABLE} CACHE STRING "Objective C compiler launcher"   FORCE)
+        set(CMAKE_OBJCXX_COMPILER_LAUNCHER ${CCACHE_EXECUTABLE} CACHE STRING "Objective C++ compiler launcher" FORCE)
+    endif()
+endif()
+
 project(BanjoRecompiled LANGUAGES C CXX)
 set(CMAKE_C_STANDARD 17)
 set(CMAKE_CXX_STANDARD 20)
@@ -39,6 +53,15 @@ set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
 if (WIN32)
     set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/lib/")
+endif()
+
+if(APPLE)
+    if(EXISTS "/opt/homebrew/opt/zlib")
+        list(APPEND CMAKE_PREFIX_PATH "/opt/homebrew/opt/zlib")
+    elseif(EXISTS "/usr/local/opt/zlib")
+        list(APPEND CMAKE_PREFIX_PATH "/usr/local/opt/zlib")
+    endif()
+    set(CMAKE_PREFIX_PATH "${CMAKE_PREFIX_PATH}" CACHE STRING "CMake prefix path" FORCE)
 endif()
 
 set(RT64_STATIC TRUE)
@@ -370,3 +393,8 @@ target_sources(BanjoRecompiled PRIVATE ${GENERATED_NRM_SOURCES})
 target_sources(BanjoRecompiled PRIVATE ${SOURCES})
 
 set_property(TARGET BanjoRecompiled PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
+
+if(APPLE)
+    set(CMAKE_OBJC_FLAGS   "${CMAKE_OBJC_FLAGS}   -Wno-error -Wno-error=unguarded-availability-new" CACHE STRING "Objective C compiler flags"   FORCE)
+    set(CMAKE_OBJCXX_FLAGS "${CMAKE_OBJCXX_FLAGS} -Wno-error -Wno-error=unguarded-availability-new" CACHE STRING "Objective C++ compiler flags" FORCE)
+endif()

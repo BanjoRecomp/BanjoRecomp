@@ -19,6 +19,9 @@ will have their max_prot values properly preserved in the output binary.
 
 import sys
 import subprocess
+
+sys.path.append(subprocess.run(["find", "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework", "-type", "d", "-name", "site-packages"], capture_output=True, text=True).stdout.strip())
+
 from itertools import takewhile
 from macholib import MachO, ptypes
 
