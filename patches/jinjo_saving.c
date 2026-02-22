@@ -34,7 +34,6 @@ void func_8032BB88(Actor *, s32, s32);
 void func_802F9D38(s32 arg0);
 void func_8025A7DC(enum comusic_e track_id);
 int gcdialog_hasCurrentTextId(void);
-ActorAnimationInfo chJinjoAnimations[10];
 void __chJinjo_802CDBA8(ActorMarker *this, ActorMarker *other);
 enum level_e level_get(void);
 enum map_e map_get(void);
@@ -48,6 +47,7 @@ typedef struct chjiggy_s
 extern s32 D_80385F30[0x2C];
 extern u32 gGlobalTimer;
 extern ActorArray *suBaddieActorArray;
+extern ActorAnimationInfo chJinjoAnimations[10];
 
 
 /*********************** Declarations (recomp) */
