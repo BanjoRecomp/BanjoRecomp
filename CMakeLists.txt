@@ -43,7 +43,10 @@ endif()
 
 set(RT64_STATIC TRUE)
 set(RT64_SDL_WINDOW_VULKAN TRUE)
-add_compile_definitions(HLSL_CPU)
+add_compile_definitions(
+    HLSL_CPU
+    __PRFCHWINTRIN_H
+)
 
 if (RECOMP_FLATPAK)
     add_compile_definitions(RECOMP_FLATPAK)
@@ -304,10 +307,7 @@ set (DXC_RT_OPTS "${DXC_COMMON_OPTS}" "-D" "RT_SHADER" "-T" "lib_6_3" "-fspv-tar
 
 if (${WIN32})
     set (DXC "${PROJECT_SOURCE_DIR}/lib/rt64/src/contrib/dxc/bin/x64/dxc.exe")
-    add_compile_definitions(
-        NOMINMAX
-        __PRFCHWINTRIN_H
-    )
+    add_compile_definitions(NOMINMAX)
 else()
     if (APPLE)
         # Apple's binary is universal, so it'll work on both x86_64 and arm64
