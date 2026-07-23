@@ -43,7 +43,10 @@ endif()
 
 set(RT64_STATIC TRUE)
 set(RT64_SDL_WINDOW_VULKAN TRUE)
-add_compile_definitions(HLSL_CPU)
+add_compile_definitions(
+    HLSL_CPU
+    __PRFCHWINTRIN_H
+)
 
 if (RECOMP_FLATPAK)
     add_compile_definitions(RECOMP_FLATPAK)
