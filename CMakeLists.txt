@@ -304,7 +304,10 @@ set (DXC_RT_OPTS "${DXC_COMMON_OPTS}" "-D" "RT_SHADER" "-T" "lib_6_3" "-fspv-tar
 
 if (${WIN32})
     set (DXC "${PROJECT_SOURCE_DIR}/lib/rt64/src/contrib/dxc/bin/x64/dxc.exe")
-    add_compile_definitions(NOMINMAX)
+    add_compile_definitions(
+        NOMINMAX
+        __PRFCHWINTRIN_H
+    )
 else()
     if (APPLE)
         # Apple's binary is universal, so it'll work on both x86_64 and arm64
