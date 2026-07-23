@@ -580,6 +580,11 @@ RECOMP_PATCH void func_80291154(void) {
             ncDynamicCamera_setState(DYNAMIC_CAMERA_STATE_R_LOOK);
             func_80291488(0x4);
             func_80290F14();
+
+            // The camera target must be reinitialized when the player exits the pole climbing state so the target doesn't stay on the climbable object.
+            if ((D_8037DB40 == 3) && (player_movementGroup() != BSGROUP_5_CLIMB)) {
+                func_802C0150(2);
+            }
         }
         else {
             tmp = func_8029105C(7);
