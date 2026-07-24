@@ -140,15 +140,3 @@ value = 0x3C0E8000 # lui $t6, 0xA000 -> lui $t6, 0x8000
 func = "func_80388D48"
 vram = 0x80388D50
 value = 0x3C0E8000 # lui $t6, 0xA000 -> lui $t6, 0x8000
-
-# Fixes Furnace Fun "last life on skull" warning to trigger at 0 lives instead of 1.
-[[patches.instruction]]
-func = "lair_func_8038E0B0"
-vram = 0x8038E43C
-value = 0x24010000 # addiu $at, $zero, 0x1 -> addiu $at, $zero, 0x0
-
-# Fixes voidouts causing game over at 0 lives.
-[[patches.instruction]]
-func = "func_8029B6F0"
-vram = 0x8029B700
-value = 0x10000005 # beq $v0, $zero -> b (always branch to respawn)
