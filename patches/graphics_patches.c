@@ -2,6 +2,7 @@
 #include "ultra_extensions.h"
 #include "misc_funcs.h"
 #include "note_saving.h"
+#include "jinjo_saving.h"
 #include "core1/core1.h"
 #include "core1/vimgr.h"
 
@@ -98,8 +99,9 @@ RECOMP_PATCH void game_draw(s32 arg0){
     // @recomp Advance the frame used as reference by the dynamic camera target changes for analog camera.
     recomp_advance_dynamic_camera_targets();
 
-    // @recomp Update note saving state.
+    // @recomp Update note and jinjo saving state.
     note_saving_update();
+    jinjo_saving_update();
 
     // @recomp Track the original values.
     Mtx* mtx_start = mtx;

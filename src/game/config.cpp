@@ -25,15 +25,18 @@ static void add_general_options(recomp::config::Config &config) {
     using EnumOptionVector = const std::vector<recomp::config::ConfigOptionEnumOption>;
 
     static EnumOptionVector note_saving_mode_options = {
-        {banjo::NoteSavingMode::Off, "Off", "Off"},
-        {banjo::NoteSavingMode::On, "On", "On"},
+        {banjo::NoteSavingMode::Off,        "Off",    "Off"},
+        {banjo::NoteSavingMode::OnlyNotes,  "Notes",  "Only Notes"},
+        {banjo::NoteSavingMode::OnlyJinjos, "Jinjos", "Only Jinjos"},
+        // Keeping as "On" to preserve compatibility with previous configs before jinjo saving
+        {banjo::NoteSavingMode::Both,       "On",     "Both"},
     };
     config.add_enum_option(
         banjo::configkeys::general::note_saving_mode,
-        "Note Saving",
-        "Saves collected notes so that you don't need to collect them again when revisiting a level. <recomp-color primary>On</recomp-color> is the default, while <recomp-color primary>off</recomp-color> matches the original game.",
+        "Note & Jinjo Saving",
+        "Saves collected notes and jinjos so that you don't need to collect them again when revisiting a level. <recomp-color primary>Both</recomp-color> is the default, while <recomp-color primary>off</recomp-color> matches the original game.<br /><br />Changing this setting will only take effect when entering/exiting a level, or restarting the game.",
         note_saving_mode_options,
-        banjo::NoteSavingMode::On
+        banjo::NoteSavingMode::Both
     );
     static EnumOptionVector analog_cam_mode_options = {
         {banjo::AnalogCamMode::Off, "Off", "Off"},

@@ -4,6 +4,7 @@
 #include "bk_api.h"
 #include "object_extension_funcs.h"
 #include "note_saving.h"
+#include "jinjo_saving.h"
 
 extern ActorMarker *D_8036E7C8;
 extern u8 D_80383428[0x1C];
@@ -130,6 +131,9 @@ RECOMP_PATCH void func_803329AC(void){
 
     // @recomp Run note saving map load code.
     note_saving_on_map_load();
+
+    // @recomp Run jinjo saving map load code.
+    jinjo_saving_on_map_load();
 
     // @recomp Reset the intro cutscene timing corrections so the cutscene can be played again
     reset_cutscene_timings_state();

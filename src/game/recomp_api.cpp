@@ -195,7 +195,19 @@ extern "C" void recomp_get_analog_cam_enabled(uint8_t* rdram, recomp_context* ct
 }
 
 extern "C" void recomp_get_note_saving_enabled(uint8_t* rdram, recomp_context* ctx) {
-    _return<s32>(ctx, banjo::get_note_saving_mode() == banjo::NoteSavingMode::On);
+    _return<s32>(
+        ctx,
+        banjo::get_note_saving_mode() == banjo::NoteSavingMode::OnlyNotes ||
+        banjo::get_note_saving_mode() == banjo::NoteSavingMode::Both
+    );
+}
+
+extern "C" void recomp_get_jinjo_saving_enabled(uint8_t* rdram, recomp_context* ctx) {
+    _return<s32>(
+        ctx,
+        banjo::get_note_saving_mode() == banjo::NoteSavingMode::OnlyJinjos ||
+        banjo::get_note_saving_mode() == banjo::NoteSavingMode::Both
+    );
 }
 
 extern "C" void recomp_get_right_analog_inputs(uint8_t* rdram, recomp_context* ctx) {

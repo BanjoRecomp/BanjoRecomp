@@ -8,7 +8,8 @@ typedef struct {
 // This struct must be 256 bytes to add up to 1536 bytes, which adds to the original 512 bytes of save data to equal exactly 2048 bytes.
 typedef struct {
     LevelNotes level_notes[9];
-    u8 padding[32]; // Reserved for future use.
+    u8 jinjo_data[8]; // 10 levels * 6 = 60 ~~ 64 bits, rounded up to the nearest byte
+    u8 padding[24]; // Reserved for future use.
 } SaveFileExtensionData;
 
 _Static_assert(sizeof(SaveFileExtensionData) == 320, "SaveExtensionData must be 256 bytes");
