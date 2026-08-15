@@ -803,18 +803,26 @@ int main(int argc, char** argv) {
     // Register the .rtz texture pack file format with the previous content type as its only allowed content type.
     recomp::mods::register_mod_container_type("rtz", std::vector{ texture_pack_content_type_id }, false);
 
-    recomp::start(
-        project_version,
-        {},
-        rsp_callbacks,
-        renderer_callbacks,
-        audio_callbacks,
-        input_callbacks,
-        gfx_callbacks,
-        thread_callbacks,
-        error_handling_callbacks,
-        threads_callbacks
-    );
+    // Configure and start.
+    recomp::Configuration cfg;
+    cfg.argc = argc;
+    cfg.argv = argv;
+    cfg.project_version = project_version;
+    cfg.window_handle = {};
+    cfg.rsp_callbacks = rsp_callbacks;
+    cfg.renderer_callbacks = renderer_callbacks;
+    cfg.audio_callbacks = audio_callbacks;
+    cfg.input_callbacks = input_callbacks;
+    cfg.gfx_callbacks = gfx_callbacks;
+    cfg.events_callbacks = thread_callbacks;
+    cfg.error_handling_callbacks = error_handling_callbacks;
+    cfg.threads_callbacks = threads_callbacks;
+    cfg.message_queue_control.requeue_pi = true;
+    cfg.message_queue_control.requeue_ai = true;
+    cfg.message_queue_control.requeue_sp = true;
+    cfg.message_queue_control.requeue_dp = true;
+    cfg.message_queue_control.requeue_timer = true;
+    recomp::start(cfg);
 
     NFD_Quit();
 
