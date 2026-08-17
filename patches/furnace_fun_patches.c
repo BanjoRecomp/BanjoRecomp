@@ -60,14 +60,12 @@ extern void func_8028FA14(enum map_e, s32);
 extern void func_80324C58(void);
 extern void func_803114D0(void);
 
-// Patched to trigger the The Furnace Fun skull-panel warning with 0 lives left instead of 1.
+// @recomp Patched to fix the Death Square warning and side button buffer size.
 RECOMP_PATCH void lair_func_8038E0B0(void) {
     s32 sp48[6];
     s32 temp_v0;
-    // controller_copySideButtons() writes Z/L/R, so it needs dst[3], but
-    // the decomp declares sp3C[2]. Harmless in the original stack frame, but once
-    // recompiled, the R button write spills into the A button slot, so the Furnace Fun
-    // panels can only be activated with R instead of A. Sizing it [3] fixes this.
+    // @recomp Make room for all three side button values (Z, L, R).
+    // s32 sp3C[2];
     s32 sp3C[3];
     s32 sp38;
     s32 sp28;
@@ -95,37 +93,38 @@ RECOMP_PATCH void lair_func_8038E0B0(void) {
             D_8037DCB8->unk4->unk9 = 2;
             if (D_8037DCB8->unk11) {
                 switch (sp38) {
-                    case FFTT_6_SKULL:
-                        comusic_playTrack(COMUSIC_7B_STEP_ON_SKULL_TILE);
-                        break;
+                case FFTT_6_SKULL://L8038E26C
+                    comusic_playTrack(COMUSIC_7B_STEP_ON_SKULL_TILE);
+                    break;
 
-                    case FFTT_5_GRUNTY:
-                        comusic_playTrack(COMUSIC_7C_STEP_ON_GRUNTY_TILE);
-                        break;
+                case FFTT_5_GRUNTY://L8038E280
+                    comusic_playTrack(COMUSIC_7C_STEP_ON_GRUNTY_TILE);
+                    break;
 
-                    case FFTT_1_BANJO:
-                        comusic_playTrack(COMUSIC_7D_STEP_ON_BK_TILE);
-                        break;
+                case FFTT_1_BANJO://L8038E294
+                    comusic_playTrack(COMUSIC_7D_STEP_ON_BK_TILE);
+                    break;
 
-                    case FFTT_7_JOKER:
-                        comusic_playTrack(COMUSIC_7E_STEP_ON_MINIGAME_TILE);
-                        break;
+                case FFTT_7_JOKER://L8038E2A8
+                    comusic_playTrack(COMUSIC_7E_STEP_ON_MINIGAME_TILE);
+                    break;
 
-                    case FFTT_3_MUSIC:
-                        comusic_playTrack(COMUSIC_7F_STEP_ON_JOKER_TILE);
-                        break;
+                case FFTT_3_MUSIC://L8038E2BC
+                    comusic_playTrack(COMUSIC_7F_STEP_ON_JOKER_TILE);
+                    break;
 
-                    case FFTT_2_PICTURE:
-                        func_8030E6D4(SFX_144_DOUBLE_CAMERA_CLICK);
-                        break;
+                case FFTT_2_PICTURE://L8038E2D0
+                    func_8030E6D4(SFX_144_DOUBLE_CAMERA_CLICK);
+                    break;
 
-                    case FFTT_4_MINIGAME:
-                        func_8038DFBC();
-                        break;
+                case FFTT_4_MINIGAME://L8038E2E4
+                    func_8038DFBC();
+                    break;
                 }
                 D_8037DCB8->unk11 = FALSE;
             }
-        } else {
+        }
+        else {
             D_8037DCB8->unk11 = TRUE;
         }
 
@@ -135,108 +134,114 @@ RECOMP_PATCH void lair_func_8038E0B0(void) {
         }
         func_8028FA14(MAP_8E_GL_FURNACE_FUN, 2);
         switch (D_8037DCB8->currFfMode) {
-            case 1:
-                if (D_8037DCB8->unk8 != 0) {
-                    func_80347A14(0);
-                    func_8038D670(FFA_2_ON_BOARD_FORGET_MOVES);
-                }
+        case 1://L8038E388
+            if (D_8037DCB8->unk8 != 0) {
+                func_80347A14(0);
+                func_8038D670(2);
+            }
+            break;
+
+        case 2://L8038E3AC
+            if (D_8037DCB8->unk8 == 0) {
+                func_8038D670(1);
                 break;
-
-            case 2:
-                if (D_8037DCB8->unk8 == 0) {
-                    func_8038D670(FFA_1_UNK);
-                    break;
+            }
+            func_802FACA4(0x14);
+            func_802FACA4(0x16);
+            if (sp38 != FFTT_0_NIL) {
+                sp28 = sp38 - 1 + FILEPROG_55_FF_BK_SQUARE_INSTRUCTIONS;
+                if (!fileProgressFlag_get(sp28) && gcdialog_showDialog(sp38 + 0x101E, 0, NULL, NULL, NULL, NULL)) {
+                    fileProgressFlag_set(sp28, TRUE);
                 }
-                func_802FACA4(ITEM_14_HEALTH);
-                func_802FACA4(ITEM_16_LIFE);
-                if (sp38 != FFTT_0_NIL) {
-                    sp28 = sp38 - 1 + FILEPROG_55_FF_BK_SQUARE_INSTRUCTIONS;
-                    if (!fileProgressFlag_get(sp28) && gcdialog_showDialog(sp38 + 0x101E, 0, NULL, NULL, NULL, NULL)) {
-                        fileProgressFlag_set(sp28, TRUE);
-                    }
 
-                    // Warning message belongs at 0 lives (last life), not 1. 
-                    if ((sp38 == FFTT_6_SKULL) && (item_getCount(ITEM_16_LIFE) == 0)) {
-                        progressDialog_setAndTriggerDialog_4(VOLATILE_FLAG_AB_LAST_LIFE_ON_SKULL);
-                    } else if (item_getCount(ITEM_14_HEALTH) == 1) {
-                        progressDialog_setAndTriggerDialog_4(VOLATILE_FLAG_AA_FF_LOW_HEALTH);
+                // @recomp Trigger the Death Square warning at 0 lives instead of 1.
+                // if ((sp38 == FFTT_6_SKULL) && (item_getCount(ITEM_16_LIFE) == 1)) {
+                if ((sp38 == FFTT_6_SKULL) && (item_getCount(ITEM_16_LIFE) == 0)) {
+                    progressDialog_setAndTriggerDialog_4(VOLATILE_FLAG_AB_LAST_LIFE_ON_SKULL);
+                }
+                else if (item_getCount(ITEM_14_HEALTH) == 1) {
+                    progressDialog_setAndTriggerDialog_4(VOLATILE_FLAG_AA_FF_LOW_HEALTH);
+                }
+                if ((D_8037DCB8->unk4->unk9 == 2) && (player_movementGroup() == BSGROUP_0_NONE)) {
+                    if (func_8028EFEC() && (sp48[FACE_BUTTON(BUTTON_A)] == 1)) {
+                        func_803114D0();
+                        player_getRotation(D_8037DCB8->playerRotation);
+                        D_8037DCB8->ffQuestionType = func_8038DCD4(sp38);
+                        func_8038DE34(D_8037DCB8->ffQuestionType);
+                        func_8038D670(3);
+                        return;
                     }
-                    if ((D_8037DCB8->unk4->unk9 == 2) && (player_movementGroup() == BSGROUP_0_NONE)) {
-                        if (func_8028EFEC() && (sp48[FACE_BUTTON(BUTTON_A)] == 1)) {
-                            func_803114D0();
-                            player_getRotation(D_8037DCB8->playerRotation);
-                            D_8037DCB8->ffQuestionType = func_8038DCD4(sp38);
-                            func_8038DE34(D_8037DCB8->ffQuestionType);
-                            func_8038D670(FFA_3_TRIGGER_QUESTION);
-                            return;
-                        }
-                        if (func_8028EFC8() && (sp48[FACE_BUTTON(BUTTON_B)] == 1)) {
-                            if ((item_getCount(ITEM_27_JOKER_CARD) > 0) && (sp28 < 0x5B)) {
-                                lair_func_8038C640(D_8037DCB8->unk8, D_8037DCB8->unk4);
-                                item_dec(ITEM_27_JOKER_CARD);
-                                func_8030E6D4(SFX_3EA_BANJO_GUH_HUH);
-                                progressDialog_setAndTriggerDialog_4(VOLATILE_FLAG_A9_FF_USED_JOKER);
-                                if (D_8037DCB8->unk8 == 0x1EF) {
-                                    func_8038D670(FFA_8_FURNACE_FUN_COMPLETE);
-                                }
-                            } else {
-                                comusic_playTrack(COMUSIC_2C_BUZZER);
+                    if (func_8028EFC8() && (sp48[FACE_BUTTON(BUTTON_B)] == 1)) {
+                        if ((item_getCount(ITEM_27_JOKER_CARD) > 0) && (sp28 < 0x5B)) {
+                            lair_func_8038C640(D_8037DCB8->unk8, D_8037DCB8->unk4);
+                            item_dec(ITEM_27_JOKER_CARD);
+                            func_8030E6D4(SFX_3EA_BANJO_GUH_HUH);
+                            progressDialog_setAndTriggerDialog_4(VOLATILE_FLAG_A9_FF_USED_JOKER);
+                            if (D_8037DCB8->unk8 == 0x1EF) {
+                                func_8038D670(8);
                             }
                         }
+                        else {
+                            comusic_playTrack(COMUSIC_2C_BUZZER);
+                        }
                     }
-                } else {
-                    if (D_8037DCB8->unk4->unk9 == 2) {
-                        lair_func_8038C640(D_8037DCB8->unk8, D_8037DCB8->unk4);
-                    }
                 }
-                break;
+            }
+            else {
+                if (D_8037DCB8->unk4->unk9 == 2) {
+                    lair_func_8038C640(D_8037DCB8->unk8, D_8037DCB8->unk4);
+                }
+            }
+            break;
 
-            case 3:
-                if ((D_8037DCB8->ffQuestionType == 2) && D_80394354[D_8037DCB8->unkC].unk0 == 2) {
-                    gczoombox_update(D_8037DCB8->unk20);
-                }
-                if ((D_8037DCB8->unk12 == 0) && func_8028EFC8() && (sp48[FACE_BUTTON(BUTTON_B)] == 1)) {
-                    func_80324C58();
-                    func_8038D670(FFA_4_UNK);
-                }
-                break;
+        case 3://L8038E5C8
+            if ((D_8037DCB8->ffQuestionType == 2) && D_80394354[D_8037DCB8->unkC].unk0 == 2) {
+                gczoombox_update(D_8037DCB8->unk20);
+            }
+            if ((D_8037DCB8->unk12 == 0) && func_8028EFC8() && (sp48[FACE_BUTTON(BUTTON_B)] == 1)) {
+                func_80324C58();
+                func_8038D670(4);
+            }
+            break;
 
-            case 4:
-                if (volatileFlag_get(VOLATILE_FLAG_1)) {
-                    volatileFlag_set(VOLATILE_FLAG_1, 0);
+        case 4://L8038E64C
+            if (volatileFlag_get(VOLATILE_FLAG_1)) {
+                volatileFlag_set(VOLATILE_FLAG_1, 0);
+                func_8038E070();
+                func_8025A55C(6000, 500, 0xA);
+            }
+            break;
+
+        case 5://L8038E684
+            if (volatileFlag_get(VOLATILE_FLAG_2_FF_IN_MINIGAME)) {
+                if (volatileFlag_get(VOLATILE_FLAG_4)) {
                     func_8038E070();
-                    func_8025A55C(6000, 500, 0xA);
+                    D_8037DCB8->unkF = volatileFlag_get(VOLATILE_FLAG_5_FF_MINIGAME_WON);
+                    func_8038D670(6);
                 }
-                break;
+                else {
+                    func_8038D670(1);
+                }
+                volatileFlag_set(VOLATILE_FLAG_2_FF_IN_MINIGAME, FALSE);
+                volatileFlag_set(VOLATILE_FLAG_4, FALSE);
+            }
+            break;
 
-            case 5:
-                if (volatileFlag_get(VOLATILE_FLAG_2_FF_IN_MINIGAME)) {
-                    if (volatileFlag_get(VOLATILE_FLAG_4)) {
-                        func_8038E070();
-                        D_8037DCB8->unkF = volatileFlag_get(VOLATILE_FLAG_5_FF_MINIGAME_WON);
-                        func_8038D670(FFA_6_TRIGGER_QUESTION_POST_EFFECTS);
-                    } else {
-                        func_8038D670(FFA_1_UNK);
-                    }
-                    volatileFlag_set(VOLATILE_FLAG_2_FF_IN_MINIGAME, FALSE);
-                    volatileFlag_set(VOLATILE_FLAG_4, FALSE);
-                }
-                break;
+        case 6://L8038E6F8
+            if ((D_8037DCB8->unk8 == 0x1EF) && (D_8037DCB8->unkF == 1)) {
+                func_8038D670(8);
+            }
+            else {
+                func_8038D670(2);
+            }
+            break;
 
-            case 6:
-                if ((D_8037DCB8->unk8 == 0x1EF) && (D_8037DCB8->unkF == 1)) {
-                    func_8038D670(FFA_8_FURNACE_FUN_COMPLETE);
-                } else {
-                    func_8038D670(FFA_2_ON_BOARD_FORGET_MOVES);
-                }
-                break;
-
-            case 9:
-                if (!func_8025AD7C(0x78)) {
-                    mapSpecificFlags_set(6, TRUE);
-                    func_8038D670(FFA_0_NIL);
-                }
-                break;
+        case 9://L8038E738
+            if (!func_8025AD7C(0x78)) {
+                mapSpecificFlags_set(6, TRUE);
+                func_8038D670(0);
+            }
+            break;
         }
     }
 }
