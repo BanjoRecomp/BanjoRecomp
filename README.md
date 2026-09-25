@@ -9,7 +9,8 @@ Join the [N64: Recompiled Community Discord](https://discord.gg/AWZThJ4dPf) to d
 
 ### **This repository and its releases do not contain game assets. The original game is required to build or run this project.**
 
-### **The Banjo: Recompiled team has not, does not, and will not use generative AI tools in the development of this project for any purpose. As per the CONTRIBUTING.md file, contributions that use any GenAI tooling in any capacity are blanket banned.**
+### No-AI stance
+**The Banjo: Recompiled team has not, does not, and will not use generative AI tools in the development of this project for any purpose. As per the CONTRIBUTING.md file, contributions that use any GenAI tooling in any capacity are blanket banned.**
 
 ## Table of Contents
 * [System Requirements](#system-requirements)
